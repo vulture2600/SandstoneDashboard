@@ -39,6 +39,9 @@ os.system('modprobe w1-therm')
 
 degree_sign = u"\N{DEGREE SIGN}"
 
+import socket
+
+hostname = socket.gethostname()
 
 
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
@@ -68,6 +71,27 @@ def read_temp(file) -> str:
     else:
         return "OFFLINE"
     
+#reads /temperature file
+def read_temp_f(file):
+    device_file = DEVICES_PATH + file + "/temperature"
+    #print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    if (path.exists(device_file)):
+#		print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        try:
+            f = open (device_file, 'r')
+            temp_string = f.read()
+#			f.close()
+
+            temp_c = float(temp_string) / 1000.0
+            temp_f = temp_c * 1.8 + 32.0
+            return format(temp_f, '.1f')
+        except:
+            return "OFF"
+    else:
+        return "OFFLINE"
+
+
+
 
 def multi_threaded_file_reader(file_paths):
     threads = []
@@ -92,22 +116,74 @@ def multi_threaded_file_reader(file_paths):
 
 
 while True:
-    print("Reading Sensors:")
-    sensorIds = os.listdir(DEVICES_PATH)
-    print(sensorIds)
+    try:
+        print("Reading Sensors:")
+        sensorIds = os.listdir(DEVICES_PATH)
+        print(sensorIds)
+        series = []
+        dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print("Found " + str((len(sensorIds) - 1)) + " devices on bus: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print("Collecting temperatures ...")
-    i = 1
-    results = multi_threaded_file_reader(sensorIds)
 
-    for file_path, content in results.items():
-        if (file_path.find('28-') != -1):
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            print (str(i).zfill(2) + ") Sensor ID: " + str(file_path) + ". Temp = " + str(content) + degree_sign + "F.")
-            i += 1
+
+
+        print("Found " + str((len(sensorIds) - 1)) + " devices on bus: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("Collecting temperatures ...")
+        i = 1
+        results = multi_threaded_file_reader(sensorIds)
+
+        for file_path, content in results.items():
+            if (file_path.find('28-') != -1):
+                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                print (str(i).zfill(2) + ") Sensor ID: " + str(file_path) + ". Temp = " + str(content) + degree_sign + "F.")
+                i += 1
+                point = {
+                    "measurement": "raw_data",
+                    "tags": {
+                        "sensor_id": file_path,
+                        "sensor_bus": "1-wire",
+                        "hostname": hostname,
+                        "type": "ds18b20"
+
+                    },
+                    "fields": {
+                        "temperature": float(content)
+                    },
+                }
+                series.append(point)
+        point = {
+            "measurement": "raw_data",
+            "tags": {
+                "time_now" : "mostRecent"
+            },
+            "fields": {
+                "timeStamp": dateTimeNow
+            }
+        
+        }
+        series.append(point)
+        #print(series)
+        client.write_points(series)
+        print("Data written to InfluxDB: " + str(series))
+
+
+
+    except:        print("Error reading sensors or writing to InfluxDB.")            
+
+
 
     print(" ")
+    try:
+        client.write_points(series)
+        print("Data posted to DB.")
+
+        result = client.query('select * from "raw_data" where time >= now() - 5s and time <= now()')
+        print(result)
+        print("Query recieved.")
+        print(" ")
+    except InfluxDBServerError as e:
+        # print("Server timeout")
+        print("server failed, reason: " + str(e))
+        print(" ")
 
     time.sleep(2)
 
