@@ -142,7 +142,8 @@ while True:
                         "sensor_id": file_path,
                         "sensor_bus": "1-wire",
                         "hostname": hostname,
-                        "type": "ds18b20"
+                        "type": "ds18b20",
+                        "timeStamp": dateTimeNow
 
                     },
                     "fields": {
@@ -150,16 +151,16 @@ while True:
                     },
                 }
                 series.append(point)
-        point = {
-            "measurement": "raw_data",
-            "tags": {
-                "time_now" : "mostRecent"
-            },
-            "fields": {
-                "timeStamp": dateTimeNow
-            }
+        #point = {
+         #   "measurement": "raw_data",
+          #  "tags": {
+           #     "time_now" : "mostRecent"
+            #},
+            #"fields": {
+            #    "timeStamp": dateTimeNow
+            #}
         
-        }
+        #}
         series.append(point)
         #print(series)
         client.write_points(series)
@@ -176,7 +177,7 @@ while True:
         client.write_points(series)
         print("Data posted to DB.")
 
-        result = client.query('select * from "raw_data" where time >= now() - 5s and time <= now()')
+        result = client.query('select * from "raw_data" where time >= now() - 1s and time <= now()')
         print(result)
         print("Query recieved.")
         print(" ")
