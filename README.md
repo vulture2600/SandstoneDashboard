@@ -17,3 +17,5 @@ service 2: search and collect all i2c ADS1115 breakout boards and queries all of
 
 config file will roughly be formatted as follows:
 1-wire temp sensor data: roomID -> "room name/sensorID"
+pressure sensors: pi-> i2c addresses -> channels
+
