@@ -14,6 +14,7 @@ from os import path
 import threading
 from influxdb import InfluxDBClient
 from constants import DEVICES_PATH, W1_SLAVE_FILE
+import shutil
 
 
 from dotenv import load_dotenv
@@ -42,6 +43,11 @@ degree_sign = u"\N{DEGREE SIGN}"
 import socket
 
 hostname = socket.gethostname()
+
+
+config_file_path = r"\\SandstoneTS251\Public\Config_Files\config.txt"
+configFile = "config_local_copy.txt"
+
 
 
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
@@ -116,6 +122,41 @@ def multi_threaded_file_reader(file_paths):
 
 
 while True:
+
+    try:
+        shutil.copyfile(config_file_path, configFile)
+        print(f"File '{config_file_path}' copied to '{configFile}'.")
+    except FileNotFoundError:
+        print(f"Config file '{config_file_path}' not found.")
+    except PermissionError:
+        print(f"Error: Permission denied. Ensure you have access to '{config_file_path}'.")
+    except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+    try:
+        with open(configFile, 'r') as f:
+            content = f.read()
+            print("Config file read successfully:")
+            print(content[:200])  # Print first 200 characters for brevity
+    except FileNotFoundError:
+        print(f"Error: The source file '{config_file_path}' was not found for reading.")
+    except PermissionError:
+        print(f"Error: Permission denied when trying to read '{config_file_path}'.")
+
+
+    except Exception as e:
+        print("Error copying config file: " + str(e))
+###
+
+    # try:
+    #     with open('//SandstoneTS251/Public/Config_Files/config.txt') as f:
+    #         configFile = f.read()
+    #     print("Config file read successfully.")
+
+    # except:
+    #     print("error")
+
+
     try:
         print("Reading Sensors:")
         sensorIds = os.listdir(DEVICES_PATH)
