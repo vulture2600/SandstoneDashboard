@@ -3,7 +3,7 @@ Revamping the whole damn thing.
 
 
 New plan:
-1)have each pi write raw 1-wire temp data and ADS1115 raw data to data base #1
+1) have each pi write raw 1-wire temp data and ADS1115 raw data to data base #1
 2) have a central service that pulls data from database #1, compares it to a global config file, sorts/formats it, then write relevant data to database #2
 3) grafana pulls data from database #2 and displays on dashboard
 
