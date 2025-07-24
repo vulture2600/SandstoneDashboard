@@ -32,7 +32,11 @@ We are implementing a master sensor config file for 1-Wire and i2c sensor connec
 
 #### To do
 
-* Python scripts should pull the sensor config file each time with the most recent local copy as the fallback
+##### Python script updates:
+
+* Create the master config json file
+
+* Update the Python scripts to pull the sensor config file each time with the most recent local copy as the fallback
 
 * The config file will be hosted on a Windows share on the NAS
 
