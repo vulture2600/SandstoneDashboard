@@ -35,6 +35,22 @@ client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
 print("client ok!")
 
+print("Verifying all kernel modules are loaded")
+kernel_mod_loads = []
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
+
+KERNEL_MOD_LOAD_FAIL = False
+
+for kernel_mod_load in kernel_mod_loads:
+    if kernel_mod_load.returncode != 0:
+        print(kernel_mod_load.stderr.rstrip())
+        KERNEL_MOD_LOAD_FAIL = True
+
+if KERNEL_MOD_LOAD_FAIL is True:
+    print("Exiting")
+    sys.exit(1)
+
 def read_temp(file) -> str:
     device_file = DEVICES_PATH + file + "/" + W1_SLAVE_FILE
     if os.path.exists(device_file):
@@ -59,22 +75,6 @@ def key_exists(roomID, keys) -> bool:
     if keys and roomID:
         return key_exists(roomID.get(keys[0]), keys[1:])
     return not keys and roomID is not None
-
-print("Verifying all kernel modules are loaded")
-kernel_mod_loads = []
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
-
-KERNEL_MOD_LOAD_FAIL = False
-
-for kernel_mod_load in kernel_mod_loads:
-    if kernel_mod_load.returncode != 0:
-        print(kernel_mod_load.stderr.rstrip())
-        KERNEL_MOD_LOAD_FAIL = True
-
-if KERNEL_MOD_LOAD_FAIL is True:
-    print("Exiting")
-    sys.exit(1)
 
 while True:
     print("Reading Sensors:")
