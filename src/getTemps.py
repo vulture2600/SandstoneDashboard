@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
+DEBUG = False
+
 HOSTNAME = socket.gethostname()
 
 if 'INVOCATION_ID' in os.environ:
@@ -162,7 +164,8 @@ while True:
         print("Data posted to DB.")
 
         result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
-        print(result)
+        if DEBUG is True:
+            print(result)
         print("Query recieved.")
         print(" ")
     except InfluxDBServerError as e:
