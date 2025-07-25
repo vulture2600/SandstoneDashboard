@@ -134,7 +134,6 @@ while True:
                     "type": TEMP_SENSOR_MODEL,
                     "title": TITLE
                 },
-
                 "fields": {
                     "status": str(STATUS),
                     "temp_flt": float(TEMP)
@@ -155,6 +154,7 @@ while True:
             "timeStamp": dateTimeNow
         }
     }
+
     series.append(point)
     print(str(i + 1) + " sensors collected.")
     print(series)
