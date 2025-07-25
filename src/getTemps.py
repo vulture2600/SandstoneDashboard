@@ -11,7 +11,7 @@ import sys
 import subprocess
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
-from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM
+from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
 HOSTNAME = socket.gethostname()
 
@@ -35,7 +35,7 @@ client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
 print("client ok!")
 
-print("Verifying all kernel modules are loaded")
+print("Verifying all kernel modules are loaded.")
 kernel_mod_loads = []
 kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
 kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
@@ -52,6 +52,7 @@ if KERNEL_MOD_LOAD_FAIL is True:
     sys.exit(1)
 
 def read_temp(file) -> str:
+    """Read temperature"""
     device_file = DEVICES_PATH + file + "/" + W1_SLAVE_FILE
     if os.path.exists(device_file):
         try:
@@ -72,6 +73,7 @@ def read_temp(file) -> str:
         return "Off"
 
 def key_exists(roomID, keys) -> bool:
+    """Check whether roomID exists"""
     if keys and roomID:
         return key_exists(roomID.get(keys[0]), keys[1:])
     return not keys and roomID is not None
@@ -80,60 +82,60 @@ while True:
     print("Reading Sensors:")
     series = []
     dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(CONFIG_FILE) as f:
-        ROOMS = f.read()
+    with open(CONFIG_FILE) as open_file:
+        ROOMS = open_file.read()
     ROOMS = ast.literal_eval(ROOMS)
 
     # get number of rooms from config file and make arrays:
-    count = len(ROOMS)
+    room_count = len(ROOMS)
 
-    for i in range(count):
+    for i in range(room_count):
         try:
             room_id = list(ROOMS.keys())[i]
             if key_exists(ROOMS, [room_id, 'id']):
-                sensor_id = ROOMS.get(room_id, {}).get('id')
-                temp 	  = read_temp(sensor_id)
-                status = "On"
+                SENSOR_ID = ROOMS.get(room_id, {}).get('id')
+                TEMP 	  = read_temp(SENSOR_ID)
+                STATUS = "On"
             else:
-                sensor_id = "unassigned"
-                temp 	  = "Off"
-                # temp 	  = -100.0
-                # status = "Off"
+                SENSOR_ID = "unassigned"
+                TEMP 	  = "Off"
+                # TEMP 	  = -100.0
+                # STATUS = "Off"
 
             if key_exists(ROOMS, [room_id, 'title']):
-                title = ROOMS.get(room_id, {}).get('title')
+                TITLE = ROOMS.get(room_id, {}).get('title')
             else:
-                title = "Untitled"
-            room_id_in_quotes = str("'" + room_id + "'")
-            title_in_quotes   = str("'" + title + "'")
+                TITLE = "Untitled"
+            ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
+            TITLE_IN_QUOTES   = str("'" + TITLE + "'")
 
             print(
                 "Sensor " + str(i + 1).zfill(2) + ") collected. " +
-                "Room ID: " + str(room_id_in_quotes).ljust(21, ' ') +
-                "Title: " + str(title_in_quotes).ljust(29, ' ') +
-                "Sensor ID: " + str(sensor_id).center(15, '-') +
-                ", Temp = " + str(temp) + "F"
+                "Room ID: " + str(ROOM_ID_IN_QUOTES).ljust(21, ' ') +
+                "Title: " + str(TITLE_IN_QUOTES).ljust(29, ' ') +
+                "Sensor ID: " + str(SENSOR_ID).center(15, '-') +
+                ", Temp = " + str(TEMP) + "F"
             )
 
-            if temp == "Off":
-                # print(f"temp is {temp}, skipping room {room_id}")
+            if TEMP == "Off":
+                # print(f"temp is {TEMP}, skipping room {room_id}")
                 # continue
-                status = "Off"
-                # temp = -100.0
+                STATUS = "Off"
+                # TEMP = -100.0
 
             point = {
                 "measurement": "temps",
                 "tags": {
-                    "sensor": 	i + 1,
+                    "sensor": i + 1,
                     "location": room_id,
-                    "id": 		sensor_id,
-                    "type": 	"ds18b20",
-                    "title": 	title
+                    "id": SENSOR_ID,
+                    "type": TEMP_SENSOR_MODEL,
+                    "title": TITLE
                 },
 
                 "fields": {
-                    "status":       str(status),
-                    "temp_flt": 	float(temp)
+                    "status": str(STATUS),
+                    "temp_flt": float(TEMP)
                 }
             }
 
