@@ -7,10 +7,11 @@ import ast
 import datetime
 import os
 import socket
-from os import path
+import sys
+import subprocess
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
-from constants import DEVICES_PATH, W1_SLAVE_FILE
+from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM
 
 HOSTNAME = socket.gethostname()
 
@@ -28,19 +29,15 @@ PASSWORD = os.getenv("PASSWORD")
 TEMP_SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
 CONFIG_FILE = os.getenv("CONFIG_FILE")
 
-os.system('modprobe w1-gpio')
-os.system('modprobe w1-therm')
-
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
 client.create_database(TEMP_SENSOR_DATABASE)
 client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
 print("client ok!")
 
-
 def read_temp(file) -> str:
     device_file = DEVICES_PATH + file + "/" + W1_SLAVE_FILE
-    if path.exists(device_file):
+    if os.path.exists(device_file):
         try:
             f = open(device_file, 'r')
             lines = f.readlines()
@@ -58,12 +55,26 @@ def read_temp(file) -> str:
     else:
         return "Off"
 
-
 def key_exists(roomID, keys) -> bool:
     if keys and roomID:
         return key_exists(roomID.get(keys[0]), keys[1:])
     return not keys and roomID is not None
 
+print("Verifying all kernel modules are loaded")
+kernel_mod_loads = []
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
+
+KERNEL_MOD_LOAD_FAIL = False
+
+for kernel_mod_load in kernel_mod_loads:
+    if kernel_mod_load.returncode != 0:
+        print(kernel_mod_load.stderr.rstrip())
+        KERNEL_MOD_LOAD_FAIL = True
+
+if KERNEL_MOD_LOAD_FAIL is True:
+    print("Exiting")
+    sys.exit(1)
 
 while True:
     print("Reading Sensors:")
