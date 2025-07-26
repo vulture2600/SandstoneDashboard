@@ -1,0 +1,17 @@
+[Unit]
+Description=Get Weather
+After=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/oneWireTemps
+ExecStart=/usr/bin/python3 getWeather.py
+
+Restart=always
+RestartSec=10
+StartLimitInterval=120
+StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target
