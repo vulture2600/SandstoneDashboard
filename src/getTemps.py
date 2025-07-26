@@ -1,6 +1,6 @@
 """
 steve.a.mccluskey@gmail.com
-Get temp sensor data and write to InfluxDB. See .env file for required configuration.
+Get temp sensor data and write to InfluxDB. See .env files for required config file.
 """
 
 import ast
@@ -11,7 +11,6 @@ import sys
 import subprocess
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBServerError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
 DEBUG = False
@@ -67,13 +66,13 @@ def read_temp(file) -> str:
 
             if position != -1:
                 temp_string = lines[1][position + 2:]
-                temp_c      = float(temp_string) / 1000.0
-                temp_f      = format((temp_c * 1.8 + 32.0), '.1f')
+                temp_c 		= float(temp_string) / 1000.0
+                temp_f 		= format((temp_c * 1.8 + 32.0), '.1f')
                 return temp_f
-            else:
-                return "Off"
         except:
             return "Off"
+    else:
+        return "Off"
 
 def key_exists(roomID, keys) -> bool:
     """Check whether roomID exists"""
@@ -102,15 +101,15 @@ while True:
             else:
                 SENSOR_ID = "unassigned"
                 TEMP 	  = "Off"
-                # TEMP      = -100.0
+                # TEMP 	  = -100.0
                 # STATUS = "Off"
 
             if key_exists(ROOMS, [room_id, 'title']):
                 TITLE = ROOMS.get(room_id, {}).get('title')
             else:
                 TITLE = "Untitled"
-                ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
-                TITLE_IN_QUOTES   = str("'" + TITLE + "'")
+            ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
+            TITLE_IN_QUOTES   = str("'" + TITLE + "'")
 
             print(
                 "Sensor " + str(i + 1).zfill(2) + ") collected. " +
@@ -137,14 +136,13 @@ while True:
                 },
                 "fields": {
                     "status": str(STATUS),
-                    "temp_flt": float(TEMP) if TEMP != "Off" else -100.0
+                    "temp_flt": float(TEMP)
                 }
             }
 
             series.append(point)
 
-        except Exception as e:
-            print(f"Error processing sensor {i + 1}: {e}")
+        except:
             i = i + 1
 
     point = {
