@@ -7,18 +7,19 @@ and save it locally.
 """
 
 
-
+import ast
+import datetime
 import os
 import time
-import datetime
+import socket
+import sys
+import subprocess
+from dotenv import load_dotenv
 from os import path
 import threading
 from influxdb import InfluxDBClient
-from constants import DEVICES_PATH, W1_SLAVE_FILE
-import shutil
-from dotenv import load_dotenv
+from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 from smb.SMBConnection import SMBConnection
-import socket
 import json
 
 
@@ -26,14 +27,16 @@ import json
 DEBUG = True
 RUN_CONTINUE = False #set to True to run continuously, False to run once and exit
 
+HOSTNAME = socket.gethostname()
+
 APP_ENV = os.getenv("APP_ENV")
 
-if APP_ENV is None:
-    print("APP_ENV not set, using .env file")
-    load_dotenv(override=True)
+if 'INVOCATION_ID' in os.environ:
+    print(f"Running under Systemd, using .env.{HOSTNAME} file")
+    load_dotenv(override=True, dotenv_path=f".env.{HOSTNAME}")
 else:
-    print(f"Using .env.{APP_ENV} file")
-    load_dotenv(override=True, dotenv_path=f".env.{APP_ENV}")
+    print("Using .env file")
+    load_dotenv(override=True)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
@@ -54,13 +57,27 @@ os.system('modprobe w1-therm')
 
 degree_sign = u"\N{DEGREE SIGN}"
 
-hostname = socket.gethostname()
+print("Verifying all kernel modules are loaded.")
+kernel_mod_loads = []
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
+
+KERNEL_MOD_LOAD_FAIL = False
 
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
 client.create_database(TEMP_SENSOR_DATABASE)
 client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
 print("InfluxDB Client OK!")
+
+for kernel_mod_load in kernel_mod_loads:
+    if kernel_mod_load.returncode != 0:
+        print(kernel_mod_load.stderr.rstrip())
+        KERNEL_MOD_LOAD_FAIL = True
+
+if KERNEL_MOD_LOAD_FAIL is True:
+    print("Exiting")
+    sys.exit(1)
 
 
 def read_temp(file) -> str:
@@ -102,8 +119,6 @@ def read_temp_f(file):
         return "OFFLINE"
 
 
-
-
 def multi_threaded_file_reader(file_paths):
     threads = []
     results = {}
@@ -124,12 +139,10 @@ def multi_threaded_file_reader(file_paths):
 
 
 
-
-
 while True:
     #get config file from NAS:
     try:
-        conn = SMBConnection(SMB_USER, SMB_PASSWORD, hostname, SMB_SERVER, use_ntlm_v2=True)
+        conn = SMBConnection(SMB_USER, SMB_PASSWORD, HOSTNAME, SMB_SERVER, use_ntlm_v2=True)
         connected = conn.connect(SMB_SERVER, 445) # Port 445 is standard for SMB
     
         if connected:
@@ -176,7 +189,7 @@ while True:
                     "tags": {
                         "sensor_id": file_path,
                         "sensor_bus": "1-wire",
-                        "hostname": hostname,
+                        "hostname": HOSTNAME,
                         "type": "ds18b20",
                         "timeStamp": dateTimeNow
 
@@ -210,10 +223,7 @@ while True:
         print("server failed, reason: " + str(e))
         print(" ")
 
-    time.sleep(2)
-
     if RUN_CONTINUE is False:
         break
-
 
     time.sleep(2)
