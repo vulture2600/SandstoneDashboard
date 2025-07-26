@@ -1,5 +1,10 @@
+from smb.SMBConnection import SMBConnection
+
 # Using a UNC path
 file_path_unc = r"\\SandstoneTS251\Public\Config_Files\config.txt"
+
+
+
 
 # Using a mapped drive letter (if applicable)
 #file_path_mapped = r"Z:\folder\filename.txt"

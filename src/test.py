@@ -15,9 +15,12 @@ import threading
 from influxdb import InfluxDBClient
 from constants import DEVICES_PATH, W1_SLAVE_FILE
 import shutil
-
-
 from dotenv import load_dotenv
+from smb.SMBConnection import SMBConnection
+
+
+DEBUG = True
+
 
 APP_ENV = os.getenv("APP_ENV")
 
@@ -76,7 +79,7 @@ def read_temp(file) -> str:
             return "Off"
     else:
         return "OFFLINE"
-    
+
 #reads /temperature file
 def read_temp_f(file):
     device_file = DEVICES_PATH + file + "/temperature"
@@ -209,7 +212,8 @@ while True:
 
 
 
-    except:        print("Error reading sensors or writing to InfluxDB.")            
+    except:        
+        print("Error reading sensors or writing to InfluxDB.")            
 
 
 
@@ -219,7 +223,8 @@ while True:
         print("Data posted to DB.")
 
         result = client.query('select * from "raw_data" where time >= now() - 1s and time <= now()')
-        print(result)
+        if DEBUG is True:
+            print(result)
         print("Query recieved.")
         print(" ")
     except InfluxDBServerError as e:
