@@ -70,9 +70,10 @@ def read_temp(file) -> str:
                 temp_c      = float(temp_string) / 1000.0
                 temp_f      = format((temp_c * 1.8 + 32.0), '.1f')
                 return temp_f
+            else:
+                return "Off"
+        except:
             return "Off"
-            return "Off"
-        return "Off"
 
 def key_exists(roomID, keys) -> bool:
     """Check whether roomID exists"""
@@ -166,7 +167,7 @@ while True:
 
         result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
         if DEBUG is True:
-        print("Query received.")
+            print(result)
         print("Query recieved.")
         print(" ")
     except InfluxDBServerError as e:
