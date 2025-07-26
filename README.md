@@ -1,16 +1,16 @@
 # SandstoneDashboard
-Revamping the whole damn thing.
 
+This is for the monitoring the ice making at the [Sandstone Ice Park](https://www.mountainproject.com/area/106915985/sandstone-ice-park) in Sandstone MN.
 
-New plan:
-1)have each pi write raw 1-wire temp data and ADS1115 raw data to data base #1
-2) have a central service that pulls data from database #1, compares it to a global config file, sorts/formats it, then write relevant data to database #2
-3) grafana pulls data from database #2 and displays on dashboard
+## Sensor config file
 
+We are implementing a master sensor config file for 1-Wire and i2c sensor connected Raspberry Pi's.
 
-1-wire temp sensors are hot swappable, meaning if one goes offline, it will show offline on the dashboard.
-A utility shows all online sensors and current temp, and can be reconfigured in global config file on the fly, and will pick up right where it left off after new sensor is assigned to any place on dashboard.
-same with pressure sensors.
+#### Requirements
+
+* 1-wire temp sensors are hot swappable. If one goes offline, it should show as offline on the dashboard.
+* A utility shows all online sensors and current temp, and can be reconfigured in global config file on the fly, and will pick up right where it left off after new sensor is assigned to any place on dashboard.
+* Same with pressure sensors.
 
 #### Format
 
