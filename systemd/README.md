@@ -1,23 +1,27 @@
-# oneWireTemps
+# Systemd services
 
-Code adapted from weatherStation along with OneWire sensors is being used to monitor ice farming at the [Sandstone Ice Park](https://www.mountainproject.com/area/106915985/sandstone-ice-park).
+Copy the service files to **/etc/systemd/system/** and follow this example to enable and start the services.
 
-### Systemd
+#### systemctl
 
-Python files in [src](src) are driven by [Systemd services](systemd)
+```shell
+sudo systemctl enabled getSHT30.service
+sudo systemctl start getSHT30.service
 
-### InfluxDB
+sudo systemctl status getSHT30.service
+```
 
-[InfluxDB](influxdb.md) - The time series database used to store the OneWire sensor data.
+```shell
+# Use when service files (unit definitions) are updated:
+sudo systemctl daemon-reload
 
-### Alerting
+# Use when the Python script, run by the service, is updated:
+sudo systemctl restart getSHT30.service
+```
 
-[Alerting](alerting.md) - Eventually through the alerts feature in Grafana and either Slack or Discord.
+#### journalctl
 
-### Issues
-
-[Issues](issues.md)
-
-### Change log
-
-[Change log](change_log.md)
+```shell
+# Follow the Systemd journal, only show getTemps.service unit lines:
+journalctl -u getTemps.service -f
+```
