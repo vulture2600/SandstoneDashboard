@@ -109,8 +109,8 @@ while True:
                 TITLE = ROOMS.get(room_id, {}).get('title')
             else:
                 TITLE = "Untitled"
-            ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
-            TITLE_IN_QUOTES   = str("'" + TITLE + "'")
+                ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
+                TITLE_IN_QUOTES   = str("'" + TITLE + "'")
 
             print(
                 "Sensor " + str(i + 1).zfill(2) + ") collected. " +

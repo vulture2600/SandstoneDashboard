@@ -34,7 +34,7 @@ print("client ok!")
 bus = smbus.SMBus(1)
 
 while True:
-    print("Reading Sensor:")
+    print("Reading Sensors:")
     try:
         series = []
         bus.write_i2c_block_data(0x44, 0x2C, [0x06])
