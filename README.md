@@ -30,8 +30,6 @@ We are implementing a master sensor config file for 1-Wire and i2c sensor connec
             * i2c addresses
             * Channels
 
-#### To do
-
 ##### Python script updates:
 
 * Create the master config json file
@@ -48,6 +46,8 @@ We are implementing a master sensor config file for 1-Wire and i2c sensor connec
 
 * The .env files should have the path to the the master sensor config file
 
+* See [Issues](issues.md) for more.
+
 
 ## Sandstone Data Pipeline
 
@@ -59,13 +59,14 @@ We are implementing a master sensor config file for 1-Wire and i2c sensor connec
 
 #### Data Ingestion
 
-* SystemD driven Python scripts used to read sensor data
+* [SystemD](systemd) driven Python [scripts](src) used to read sensor data
 
 #### Storage
 
-* Data is written to InfluxDB
+* OneWire sensor data is written to [InfluxDB](influxdb.md) - time series database
 
 #### Visualization, Monitoring, Alerting
 
 * Grafana for the dashboard
 * Slack or Discord alert channels
+* See [Alerting](alerting.md) for more
