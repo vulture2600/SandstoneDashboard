@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 import smbus
 from influxdb import InfluxDBClient
 
+# Set to True to print query result:
+DEBUG = False
+
 HOSTNAME = socket.gethostname()
 
 if 'INVOCATION_ID' in os.environ:
@@ -77,11 +80,10 @@ while True:
         print("Data posted to DB.")
 
         result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
-        print("QUERY RECIEVED")
-        print("")
-        print(result)
+        print("Query received")
+        if DEBUG is True:
+            print(result)
     except:
         print("Server timeout")
-        print("")
 
     time.sleep(10)

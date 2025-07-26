@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
+# Set to True to print query result:
 DEBUG = False
 
 HOSTNAME = socket.gethostname()
@@ -164,11 +165,9 @@ while True:
         print("Data posted to DB.")
 
         result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
+        print("Query received")
         if DEBUG is True:
             print(result)
-        print("Query recieved.")
-        print(" ")
     except InfluxDBServerError as e:
         # print("Server timeout")
         print("server failed, reason: " + str(e))
-        print(" ")
