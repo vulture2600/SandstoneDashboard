@@ -1,6 +1,6 @@
 """
 steve.a.mccluskey@gmail.com
-Get temp sensor data and write to InfluxDB. See .env files for required config file.
+Get temp sensor data and write to InfluxDB. See .env file for required configuration.
 """
 
 import ast
@@ -11,6 +11,7 @@ import sys
 import subprocess
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
 DEBUG = False
@@ -65,13 +66,12 @@ def read_temp(file) -> str:
             position = lines[1].find('t=')
 
             if position != -1:
-                temp_string = lines[1][position + 2:]
-                temp_c 		= float(temp_string) / 1000.0
-                temp_f 		= format((temp_c * 1.8 + 32.0), '.1f')
+                temp_c      = float(temp_string) / 1000.0
+                temp_c      = float(temp_string) / 1000.0
+                temp_f      = format((temp_c * 1.8 + 32.0), '.1f')
                 return temp_f
-        except:
             return "Off"
-    else:
+            return "Off"
         return "Off"
 
 def key_exists(roomID, keys) -> bool:
@@ -101,7 +101,7 @@ while True:
             else:
                 SENSOR_ID = "unassigned"
                 TEMP 	  = "Off"
-                # TEMP 	  = -100.0
+                # TEMP      = -100.0
                 # STATUS = "Off"
 
             if key_exists(ROOMS, [room_id, 'title']):
@@ -136,13 +136,14 @@ while True:
                 },
                 "fields": {
                     "status": str(STATUS),
-                    "temp_flt": float(TEMP)
+                    "temp_flt": float(TEMP) if TEMP != "Off" else -100.0
                 }
             }
 
             series.append(point)
 
-        except:
+        except Exception as e:
+            print(f"Error processing sensor {i + 1}: {e}")
             i = i + 1
 
     point = {
@@ -165,7 +166,7 @@ while True:
 
         result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
         if DEBUG is True:
-            print(result)
+        print("Query received.")
         print("Query recieved.")
         print(" ")
     except InfluxDBServerError as e:
