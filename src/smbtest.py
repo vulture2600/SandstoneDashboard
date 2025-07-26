@@ -2,7 +2,7 @@ from smb.SMBConnection import SMBConnection
 
 # SMB server details
 server_ip = '192.168.30.10'  # e.g., '192.168.1.100'
-share_name = '/SandstoneIcePark'    
+share_name = 'Public'  # The name of the SMB share    
 username = 'Sandstone'
 password = 'Sandstone1'  # Your SMB username and password
 client_name = 'raspberrypi_client' # A name for your client
