@@ -19,11 +19,12 @@ import shutil
 from dotenv import load_dotenv
 from smb.SMBConnection import SMBConnection
 import socket
+import json
 
 
 
 DEBUG = True
-
+RUN_CONTINUE = False #set to True to run continuously, False to run once and exit
 
 APP_ENV = os.getenv("APP_ENV")
 
@@ -46,7 +47,7 @@ SMB_SHARE = os.getenv("SMB_SHARE_NAME")
 SMB_USER = os.getenv("SMB_USERNAME")
 SMB_PASSWORD = os.getenv("SMB_PASSWORD")
 
-local_save_path = 'config.txt'
+local_save_path = 'config.json'
 
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
@@ -142,8 +143,16 @@ while True:
         conn.close()
     except Exception as e:
         print(f"An error occurred: {e}")
-    
-   
+
+
+    try: #open config file:
+        with open(local_save_path, 'r') as CONFIG:
+            config_data = CONFIG.read()
+            CONFIG_JSON = json.loads(config_data)
+            print(CONFIG_JSON)
+    except:
+        print("Config file not found.")
+
 
     #Read all sensors and post to InfluxDB
     try:
@@ -203,3 +212,8 @@ while True:
 
     time.sleep(2)
 
+    if RUN_CONTINUE is False:
+        break
+
+
+    time.sleep(2)
