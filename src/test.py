@@ -18,6 +18,7 @@ from constants import DEVICES_PATH, W1_SLAVE_FILE
 import shutil
 from dotenv import load_dotenv
 from smb.SMBConnection import SMBConnection
+import socket
 
 
 
@@ -52,21 +53,13 @@ os.system('modprobe w1-therm')
 
 degree_sign = u"\N{DEGREE SIGN}"
 
-import socket
-
 hostname = socket.gethostname()
-
-
-#config_file_path = r"\\SandstoneTS251\Public\Config_Files\config.txt"
-#configFile = "config_local_copy.txt"
-
-
 
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
 client.create_database(TEMP_SENSOR_DATABASE)
 client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
-print("client ok!")
+print("InfluxDB Client OK!")
 
 
 def read_temp(file) -> str:
@@ -92,9 +85,8 @@ def read_temp(file) -> str:
 #reads /temperature file
 def read_temp_f(file):
     device_file = DEVICES_PATH + file + "/temperature"
-    #print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
     if (path.exists(device_file)):
-#		print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         try:
             f = open (device_file, 'r')
             temp_string = f.read()
@@ -136,10 +128,7 @@ def multi_threaded_file_reader(file_paths):
 while True:
     #get config file from NAS:
     try:
-        # Create an SMB connection object
         conn = SMBConnection(SMB_USER, SMB_PASSWORD, hostname, SMB_SERVER, use_ntlm_v2=True)
-
-        # Establish the connection
         connected = conn.connect(SMB_SERVER, 445) # Port 445 is standard for SMB
     
         if connected:
@@ -155,20 +144,14 @@ while True:
         print(f"An error occurred: {e}")
     
    
-            
-
-
 
     #Read all sensors and post to InfluxDB
     try:
         print("Reading Sensors:")
         sensorIds = os.listdir(DEVICES_PATH)
-        print(sensorIds)
+#       print(sensorIds)
         series = []
         dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-
 
         print("Found " + str((len(sensorIds) - 1)) + " devices on bus: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         print("Collecting temperatures ...")
@@ -177,7 +160,6 @@ while True:
 
         for file_path, content in results.items():
             if (file_path.find('28-') != -1):
-                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 print (str(i).zfill(2) + ") Sensor ID: " + str(file_path) + ". Temp = " + str(content) + degree_sign + "F.")
                 i += 1
                 point = {
@@ -195,37 +177,24 @@ while True:
                     },
                 }
                 series.append(point)
-        #point = {
-         #   "measurement": "raw_data",
-          #  "tags": {
-           #     "time_now" : "mostRecent"
-            #},
-            #"fields": {
-            #    "timeStamp": dateTimeNow
-            #}
-        
-        #}
-        series.append(point)
-        #print(series)
-        client.write_points(series)
-        print("Data written to InfluxDB: " + str(series))
 
-
+        if DEBUG is True:
+            print("Series to post: ")
+            print(series)
 
     except:        
-        print("Error reading sensors or writing to InfluxDB.")            
-
-
+        print("Error reading sensors.")            
 
     print(" ")
+
     try:
         client.write_points(series)
         print("Data posted to DB.")
 
         result = client.query('select * from "raw_data" where time >= now() - 1s and time <= now()')
+        print("Query recieved.")
         if DEBUG is True:
             print(result)
-        print("Query recieved.")
         print(" ")
     except InfluxDBServerError as e:
         # print("Server timeout")
