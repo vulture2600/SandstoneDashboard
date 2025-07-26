@@ -36,7 +36,7 @@ client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_S
 client.create_database(TEMP_SENSOR_DATABASE)
 client.get_list_database()
 client.switch_database(TEMP_SENSOR_DATABASE)
-print("client ok!")
+print("InfluxDB Client OK!")
 
 print("Verifying all kernel modules are loaded.")
 kernel_mod_loads = []
