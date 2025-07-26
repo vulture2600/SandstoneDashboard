@@ -1,7 +1,8 @@
 """
 test file to read all 1-wire temp folders and post their current temps to database
 
-
+adding SMB functionality to read a config file on NAS
+and save it locally.
 
 """
 
@@ -17,6 +18,7 @@ from constants import DEVICES_PATH, W1_SLAVE_FILE
 import shutil
 from dotenv import load_dotenv
 from smb.SMBConnection import SMBConnection
+
 
 
 DEBUG = True
@@ -38,6 +40,13 @@ PASSWORD = os.getenv("PASSWORD")
 TEMP_SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
 CONFIG_FILE = os.getenv("CONFIG_FILE")
 
+SMB_SERVER = os.getenv("SMB_SERVER_IP")
+SMB_SHARE = os.getenv("SMB_SHARE_NAME")
+SMB_USER = os.getenv("SMB_USERNAME")
+SMB_PASSWORD = os.getenv("SMB_PASSWORD")
+
+local_save_path = 'config.txt'
+
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
 
@@ -48,8 +57,8 @@ import socket
 hostname = socket.gethostname()
 
 
-config_file_path = r"\\SandstoneTS251\Public\Config_Files\config.txt"
-configFile = "config_local_copy.txt"
+#config_file_path = r"\\SandstoneTS251\Public\Config_Files\config.txt"
+#configFile = "config_local_copy.txt"
 
 
 
@@ -125,41 +134,32 @@ def multi_threaded_file_reader(file_paths):
 
 
 while True:
-
+    #get config file from NAS:
     try:
-        shutil.copyfile(config_file_path, configFile)
-        print(f"File '{config_file_path}' copied to '{configFile}'.")
-    except FileNotFoundError:
-        print(f"Config file '{config_file_path}' not found.")
-    except PermissionError:
-        print(f"Error: Permission denied. Ensure you have access to '{config_file_path}'.")
+        # Create an SMB connection object
+        conn = SMBConnection(SMB_USER, SMB_PASSWORD, hostname, SMB_SERVER, use_ntlm_v2=True)
+
+        # Establish the connection
+        connected = conn.connect(SMB_SERVER, 445) # Port 445 is standard for SMB
+    
+        if connected:
+            print(f"Successfully connected to {SMB_SERVER}!")
+    
+        with open(local_save_path, 'wb') as local_file:
+        # Retrieve the remote file
+            file_attributes, filesize = conn.retrieveFile(SMB_SHARE, CONFIG_FILE, local_file)
+
+        print(f"File '{CONFIG_FILE}' downloaded successfully to '{local_save_path}'")
+        conn.close()
     except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-
-    try:
-        with open(configFile, 'r') as f:
-            content = f.read()
-            print("Config file read successfully:")
-            print(content[:200])  # Print first 200 characters for brevity
-    except FileNotFoundError:
-        print(f"Error: The source file '{config_file_path}' was not found for reading.")
-    except PermissionError:
-        print(f"Error: Permission denied when trying to read '{config_file_path}'.")
+        print(f"An error occurred: {e}")
+    
+   
+            
 
 
-    except Exception as e:
-        print("Error copying config file: " + str(e))
-###
 
-    # try:
-    #     with open('//SandstoneTS251/Public/Config_Files/config.txt') as f:
-    #         configFile = f.read()
-    #     print("Config file read successfully.")
-
-    # except:
-    #     print("error")
-
-
+    #Read all sensors and post to InfluxDB
     try:
         print("Reading Sensors:")
         sensorIds = os.listdir(DEVICES_PATH)
