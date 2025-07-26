@@ -66,7 +66,7 @@ def read_temp(file) -> str:
             position = lines[1].find('t=')
 
             if position != -1:
-                temp_c      = float(temp_string) / 1000.0
+                temp_string = lines[1][position + 2:]
                 temp_c      = float(temp_string) / 1000.0
                 temp_f      = format((temp_c * 1.8 + 32.0), '.1f')
                 return temp_f
