@@ -138,62 +138,577 @@
       }
     },
 
-    "pressures": {
-        "hostname": "SandstoneRasPi4b8GbPowerMonitor:",
+    "pressures": [ 
+      {
+        "hostname": "SandstoneRasPi4b8GbPowerMonitor",
         "adresses": [
           {
             "i2c_address": "0x48",
-              "channels": [
-                {
-                  "id": "manifoldPressure",
-                  "name": "Manifold Pressure",
-                  "gain": 0,
-                  "maxPSI": 100,
-                  "minPSI": 0,
-                  "minADC": 4100,
-                  "maxADC": 32760,
-                  "enabled": true
-                },
-                 {
-                  "id": "manifoldPressure",
-                  "name": "Manifold Pressure",
-                  "gain": 0,
-                  "maxPSI": 100,
-                  "minPSI": 0,
-                  "minADC": 4100,
-                  "maxADC": 32760,
-                  "enabled": false
-                }
-              ]
-            },
-            {
+            "connected": true,
+            "channels": [
+              {
+                "id": "manifoldPressure",
+                "name": "Manifold Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": true
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
             "i2c_address": "0x49",
-              "channels": [
-                {
-                  "id": "manifoldPressure",
-                  "name": "Manifold Pressure",
-                  "gain": 0,
-                  "maxPSI": 100,
-                  "minPSI": 0,
-                  "minADC": 4100,
-                  "maxADC": 32760,
-                  "enabled": true
-                },
-                 {
-                  "id": "manifoldPressure",
-                  "name": "Manifold Pressure",
-                  "gain": 0,
-                  "maxPSI": 100,
-                  "minPSI": 0,
-                  "minADC": 4100,
-                  "maxADC": 32760,
-                  "enabled": true
-                }
-              ]
-            }
-          ]
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x50",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+                    {
+            "i2c_address": "0x51",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "hostname": "SandstonePi3bPlusSchoolRoom:",
+        "adresses": [
+          {
+            "i2c_address": "0x48",
+            "connected": true,
+            "channels": [
+              {
+                "id": "schoolRoomDump",
+                "name": "School Room Dump Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 400,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "upperSchoolRoom",
+                "name": "Upper School Room Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4000,
+                "maxADC": 15000,
+                "enabled": false
+              },
+              {
+                "id": "bootyWall",
+                "name": "Booty Wall pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 40100,
+                "maxADC": 12000,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x49",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x50",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+                    {
+            "i2c_address": "0x51",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "hostname": "SandstoneRasPi3BPlusStageWall",
+        "adresses": [
+          {
+            "i2c_address": "0x48",
+            "connected": true,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "mainFlow",
+                "name": "Main Flow Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4400,
+                "maxADC": 29500,
+                "enabled": false
+              },
+              {
+                "id": "northEnd",
+                "name": "North End Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 29500,
+                "enabled": false
+              },
+              {
+                "id": "derrickWall",
+                "name": "Errick Wall Pressure",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4600,
+                "maxADC": 26000,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x49",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x50",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "i2c_address": "0x51",
+            "connected": false,
+            "channels": [
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              },
+              {
+                "id": "",
+                "name": "",
+                "gain": 1,
+                "maxPSI": 100,
+                "minPSI": 0,
+                "minADC": 4100,
+                "maxADC": 32760,
+                "enabled": false
+              }
+            ]
+          }
+        ]
       }
-    
+    ]
   }
 }
 
