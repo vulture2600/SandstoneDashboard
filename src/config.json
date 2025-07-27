@@ -131,5 +131,30 @@
         "title": "Upper School Room Water Temp"
       }
     }
+  },
+  "i2c": {
+    "temp": {
+      "shedSHT30": {
+        "id": "i2c:0x44",
+        "title": "Shed SHT30"
+      }
+    },
+    "pressures":{
+      "hostname": "SandstoneRasPi4b8GbPowerMonitor:",
+      "i2c_address": {
+        "address": "0x48",
+        "channel": {
+          "adc_channel": 0,
+          "id": "manifoldPressure",
+          "name": "Manifold Pressure",
+          "gain": 0,
+          "maxPSI": 100,
+          "minPSI": 0,
+          "minADC": 4100,
+          "maxADC": 32760,
+          "enabled": true
+        }
+      }
+    }
   }
 }
