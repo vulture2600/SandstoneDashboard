@@ -32,13 +32,16 @@ PASSWORD = os.getenv("PASSWORD")
 TEMP_SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
 CONFIG_FILE = os.getenv("CONFIG_FILE")
 
+print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
-client.create_database(TEMP_SENSOR_DATABASE)
-client.get_list_database()
-client.switch_database(TEMP_SENSOR_DATABASE)
-print("InfluxDB Client OK!")
+databases = client.get_list_database()
+if not any(db['name'] == TEMP_SENSOR_DATABASE for db in databases):
+    print(f"Creating {TEMP_SENSOR_DATABASE}")
+    client.create_database(TEMP_SENSOR_DATABASE)
+    client.switch_database(TEMP_SENSOR_DATABASE)
+print(f"InfluxDB client ok! Using {TEMP_SENSOR_DATABASE}")
 
-print("Verifying all kernel modules are loaded.")
+print("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
 kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
 kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))

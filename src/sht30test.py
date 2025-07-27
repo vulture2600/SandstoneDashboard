@@ -28,11 +28,14 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
 
+print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
-client.create_database(SENSOR_DATABASE)
-client.get_list_database()
-client.switch_database(SENSOR_DATABASE)
-print("client ok!")
+databases = client.get_list_database()
+if not any(db['name'] == SENSOR_DATABASE for db in databases):
+    print(f"Creating {SENSOR_DATABASE}")
+    client.create_database(SENSOR_DATABASE)
+    client.switch_database(SENSOR_DATABASE)
+print(f"InfluxDB client ok! Using {SENSOR_DATABASE}")
 
 bus = smbus.SMBus(1)
 

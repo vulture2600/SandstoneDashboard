@@ -34,15 +34,14 @@ LONGITUDE = os.getenv("LONGITUDE")
 UNITS = 'imperial'
 URL   = 'http://api.openweathermap.org/data/3.0/onecall?lat=' + str(LATITUDE) + '&lon=' + str(LONGITUDE) + '&exclude=minutely,hourly&appid=' + OPENWEATHERMAP_API_KEY + '&units=' + UNITS
 
+print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
-client.create_database(TEMP_SENSOR_DATABASE)
-client.get_list_database()
-client.switch_database(TEMP_SENSOR_DATABASE)
-
-if client:
-    print("client ok!")
-else:
-    print("server failed!")
+databases = client.get_list_database()
+if not any(db['name'] == TEMP_SENSOR_DATABASE for db in databases):
+    print(f"Creating {TEMP_SENSOR_DATABASE}")
+    client.create_database(TEMP_SENSOR_DATABASE)
+    client.switch_database(TEMP_SENSOR_DATABASE)
+print(f"InfluxDB client ok! Using {TEMP_SENSOR_DATABASE}")
 
 while True:
     try:
