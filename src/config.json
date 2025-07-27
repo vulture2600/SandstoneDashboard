@@ -138,26 +138,62 @@
       }
     },
 
-    "pressures": 
-    
-    {
-      "hostname": "SandstoneRasPi4b8GbPowerMonitor:",
-      "i2c_address": {
-        "0x48": {
-          "channel0": {
-            "adc_channel": 0,
-            "id": "manifoldPressure",
-            "name": "Manifold Pressure",
-            "gain": 0,
-            "maxPSI": 100,
-            "minPSI": 0,
-            "minADC": 4100,
-            "maxADC": 32760,
-            "enabled": true
-          }
-        }
+    "pressures": {
+        "hostname": "SandstoneRasPi4b8GbPowerMonitor:",
+        "adresses": [
+          {
+            "i2c_address": "0x48",
+              "channels": [
+                {
+                  "id": "manifoldPressure",
+                  "name": "Manifold Pressure",
+                  "gain": 0,
+                  "maxPSI": 100,
+                  "minPSI": 0,
+                  "minADC": 4100,
+                  "maxADC": 32760,
+                  "enabled": true
+                },
+                 {
+                  "id": "manifoldPressure",
+                  "name": "Manifold Pressure",
+                  "gain": 0,
+                  "maxPSI": 100,
+                  "minPSI": 0,
+                  "minADC": 4100,
+                  "maxADC": 32760,
+                  "enabled": false
+                }
+              ]
+            },
+            {
+            "i2c_address": "0x49",
+              "channels": [
+                {
+                  "id": "manifoldPressure",
+                  "name": "Manifold Pressure",
+                  "gain": 0,
+                  "maxPSI": 100,
+                  "minPSI": 0,
+                  "minADC": 4100,
+                  "maxADC": 32760,
+                  "enabled": true
+                },
+                 {
+                  "id": "manifoldPressure",
+                  "name": "Manifold Pressure",
+                  "gain": 0,
+                  "maxPSI": 100,
+                  "minPSI": 0,
+                  "minADC": 4100,
+                  "maxADC": 32760,
+                  "enabled": true
+                }
+              ]
+            }
+          ]
       }
-    }
+    
   }
 }
 
