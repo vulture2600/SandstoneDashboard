@@ -52,9 +52,6 @@ SMB_PASSWORD = os.getenv("SMB_PASSWORD")
 
 local_save_path = 'config.json'
 
-os.system('modprobe w1-gpio')
-os.system('modprobe w1-therm')
-
 degree_sign = u"\N{DEGREE SIGN}"
 
 print("Verifying all kernel modules are loaded.")
@@ -175,14 +172,19 @@ while True:
         series = []
         dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        print("Found " + str((len(sensorIds) - 1)) + " devices on bus: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("Found " + str((len(sensorIds) - 1)) + 
+              " devices on bus: " + 
+              datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        
         print("Collecting temperatures ...")
         i = 1
         results = multi_threaded_file_reader(sensorIds)
 
         for file_path, content in results.items():
             if (file_path.find('28-') != -1):
-                print (str(i).zfill(2) + ") Sensor ID: " + str(file_path) + ". Temp = " + str(content) + degree_sign + "F.")
+                print (str(i).zfill(2) + ") Sensor ID: " 
+                       + str(file_path) + ". Temp = " 
+                       + str(content) + degree_sign + "F.")
                 i += 1
                 point = {
                     "measurement": "raw_data",
