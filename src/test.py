@@ -173,13 +173,14 @@ while True:
         print(f"File '{CONFIG_FILE}' downloaded successfully to '{local_save_path}'")
         conn.close()
     except Exception as e:
-        print(f"An error occurred: {e}. Using local config file instead.")
+        print(f"An error occurred: {e}. Attemping to use local config file instead.")
 
 
     try: #open config file:
         with open(local_save_path, 'r') as CONFIG:
  #           config_data = CONFIG.read()
             CONFIG_JSON = json.load(CONFIG)
+            print(type(CONFIG_JSON))
 #            if DEBUG is True:
 #               print(CONFIG_JSON)
         
@@ -190,23 +191,23 @@ while True:
 
     try:
         one_wire_config = CONFIG_JSON['1-wire'] #get all 1-wire data
-        #        print(one_wire_config)
         rooms_ids = list(one_wire_config.keys()) # make list of room ids
-        print(type(rooms_ids))
-        print(rooms_ids)
         found_rooms = []
         x = 0
         for room in rooms_ids:
             if one_wire_config[room].get('hostname') == HOSTNAME:
                 found_rooms.append(rooms_ids[x])
-#                print(str(rooms_ids[x]))
                 found_rooms.append(one_wire_config[room])
             x += 1
-        print("Rooms found matching this host name:")
-        print(type(found_rooms))
 
-        print(str(found_rooms))
-
+        found_rooms = json.dumps(found_rooms)             
+        if DEBUG is True: 
+            print("Rooms found matching this host name:")
+            print(type(found_rooms))
+            print(str(found_rooms))
+   
+        
+    
     except:
         print("Getting rooms from config file failed!")
 
@@ -222,16 +223,52 @@ while True:
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     print("Collecting temperatures from all sensors online...")
-    i = 1
     results = multi_threaded_file_reader(sensorIds)
 
+    i = 1
     for file_path, value in results.items():
         if (file_path.find('28-') != -1):
             if DEBUG is True:
                 print (str(i).zfill(2) + ") Sensor ID: " 
                         + str(file_path) + ". Temp = " 
                     + str(value) + degree_sign + "F.")
-                                            
+
+            for key in found_rooms:
+                if found_rooms[key]['id'] == file_path:
+
+                    point = {
+                        "measurement": "raw_data",
+                        "tags": {
+                            "location:": key,
+                            "sensor_id": file_path,
+                            "sensor_bus": "1-wire",
+                            "hostname": HOSTNAME,
+                            "type": TEMP_SENSOR_MODEL,
+                            "timeStamp": dateTimeNow
+                        },
+                        "fields": {
+                            "temperature": float(value)
+                        },
+                    }
+                    series.append(point)
+
+                else:
+                    point = {
+                        "measurement": "raw_data",
+                        "tags": {
+                            "location:": "UNASSIGNED",
+                            "sensor_id": file_path,
+                            "sensor_bus": "1-wire",
+                            "hostname": HOSTNAME,
+                            "type": TEMP_SENSOR_MODEL,
+                            "timeStamp": dateTimeNow
+                        },
+                        "fields": {
+                            "temperature": float(value)
+                        },
+                    }
+                    series.append(point)
+
             i += 1
             # print(results)
             # print (found_rooms)
