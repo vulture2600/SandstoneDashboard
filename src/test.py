@@ -190,13 +190,14 @@ while True:
 
     try:
         one_wire_config = CONFIG_JSON['1-wire'] #get all 1-wire data
+#        print(one_wire_config)
         rooms_ids = list(one_wire_config.keys()) # make list of room ids
         print(type(rooms_ids))
         print(rooms_ids)
         found_rooms = []
         for room in rooms_ids:
             if one_wire_config[room].get('hostname') == HOSTNAME:
-#                found_rooms.append(rooms_ids[room])
+                found_rooms.append(rooms_ids[room])
 #                found_rooms.append(CONFIG_JSON['1-wire'].keys()[room])
                 found_rooms.append(one_wire_config[room])
         print("Rooms found matching this host name:")
