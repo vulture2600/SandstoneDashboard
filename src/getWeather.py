@@ -32,7 +32,15 @@ LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 
 UNITS = 'imperial'
-URL   = 'http://api.openweathermap.org/data/3.0/onecall?lat=' + str(LATITUDE) + '&lon=' + str(LONGITUDE) + '&exclude=minutely,hourly&appid=' + OPENWEATHERMAP_API_KEY + '&units=' + UNITS
+
+URL = (
+    f"http://api.openweathermap.org/data/3.0/onecall"
+    f"?lat={LATITUDE}"
+    f"&lon={LONGITUDE}"
+    f"&exclude=minutely,hourly"
+    f"&appid={OPENWEATHERMAP_API_KEY}"
+    f"&units={UNITS}"
+)
 
 print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
