@@ -1,0 +1,39 @@
+---
+- name: Deploy and manage systemd services
+  hosts: all
+  vars_files:
+    - vars.yml
+  # gather_facts: false
+
+  vars:
+    services:
+      - getTemps
+      - getWeather
+      - getSHT30
+
+  tasks:
+
+    - name: Copy systemd service files
+      ansible.builtin.copy:
+        src: "systemd/{{ item }}.service"
+        dest: "/etc/systemd/system/{{ item }}.service"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ services }}"
+      notify: Reload systemd daemon
+      become: true
+
+    - name: Enable and start each service
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: "{{ services }}"
+      become: true
+
+  handlers:
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+      become: true
