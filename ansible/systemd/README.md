@@ -17,9 +17,10 @@ sudo systemctl status getSHT30.service
 sudo systemctl daemon-reload
 
 # Run when the respective Python script is updated:
+sudo systemctl restart getADS1115.service
+sudo systemctl restart getSHT30.service
 sudo systemctl restart getTemps.service
 sudo systemctl restart getWeather.service
-sudo systemctl restart getSHT30.service
 ```
 
 #### journalctl

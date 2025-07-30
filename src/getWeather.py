@@ -1,5 +1,5 @@
 """
-Get weather and write to InfluxDB.
+Get weather data from OpenWeather and write to InfluxDB.
 """
 
 import datetime

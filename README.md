@@ -10,20 +10,22 @@ See [Current Efforts](current_efforts.md) for more.
 
 #### Data Source
 
-* Adafruit 1-Wire temperature sensors
-* Adafruit SHT30 temp and humidity sensors (i2c)
+* Adafruit ADS1115 Analog-to-Digital converter used to measure water pressure
+* Adafruit SHT30 Humidity and Temperature Sensor
+* Adafruit 1-Wire temperature sensor
 * [Open Weather API](https://openweathermap.org/api)
 
 #### Data Ingestion
 
 [SystemD](ansible/systemd) driven Python [scripts](src):
-* getTemps.service
+* getADS1115.service
 * getSHT30.service
+* getTemps.service
 * getWeather.service
 
 #### Data Storage
 
-* OneWire sensor data is written to [InfluxDB](influxdb.md) time series database
+* I2C and 1-Wire sensor data is written to [InfluxDB](influxdb.md) time series database
 
 #### Visualization, Monitoring, and Alerting
 

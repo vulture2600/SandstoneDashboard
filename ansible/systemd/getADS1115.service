@@ -1,12 +1,12 @@
 [Unit]
-Description=Get SHT Temp and Humidity
+Description=Get ADS1115 Pressures
 After=multi-user.target
 
 [Service]
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/oneWireTemps
-ExecStart=/usr/bin/python3 getSHT30.py
+ExecStart=/usr/bin/python3 getADS1115.py
 
 Restart=always
 RestartSec=10

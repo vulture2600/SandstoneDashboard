@@ -1,6 +1,7 @@
 """
 steve.a.mccluskey@gmail.com
-Get sht30 sensor data and write to InfluxDB.
+Read Adafruit SHT30 Humidity and Temperature Sensor data and write to InfluxDB.
+This uses SMBus (System Management Bus), a subset of the I2C (Inter-Integrated Circuit) protocol.
 """
 
 import os

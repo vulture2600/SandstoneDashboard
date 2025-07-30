@@ -10,6 +10,7 @@
       - getTemps
       - getWeather
       - getSHT30
+      - getADS1115
 
   tasks:
 

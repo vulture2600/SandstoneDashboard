@@ -1,6 +1,6 @@
 """
 steve.a.mccluskey@gmail.com
-Get temp sensor data and write to InfluxDB. See .env files for required config file.
+Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env files for required config file.
 """
 
 import ast
