@@ -1,10 +1,11 @@
 # Systemd services
 
-Copy the service files to **/etc/systemd/system/** and follow this example to enable and start the services.
+Service files should be in **/etc/systemd/system/**
 
 #### systemctl
 
 ```shell
+# Enable, start and get status for the getSHT30 service:
 sudo systemctl enabled getSHT30.service
 sudo systemctl start getSHT30.service
 
@@ -12,10 +13,12 @@ sudo systemctl status getSHT30.service
 ```
 
 ```shell
-# Use when service files (unit definitions) are updated:
+# Run when service files (unit definitions) are updated:
 sudo systemctl daemon-reload
 
-# Use when the Python script, run by the service, is updated:
+# Run when the respective Python script is updated:
+sudo systemctl restart getTemps.service
+sudo systemctl restart getWeather.service
 sudo systemctl restart getSHT30.service
 ```
 
@@ -24,4 +27,9 @@ sudo systemctl restart getSHT30.service
 ```shell
 # Follow the Systemd journal, only show getTemps.service unit lines:
 journalctl -u getTemps.service -f
+```
+
+#### Combined example
+```shell
+sudo systemctl restart getTemps.service && journalctl -u getTemps.service -f
 ```
