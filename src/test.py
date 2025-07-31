@@ -191,20 +191,36 @@ while True:
 
     try:
         one_wire_config = CONFIG_JSON['1-wire'] #get all 1-wire data
+        if DEBUG is True:
+            print("1-wire config data:")
+            print(type(one_wire_config))
+            print(one_wire_config)
+            print("")
+
         rooms_ids = list(one_wire_config.keys()) # make list of room ids
-        found_rooms = []
+        print(type(rooms_ids))
+        print(rooms_ids)
+        print("")
+ #       found_rooms = []
+        found_rooms = {}
         x = 0
-        for room in rooms_ids:
+        for room in rooms_ids: #find all rooms that match this host name
             if one_wire_config[room].get('hostname') == HOSTNAME:
-                found_rooms.append(rooms_ids[x])
-                found_rooms.append(one_wire_config[room])
+#                found_rooms.append(rooms_ids[x])
+#                found_rooms.append(one_wire_config[room])
+                new_room = {'id': one_wire_config[room].get('id'), 
+                            'hostname': one_wire_config[room].get('hostname'),
+                            'title': one_wire_config[room].get('title')}
+                found_rooms.update({room: new_room})
+
             x += 1
 
-        found_rooms = json.dumps(found_rooms)             
+#        found_rooms = json.dumps(found_rooms)             
         if DEBUG is True: 
             print("Rooms found matching this host name:")
             print(type(found_rooms))
-            print(str(found_rooms))
+            print(found_rooms)
+            print("")
    
         
     
@@ -214,6 +230,10 @@ while True:
     #Read all sensors and post to InfluxDB
     #try:
 #    print("Reading Sensors:")
+    rooms_ids = list(found_rooms.keys()) # make list of room ids
+    print(type(rooms_ids))
+    print(rooms_ids)
+    print("")
     sensorIds = os.listdir(DEVICES_PATH)
     series = []
     dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -232,42 +252,29 @@ while True:
                 print (str(i).zfill(2) + ") Sensor ID: " 
                         + str(file_path) + ". Temp = " 
                     + str(value) + degree_sign + "F.")
-
-            for key in found_rooms:
-                if found_rooms[key]['id'] == file_path:
+  
+            for room in rooms_ids:
+                if found_rooms[room].get('id') == file_path:
 
                     point = {
                         "measurement": "raw_data",
                         "tags": {
-                            "location:": key,
+                            "location:": room,
                             "sensor_id": file_path,
                             "sensor_bus": "1-wire",
                             "hostname": HOSTNAME,
                             "type": TEMP_SENSOR_MODEL,
-                            "timeStamp": dateTimeNow
+                            "timeStamp": dateTimeNow,
+                            "status": "online"
                         },
                         "fields": {
                             "temperature": float(value)
                         },
                     }
+                    print(point)
                     series.append(point)
+  
 
-                else:
-                    point = {
-                        "measurement": "raw_data",
-                        "tags": {
-                            "location:": "UNASSIGNED",
-                            "sensor_id": file_path,
-                            "sensor_bus": "1-wire",
-                            "hostname": HOSTNAME,
-                            "type": TEMP_SENSOR_MODEL,
-                            "timeStamp": dateTimeNow
-                        },
-                        "fields": {
-                            "temperature": float(value)
-                        },
-                    }
-                    series.append(point)
 
             i += 1
             # print(results)
@@ -293,9 +300,9 @@ while True:
     #         }
     #         series.append(point)
 
-    # if DEBUG is True:
-    #     print("Series to post: ")
-    #     print(series)
+    if DEBUG is True:
+        print("Series to post: ")
+        print(series)
 
     #except:        
     #    print("Error reading sensors.")    
@@ -305,7 +312,7 @@ while True:
  
 
 
-    print(series)
+ #   print(series)
 
 
 
