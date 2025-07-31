@@ -2,15 +2,19 @@
 Get weather data from OpenWeather and write to InfluxDB.
 """
 
-import datetime
 import os
 import socket
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from requests import get
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
+TRY_AGAIN_SECS = 60
+GET_WEATHER_SLEEP_SECS = 600
+TIME_ZONE = "America/Chicago"
 HOSTNAME = socket.gethostname()
 
 if 'INVOCATION_ID' in os.environ:
@@ -33,7 +37,7 @@ LONGITUDE = os.getenv("LONGITUDE")
 
 UNITS = 'imperial'
 
-URL = (
+OPENWEATHERMAP_URL = (
     f"http://api.openweathermap.org/data/3.0/onecall"
     f"?lat={LATITUDE}"
     f"&lon={LONGITUDE}"
@@ -53,16 +57,21 @@ print(f"InfluxDB client ok! Using {TEMP_SENSOR_DATABASE}")
 
 while True:
     try:
-        weatherData = get(URL).json()
-        series = []
-        dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        weatherData = get(OPENWEATHERMAP_URL, timeout=5).json()
+    except:
+        print(f"Failed to get weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
+        time.sleep(TRY_AGAIN_SECS)
+        continue
 
+    series = []
+    dateTimeNow = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
         point = {
             "measurement": "weather",
             "tags": {
                 "location": LOCATION
             },
-
             "fields": {
                 "humidity":               int(weatherData['current']['humidity']),
                 "feelsLike":              float(weatherData['current']['feels_like']),
@@ -81,17 +90,26 @@ while True:
             "time": dateTimeNow
         }
 
-        series.append(point)
         print(point)
+        series.append(point)
     except:
-        print("weather failed")
+        print("Failure parsing weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
+        continue
+
+    # GMT-5 (Summer), GMT-6 (Winter)
+    now = datetime.now(ZoneInfo(TIME_ZONE))
+    base_offset_seconds = (now.utcoffset() - now.dst()).total_seconds()
+    dst_offset_seconds = now.dst().total_seconds()
+    gmt_offset_seconds = base_offset_seconds + dst_offset_seconds
+    GMT_OFFSET_MINUTES = str(int(gmt_offset_seconds / 60 * -1)) + 'm'
 
     try:
         client.write_points(series)
-        print("Data posted to DB.")
-        result = client.query('select * from "weather" where time >= now() - 10m and time <= now()')
-        print(result)
+        print("Series written to InfluxDB.")
+        query_result = client.query(f"SELECT * FROM weather WHERE time >= now() - {GMT_OFFSET_MINUTES} - 10m")
+        print(f"Query results: {query_result}")
     except InfluxDBServerError as e:
-        print("server failed, reason: " + str(e))
+        print("Failure writing to or reading from InfluxDB:", e)
 
-    time.sleep(600)  # update every ten minutes (60s x 10 minutes)
+    print(f"Sleeping for {GET_WEATHER_SLEEP_SECS / 60} minutes")
+    time.sleep(GET_WEATHER_SLEEP_SECS)
