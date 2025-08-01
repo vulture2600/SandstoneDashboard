@@ -11,9 +11,9 @@ from requests import get
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
+DEBUG = False
 TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
-TIME_ZONE = "America/Chicago"
 HOSTNAME = socket.gethostname()
 
 if 'INVOCATION_ID' in os.environ:
@@ -63,6 +63,7 @@ while True:
         continue
 
     series = []
+    TODAY, TOMORROW = 0, 1
     dateTimeNow = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
@@ -75,15 +76,15 @@ while True:
                 "humidity":               int(weatherData['current']['humidity']),
                 "feelsLike":              float(weatherData['current']['feels_like']),
                 "currentCondition":       weatherData['current']['weather'][0]['main'],
-                "tempHigh":               float(weatherData['daily'][0]['temp']['max']),
-                "tempLow":                float(weatherData['daily'][0]['temp']['min']),
-                "dailyCondition":         weatherData['daily'][0]['weather'][0]['main'],
-                "dailyConditionTomorrow": weatherData['daily'][1]['weather'][0]['main'],
-                "tempHighTomorrow":       int(weatherData['daily'][1]['temp']['max']),
-                "tempLowTomorrow":        float(weatherData['daily'][1]['temp']['min']),
+                "tempHigh":               float(weatherData['daily'][TODAY]['temp']['max']),
+                "tempLow":                float(weatherData['daily'][TODAY]['temp']['min']),
+                "dailyCondition":         weatherData['daily'][TODAY]['weather'][0]['main'],
+                "dailyConditionTomorrow": weatherData['daily'][TOMORROW]['weather'][0]['main'],
+                "tempHighTomorrow":       int(weatherData['daily'][TOMORROW]['temp']['max']),
+                "tempLowTomorrow":        float(weatherData['daily'][TOMORROW]['temp']['min']),
                 "windDirection":          int(weatherData['current']['wind_deg']),
                 "windSpeed":              float(weatherData['current']['wind_speed']),
-                "windGust":               float(weatherData['daily'][0]['wind_gust']),
+                "windGust":               float(weatherData['daily'][TODAY]['wind_gust']),
                 "timeStamp": dateTimeNow
             }
         }
@@ -97,10 +98,13 @@ while True:
     try:
         client.write_points(series)
         print("Series written to InfluxDB.")
-        query_result = client.query("SELECT * FROM weather WHERE time >= now() - 10m") # change this to a debug line
-        print(f"Query results: {query_result}") # change this to a debug line
+        if DEBUG is True:
+            query_result = client.query("SELECT * FROM weather WHERE time >= now() - 10m")
+            print(f"Query results: {query_result}")
     except InfluxDBServerError as e:
-        print("Failure writing to or reading from InfluxDB:", e) # update message when above are changed
+        print("Failure writing to or reading from InfluxDB:", e)
 
-    print(f"Sleeping for {GET_WEATHER_SLEEP_SECS / 60} minutes")
+    SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
+    SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
+    print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes")
     time.sleep(GET_WEATHER_SLEEP_SECS)
