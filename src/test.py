@@ -134,28 +134,6 @@ def multi_threaded_file_reader(file_paths):
 #    print(results)
     return results
 
-def compare_sensor_ids(results, found_rooms, value):
-    for room in found_rooms:
-        for sensor in results.keys():
-            if room['id'] == sensor:
-                point = {
-                    "measurement": "raw_data",
-                    "tags": {
-
-                        "sensor_id": sensor,
-                        "sensor_bus": "1-wire",
-                        "hostname": HOSTNAME,
-                        "type": "ds18b20",
-                        "timeStamp": dateTimeNow
-                    },
-                    "fields": {
-                        "temperature": float(value)
-                    },
-                }
-                series.append(point)
-
-
- #   print(series)
 
 while True:
     #get config file from NAS:
@@ -178,11 +156,13 @@ while True:
 
     try: #open config file:
         with open(local_save_path, 'r') as CONFIG:
- #           config_data = CONFIG.read()
             CONFIG_JSON = json.load(CONFIG)
-            print(type(CONFIG_JSON))
-#            if DEBUG is True:
-#               print(CONFIG_JSON)
+            
+            if DEBUG is True:
+                print("Config file loaded successfully.")
+                print(type(CONFIG_JSON))
+                print(CONFIG_JSON)
+                print("")
         
     except:
         print("Config file not found.")
@@ -198,26 +178,24 @@ while True:
             print("")
 
         rooms_ids = list(one_wire_config.keys()) # make list of room ids
-        print(type(rooms_ids))
-        print(rooms_ids)
-        print("")
- #       found_rooms = []
+
+        if DEBUG is True:
+            print("List of Room IDs:")
+            print(type(rooms_ids))
+            print(rooms_ids)
+            print("")
+
         found_rooms = {}
-        x = 0
+
         for room in rooms_ids: #find all rooms that match this host name
             if one_wire_config[room].get('hostname') == HOSTNAME:
-#                found_rooms.append(rooms_ids[x])
-#                found_rooms.append(one_wire_config[room])
                 new_room = {'id': one_wire_config[room].get('id'), 
                             'hostname': one_wire_config[room].get('hostname'),
                             'title': one_wire_config[room].get('title')}
                 found_rooms.update({room: new_room})
-
-            x += 1
-
-#        found_rooms = json.dumps(found_rooms)             
+          
         if DEBUG is True: 
-            print("Rooms found matching this host name:")
+            print("Config data matching this host's name:")
             print(type(found_rooms))
             print(found_rooms)
             print("")
@@ -228,95 +206,123 @@ while True:
         print("Getting rooms from config file failed!")
 
     #Read all sensors and post to InfluxDB
-    #try:
-#    print("Reading Sensors:")
-    rooms_ids = list(found_rooms.keys()) # make list of room ids
-    print(type(rooms_ids))
-    print(rooms_ids)
-    print("")
-    sensorIds = os.listdir(DEVICES_PATH)
-    series = []
-    dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        rooms_ids = list(found_rooms.keys()) 
+        if DEBUG is True:
+            print("List of Room IDs after filtering by hostname:")
+            print(type(rooms_ids))
+            print(rooms_ids)
+            print("")
 
-    print("Found " + str((len(sensorIds) - 1)) + 
-            " devices on bus: " + 
-            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        sensorIds = os.listdir(DEVICES_PATH)
+        series = []
+        dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        if DEBUG is True:
+            print("Found " + str((len(sensorIds) - 1)) + 
+                    " devices on bus: " + 
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            print(" ")
+            
+            print("Collecting temperatures from all sensors online...")
+
+        results = multi_threaded_file_reader(sensorIds)
+
+        i = 1
+        for file_path, value in results.items():
+            if (file_path.find('28-') != -1):
+                if DEBUG is True:
+                    print (str(i).zfill(2) + ") Sensor ID: " 
+                            + str(file_path) + ". Temp = " 
+                        + str(value) + degree_sign + "F.")
     
-    print("Collecting temperatures from all sensors online...")
-    results = multi_threaded_file_reader(sensorIds)
+                for room in rooms_ids:
+                    if found_rooms[room].get('id') == file_path:
+                        point = {
+                            "measurement": "raw_data",
+                            "tags": {
+                                "location:": room,
+                                "sensor_id": file_path,
+                                "title": found_rooms[room].get('title'),
+                                "sensor_bus": "1-wire",
+                                "hostname": HOSTNAME,
+                                "type": TEMP_SENSOR_MODEL,
+                                "timeStamp": dateTimeNow,
+                                "status": "Online"
+                            },
+                            "fields": {
+                                "temperature": float(value)
+                            },
+                        }
+                        if DEBUG is True:
+                            print(point)
+                            print(" ")
+                        series.append(point)
+                        break
 
-    i = 1
-    for file_path, value in results.items():
-        if (file_path.find('28-') != -1):
-            if DEBUG is True:
-                print (str(i).zfill(2) + ") Sensor ID: " 
-                        + str(file_path) + ". Temp = " 
-                    + str(value) + degree_sign + "F.")
-  
-            for room in rooms_ids:
-                if found_rooms[room].get('id') == file_path:
-
+#                for room in found_rooms:
+                else:                    
                     point = {
                         "measurement": "raw_data",
                         "tags": {
-                            "location:": room,
+                            "location:": "UNASSIGNED",
+                            'title': "UNNAMED",
                             "sensor_id": file_path,
                             "sensor_bus": "1-wire",
                             "hostname": HOSTNAME,
                             "type": TEMP_SENSOR_MODEL,
                             "timeStamp": dateTimeNow,
-                            "status": "online"
+                            "status": "Online"
                         },
                         "fields": {
                             "temperature": float(value)
                         },
                     }
-                    print(point)
+                    if DEBUG is True:
+                        print(point)
+                        print(" ")
                     series.append(point)
-  
-
-
-            i += 1
-            # print(results)
-            # print (found_rooms)
-            # print(value)
-            # compare_sensor_ids(results, found_rooms, value)
-
-
-
-    #         point = {
-    #             "measurement": "raw_data",
-    #             "tags": {
-    #                 "sensor_id": file_path,
-    #                 "sensor_bus": "1-wire",
-    #                 "hostname": HOSTNAME,
-    #                 "type": "ds18b20",
-    #                 "timeStamp": dateTimeNow
-
-    #             },
-    #             "fields": {
-    #                 "temperature": float(value)
-    #             },
-    #         }
-    #         series.append(point)
-
-    if DEBUG is True:
-        print("Series to post: ")
-        print(series)
-
-    #except:        
-    #    print("Error reading sensors.")    
-
-
-
  
+                i += 1
 
+        for room in rooms_ids:
+            if found_rooms[room].get('id') not in sensorIds:
+                print(str(i).zfill(2) + ") Sensor ID: " 
+                      + found_rooms[room].get('id') 
+                      + " is OFFLINE!")
+                
+                point = {
+                    "measurement": "raw_data",
+                    "tags": {
+                        "location:": room,
+                        "sensor_id": found_rooms[room].get('id'),
+                        "title": found_rooms[room].get('title'),
+                        "sensor_bus": "1-wire",
+                        "hostname": HOSTNAME,
+                        "type": TEMP_SENSOR_MODEL,
+                        "timeStamp": dateTimeNow,
+                        "status": "OFFLINE"
+                    },
+                    "fields": {
+                        "temperature": -100.0
+                    },
+                }
+                if DEBUG is True:
+                    print(point)
+                    print
+                    print(" ")
+                series.append(point)
+            i += 1
+        
 
- #   print(series)
+        if DEBUG is True:
+            print(" ")
+            print("Series to post: ")
+            print(series)
+            print(" ")
+    except:        
+       print("Error reading sensors.")   
 
-
-
-    print(" ")
 
     try:
         client.write_points(series)
@@ -326,9 +332,9 @@ while True:
         print("Query recieved.")
         if DEBUG is True:
             print(result)
-        print(" ")
+            print(" ")
+
     except InfluxDBServerError as e:
-        # print("Server timeout")
         print("server failed, reason: " + str(e))
         print(" ")
 
