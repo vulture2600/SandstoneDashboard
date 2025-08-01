@@ -25,7 +25,7 @@ import json
 
 
 DEBUG = True
-RUN_CONTINUE = False #set to True to run continuously, False to run once and exit
+RUN_CONTINUE = True #set to True to run continuously, False to run once and exit
 
 HOSTNAME = socket.gethostname()
 
@@ -131,10 +131,9 @@ def multi_threaded_file_reader(file_paths):
 
     for thread in threads:
         thread.join()
-#    print(results)
     return results
 
-
+#main loop here:
 while True:
     #get config file from NAS:
     try:
@@ -142,19 +141,21 @@ while True:
         connected = conn.connect(SMB_SERVER, 445) # Port 445 is standard for SMB
     
         if connected:
-            print(f"Successfully connected to {SMB_SERVER}!")
+            if DEBUG is True:
+                print(f"Successfully connected to {SMB_SERVER}!")
     
         with open(local_save_path, 'wb') as local_file:
         # Retrieve the remote file
             file_attributes, filesize = conn.retrieveFile(SMB_SHARE, CONFIG_FILE, local_file)
 
-        print(f"File '{CONFIG_FILE}' downloaded successfully to '{local_save_path}'")
+        if DEBUG is True:
+            print(f"File '{CONFIG_FILE}' downloaded successfully to '{local_save_path}'")
         conn.close()
     except Exception as e:
         print(f"An error occurred: {e}. Attemping to use local config file instead.")
 
 
-    try: #open config file:
+    try: #open local config file:
         with open(local_save_path, 'r') as CONFIG:
             CONFIG_JSON = json.load(CONFIG)
             
@@ -199,11 +200,10 @@ while True:
             print(type(found_rooms))
             print(found_rooms)
             print("")
-   
-        
-    
+
     except:
         print("Getting rooms from config file failed!")
+
 
     #Read all sensors and post to InfluxDB
     try:
@@ -229,14 +229,14 @@ while True:
         results = multi_threaded_file_reader(sensorIds)
 
         i = 1
-        for file_path, value in results.items():
+        for file_path, value in results.items(): #search all onlne sensors:
             if (file_path.find('28-') != -1):
                 if DEBUG is True:
                     print (str(i).zfill(2) + ") Sensor ID: " 
                             + str(file_path) + ". Temp = " 
                         + str(value) + degree_sign + "F.")
     
-                for room in rooms_ids:
+                for room in rooms_ids: # check if sensor is in config file:
                     if found_rooms[room].get('id') == file_path:
                         point = {
                             "measurement": "raw_data",
@@ -260,8 +260,7 @@ while True:
                         series.append(point)
                         break
 
-#                for room in found_rooms:
-                else:                    
+                else:   #not found in config file, but still online.                 
                     point = {
                         "measurement": "raw_data",
                         "tags": {
@@ -281,15 +280,15 @@ while True:
                     if DEBUG is True:
                         print(point)
                         print(" ")
-                    series.append(point)
- 
+                    series.append(point) 
                 i += 1
 
-        for room in rooms_ids:
+        for room in rooms_ids: #offline sensors in config file:
             if found_rooms[room].get('id') not in sensorIds:
-                print(str(i).zfill(2) + ") Sensor ID: " 
-                      + found_rooms[room].get('id') 
-                      + " is OFFLINE!")
+                if DEBUG is True:
+                    print(str(i).zfill(2) + ") Sensor ID: " 
+                        + found_rooms[room].get('id') 
+                        + " is OFFLINE!")
                 
                 point = {
                     "measurement": "raw_data",
@@ -326,13 +325,16 @@ while True:
 
     try:
         client.write_points(series)
-        print("Data posted to DB.")
+ #       if DEBUG is True:
+        print("Data posted to DB. " + dateTimeNow)
+#            print(" ")
 
         result = client.query('select * from "raw_data" where time >= now() - 1s and time <= now()')
+
+#        if DEBUG is True:
         print("Query recieved.")
-        if DEBUG is True:
-            print(result)
-            print(" ")
+#            print(result)
+#            print(" ")
 
     except InfluxDBServerError as e:
         print("server failed, reason: " + str(e))
