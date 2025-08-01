@@ -92,23 +92,6 @@ def read_temp(file) -> str:
         return "OFFLINE"
 
 
-def read_temp_f(file):
-    """Read temperature from 1-Wire temp sensor attached to the system bus"""
-    device_file = DEVICES_PATH + file + "/temperature"
-
-    if path.exists(device_file):
-        try:
-            f = open (device_file, 'r')  # use with to open/close this file
-            temp_string = f.read()
-#			f.close()
-
-            temp_c = float(temp_string) / 1000.0
-            temp_f = temp_c * 1.8 + 32.0
-            return format(temp_f, '.1f')
-        except:
-            return "OFF"
-    else:
-        return "OFFLINE"
 
 
 def multi_threaded_file_reader(file_paths):
@@ -116,7 +99,7 @@ def multi_threaded_file_reader(file_paths):
     results = {}
 
     def read_file_thread(file_path):
-        result = read_temp_f(file_path)
+        result = read_temp(file_path)
         results[file_path] = result
 
     for file_path in file_paths:
