@@ -4,26 +4,22 @@ This is a refactored version of the original getTemps.py script.
 steve.a.mccluskey@gmail.com
 """
 
-
-import ast
 import datetime
-import os
-import time
-import socket
-import sys
-import subprocess
-from dotenv import load_dotenv
-from os import path
-import threading
-from influxdb import InfluxDBClient
-from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
-from smb.SMBConnection import SMBConnection
 import json
-
-
+import os
+import socket
+import subprocess
+import sys
+import threading
+import time
+from os import path
+from dotenv import load_dotenv
+from influxdb import InfluxDBClient
+from smb.SMBConnection import SMBConnection
+from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
 DEBUG = True
-RUN_CONTINUE = False #set to True to run continuously, False to run once and exit
+RUN_CONTINUE = False # set to True to run continuously, False to run once and exit
 
 HOSTNAME = socket.gethostname()
 
@@ -49,8 +45,7 @@ SMB_SHARE = os.getenv("SMB_SHARE_NAME")
 SMB_USER = os.getenv("SMB_USERNAME")
 SMB_PASSWORD = os.getenv("SMB_PASSWORD")
 
-
-degree_sign = u"\N{DEGREE SIGN}"
+DEGREE_SIGN = "\N{DEGREE SIGN}"
 
 print("Verifying all kernel modules are loaded.")
 kernel_mod_loads = []
@@ -74,6 +69,7 @@ if KERNEL_MOD_LOAD_FAIL is True:
     print("Exiting")
     sys.exit(1)
 
+## Delete read_temp() if it's no longer being used
 
 def read_temp(file) -> str:
     device_file = DEVICES_PATH + file + "/" + W1_SLAVE_FILE
@@ -95,13 +91,14 @@ def read_temp(file) -> str:
     else:
         return "OFFLINE"
 
-#reads /temperature file
+
 def read_temp_f(file):
+    """Read temperature from 1-Wire temp sensor attached to the system bus"""
     device_file = DEVICES_PATH + file + "/temperature"
 
-    if (path.exists(device_file)):
+    if path.exists(device_file):
         try:
-            f = open (device_file, 'r')
+            f = open (device_file, 'r')  # use with to open/close this file
             temp_string = f.read()
 #			f.close()
 
@@ -137,11 +134,11 @@ while True:
     try:
         conn = SMBConnection(SMB_USER, SMB_PASSWORD, HOSTNAME, SMB_SERVER, use_ntlm_v2=True)
         connected = conn.connect(SMB_SERVER, 445) # Port 445 is standard for SMB
-    
+
         if connected:
             if DEBUG is True:
                 print(f"Successfully connected to {SMB_SERVER}!")
-    
+
         with open(LOCAL_CONFIG_FILE, 'wb') as local_file:
         # Retrieve the remote file
             file_attributes, filesize = conn.retrieveFile(SMB_SHARE, MASTER_CONFIG_FILE, local_file)
@@ -152,21 +149,18 @@ while True:
     except Exception as e:
         print(f"An error occurred: {e}. Attemping to use local config file instead.")
 
-
     try: #open local config file:
         with open(LOCAL_CONFIG_FILE, 'r') as CONFIG:
             CONFIG_JSON = json.load(CONFIG)
-            
+
             if DEBUG is True:
                 print("Config file loaded successfully.")
                 print(type(CONFIG_JSON))
                 print(CONFIG_JSON)
                 print("")
-        
     except:
         print("Config file not found.")
         sys.exit(1)
-        
 
     try:
         one_wire_config = CONFIG_JSON['1-wire'] #get all 1-wire data
@@ -188,24 +182,22 @@ while True:
 
         for room in rooms_ids: #find all rooms that match this host name
             if one_wire_config[room].get('hostname') == HOSTNAME:
-                new_room = {'id': one_wire_config[room].get('id'), 
+                new_room = {'id': one_wire_config[room].get('id'),
                             'hostname': one_wire_config[room].get('hostname'),
                             'title': one_wire_config[room].get('title')}
                 found_rooms.update({room: new_room})
-          
-        if DEBUG is True: 
+
+        if DEBUG is True:
             print("Config data matching this host's name:")
             print(type(found_rooms))
             print(found_rooms)
             print("")
-
     except:
         print("Getting rooms from config file failed!")
 
-
     #Read all sensors and post to InfluxDB
     try:
-        rooms_ids = list(found_rooms.keys()) 
+        rooms_ids = list(found_rooms.keys())
         if DEBUG is True:
             print("List of Room IDs after filtering by hostname:")
             print(type(rooms_ids))
@@ -217,23 +209,23 @@ while True:
         dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         if DEBUG is True:
-            print("Found " + str((len(sensorIds) - 1)) + 
-                    " devices on bus: " + 
+            print("Found " + str((len(sensorIds) - 1)) +
+                    " devices on bus: " +
                     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             print(" ")
-            
+
             print("Collecting temperatures from all sensors online...")
 
         results = multi_threaded_file_reader(sensorIds)
 
         i = 1
         for file_path, value in results.items(): #search all onlne sensors:
-            if (file_path.find('28-') != -1):
+            if file_path.find('28-') != -1:
                 if DEBUG is True:
-                    print (str(i).zfill(2) + ") Sensor ID: " 
-                            + str(file_path) + ". Temp = " 
-                        + str(value) + degree_sign + "F.")
-    
+                    print (str(i).zfill(2) + ") Sensor ID: "
+                            + str(file_path) + ". Temp = "
+                        + str(value) + DEGREE_SIGN + "F.")
+
                 for room in rooms_ids: # check if sensor is in config file:
                     if found_rooms[room].get('id') == file_path:
                         point = {
@@ -258,7 +250,7 @@ while True:
                         series.append(point)
                         break
 
-                else:   #not found in config file, but still online.                 
+                else:   #not found in config file, but still online.
                     point = {
                         "measurement": "raw_data",
                         "tags": {
@@ -278,16 +270,16 @@ while True:
                     if DEBUG is True:
                         print(point)
                         print(" ")
-                    series.append(point) 
+                    series.append(point)
                 i += 1
 
         for room in rooms_ids: #offline sensors in config file:
             if found_rooms[room].get('id') not in sensorIds:
                 if DEBUG is True:
-                    print(str(i).zfill(2) + ") Sensor ID: " 
-                        + found_rooms[room].get('id') 
+                    print(str(i).zfill(2) + ") Sensor ID: "
+                        + found_rooms[room].get('id')
                         + " is OFFLINE!")
-                
+
                 point = {
                     "measurement": "raw_data",
                     "tags": {
@@ -306,20 +298,17 @@ while True:
                 }
                 if DEBUG is True:
                     print(point)
-                    print
                     print(" ")
                 series.append(point)
             i += 1
-        
 
         if DEBUG is True:
             print(" ")
             print("Series to post: ")
             print(series)
             print(" ")
-    except:        
-       print("Error reading sensors.")   
-
+    except:
+        print("Error reading sensors.")
 
     try:
         client.write_points(series)
