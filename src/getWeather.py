@@ -6,7 +6,6 @@ import os
 import socket
 import time
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from requests import get
 from influxdb import InfluxDBClient
@@ -86,30 +85,22 @@ while True:
                 "windSpeed":              float(weatherData['current']['wind_speed']),
                 "windGust":               float(weatherData['daily'][0]['wind_gust']),
                 "timeStamp": dateTimeNow
-            },
-            "time": dateTimeNow
+            }
         }
 
-        print(point)
+        print(f"Point: {point}")
         series.append(point)
     except:
         print("Failure parsing weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
         continue
 
-    # GMT-5 (Summer), GMT-6 (Winter)
-    now = datetime.now(ZoneInfo(TIME_ZONE))
-    base_offset_seconds = (now.utcoffset() - now.dst()).total_seconds()
-    dst_offset_seconds = now.dst().total_seconds()
-    gmt_offset_seconds = base_offset_seconds + dst_offset_seconds
-    GMT_OFFSET_MINUTES = str(int(gmt_offset_seconds / 60 * -1)) + 'm'
-
     try:
         client.write_points(series)
         print("Series written to InfluxDB.")
-        query_result = client.query(f"SELECT * FROM weather WHERE time >= now() - {GMT_OFFSET_MINUTES} - 10m")
-        print(f"Query results: {query_result}")
+        query_result = client.query("SELECT * FROM weather WHERE time >= now() - 10m") # change this to a debug line
+        print(f"Query results: {query_result}") # change this to a debug line
     except InfluxDBServerError as e:
-        print("Failure writing to or reading from InfluxDB:", e)
+        print("Failure writing to or reading from InfluxDB:", e) # update message when above are changed
 
     print(f"Sleeping for {GET_WEATHER_SLEEP_SECS / 60} minutes")
     time.sleep(GET_WEATHER_SLEEP_SECS)
