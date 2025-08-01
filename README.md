@@ -18,7 +18,7 @@ See [Current Efforts](docs/current_efforts.md) for more.
 #### Data Ingestion
 
 [SystemD](ansible/systemd) driven Python [scripts](src):
-* getADS1115.service
+* getPressures.service
 * getSHT30.service
 * getTemps.service
 * getWeather.service

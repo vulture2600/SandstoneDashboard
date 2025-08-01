@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/oneWireTemps
+WorkingDirectory=/home/pi/SandstoneDashboard
 ExecStart=/usr/bin/python3 getTemps.py
 
 Restart=always
