@@ -2,6 +2,7 @@
 steve.a.mccluskey@gmail.com
 Read Adafruit ADS1115 ADC (Analog-to-Digital Converter) breakout board and write to InfluxDB.
 This uses the I2C (Inter-Integrated Circuit) protocol to get water pressure readings.
+THIS FILE IS TO BE COMPLETELY REWRITTEN using JSON master config data. All channel variables have been removed from env template.
 """
 
 import os

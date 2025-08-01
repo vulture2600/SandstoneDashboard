@@ -1,6 +1,8 @@
 """
 steve.a.mccluskey@gmail.com
 Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env files for required config file.
+THIS FILE CAN BE REPLACED/MERGED WITH getTemps.py FROM BRANCH "Steve".
+All references to old config file have been removed and updated to use JSON format.
 """
 
 import ast
