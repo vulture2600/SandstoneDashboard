@@ -92,8 +92,6 @@ def read_temp(file) -> str:
         return "OFFLINE"
 
 
-
-
 def multi_threaded_file_reader(file_paths):
     threads = []
     results = {}
@@ -227,6 +225,7 @@ while True:
                                 "temperature": float(value)
                             },
                         }
+                        i += 1
                         if DEBUG is True:
                             print(point)
                             print(" ")
@@ -254,7 +253,7 @@ while True:
                         print(point)
                         print(" ")
                     series.append(point)
-                i += 1
+                    i += 1
 
         for room in rooms_ids: #offline sensors in config file:
             if found_rooms[room].get('id') not in sensorIds:
@@ -283,7 +282,7 @@ while True:
                     print(point)
                     print(" ")
                 series.append(point)
-            i += 1
+                i += 1
 
         if DEBUG is True:
             print(" ")
