@@ -7,10 +7,10 @@
 
   vars:
     services:
+      - getPressures
+      - getSHT30
       - getTemps
       - getWeather
-      - getSHT30
-      - getADS1115
 
   tasks:
 
