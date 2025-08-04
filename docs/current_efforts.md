@@ -90,3 +90,10 @@ if temp == "Off":
     print(f"temp is {temp}, skipping room {room_id}")
     continue
 ```
+
+
+## Misc
+
+Eventually remove the int/float data conversions from [getWeather.py](../src/getWeather.py) - A new table will need to be used.
+
+Implement logging or use ```python -u``` so that all lines appear in the journal.

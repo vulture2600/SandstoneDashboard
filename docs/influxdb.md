@@ -14,33 +14,125 @@ sudo systemctl status influxdb
 #### Connect to InfluxDB
 
 ```shell
-# Connect to InfluxDB running on the localhost without the password set:
+# Connect to InfluxDB running on the localhost:
 influx
 
 # Connect to InfluxDb running on another host:
-influx -host 192.168.1.10 -username fakeuser -password fakepassword
+influx -host 192.168.1.10 -username <user> -password <password>
 
 # Same as above and specify the port and database:
-influx -host 192.168.1.10 -port 8086 -username fakeuser -password fakepassword -database SandstoneSensorData
+influx -host 192.168.1.10 -port 8086 -username <user> -password <password> -database <database>
 ```
 
-#### Databases, Measurements
+### Comparison with SQL databases
+
+
+| InfluxDB        | SQL Equivalent                  | Notes                                             |
+| --------------- | ------------------------------- | ------------------------------------------------- |
+| Measurement | Table                           |
+| Tag set     | Indexed columns (labels)        | Defines "dimensions" — like `location="Minneapolis"`  |
+| Field set   | Data columns (values)           | Not indexed — stores actual measurements          |
+| Point       | Row                             | A single data record (time + tag set + field set) |
+| Series      | Group of rows (points) with same tag set | Filtered view of a measurement             |
+
+### Measurements
 
 ```sql
--- Show databases (power_monitor_sandstone, SandstoneSensorData):
-SHOW databases
+use <database>
 
--- Use the SandstoneSensorData database:
-USE SandstoneSensorData
-
--- Show measurements (pressures, temps, weather):
-SHOW MEASUREMENTS
+show measurements
 ```
 
-### Tags
+```sql
+name: measurements
+name
+----
+temps
+weather
+```
+
+### Series
 
 ```sql
-SHOW TAG VALUES FROM temps WITH KEY = title
+show series                      -- show all series for the database
+show series from weather         -- show series for the measurement weather
+show series from autogen.weather -- same as above, include the retention policy
+```
+
+```
+key
+---
+weather,location=Minneapolis
+weather,location=Sandstone
+```
+
+#### Key fields for the series
+
+```sql
+show field keys from weather
+```
+
+```
+name: weather
+fieldKey               fieldType
+--------               ---------
+currentCondition       string
+dailyCondition         string
+dailyConditionTomorrow string
+feelsLike              float
+humidity               integer
+tempHigh               float
+tempHighTomorrow       integer
+tempLow                float
+tempLowTomorrow        float
+timeStamp              string
+windDirection          integer
+windGust               float
+windSpeed              float
+```
+
+#### Point example as json
+
+```json
+{
+    "measurement": "weather",
+    "tags": {
+        "location": "Sandstone"
+    },
+    "fields": {
+        "currentCondition": "Clear",
+        "dailyCondition": "Clear",
+        "dailyConditionTomorrow": "Clear",
+        "feelsLike": 53.04,
+        "humidity": 100,
+        "tempHigh": 76.93,
+        "tempHighTomorrow": 75,
+        "tempLow": 53.31,
+        "tempLowTomorrow": 51.69,
+        "timeStamp": "2025-08-01 08: 20: 31",
+        "windDirection": 0,
+        "windSpeed": 0.0,
+        "windGust": 8.86
+    }
+}
+```
+
+Total number of unique series (combination of measurement and tags):
+
+```sql
+show series cardinality
+```
+
+```
+cardinality estimation
+----------------------
+6
+```
+
+#### Tags
+
+```sql
+show tag values from temps with key = title
 ```
 
 ```
@@ -76,7 +168,7 @@ title Upper School Room Water Temp
 ```
 
 ```sql
-SHOW TAG VALUES FROM temps WITH KEY = location
+show tag values from temps with key = location
 ```
 
 ```
@@ -111,31 +203,56 @@ location upSchlRmEnclTemp
 location upSchlRmWaterTemp
 ```
 
-### Queries
+#### Query examples
 
 ```sql
--- List the latest 30 temps taken:
-SELECT * FROM temps ORDER BY time DESC LIMIT 30
+-- List the latest 10 temps taken:
+select * from temps order by time desc limit 10
 
--- List the latest 30 readings from the Derrick Wall:
-SELECT * AS readable_time FROM temps WHERE location = 'derrickWallEnclTemp' ORDER BY time DESC LIMIT 30
+-- List the latest 10 temps from the School Room:
+select * from temps where location = 'schoolRmOutsideTemp' order by time desc limit 10
 
--- List the first temp from each day for the last 30 days:
-SELECT FIRST("temp") AS first_temp_of_day FROM "temps" WHERE time >= now() - 30d GROUP BY time(1d)
+-- Show the last School Room temp:
+select last(temp_flt), title from temps where location = 'schoolRmOutsideTemp'
 
--- Show counts from countable columns:
-SELECT count(*) FROM temps
+-- List the first temps of each day from the Stage Wall for the last 30 days:
+select first(temp_flt) as first_temp_of_day, title from temps where location = 'stageWallOutsideTemp' and time >= now() - 30d group by time(1d)
 
--- List series limit to 5 rows:
-SHOW SERIES LIMIT 5
+-- Show counts from countable columns in temps:
+select count(*) from temps
 ```
 
+#### Grafana queries
 
-### Backup/restore InfluxDB
+InfluxQL in Grafana for the latest:
 
-InfluxDB 1.x
+```sql
+select last(*) from autogen.weather
 
-Source
+select last(*) from weather
+```
+
+Grafana uses the time of the most recent point as the default timestamp in Stat or Time series panels.
+
+* last(*): Selects the most recent value of every field in the weather measurement.
+* "autogen": Default retention policy
+* "weather": Measurement (like an SQL table)
+
+#### Retention policies
+
+```sql
+show retention policies
+
+show retention policies on <database>
+
+create retention policy "180_days" on <database> duration 180d replication 1 default
+```
+
+## Backup/restore InfluxDB
+
+InfluxDB 1.x, backup using a USB drive
+
+#### Source
 
 ```shell
 # Check for the USB drive.
@@ -152,7 +269,7 @@ influxd backup -portable /path/to/backup
 udisksctl unmount -b /dev/sda1
 ```
 
-Destination
+#### Destination
 
 ```shell
 # Move the usb drive to the new host. Check for and mount it as above.
