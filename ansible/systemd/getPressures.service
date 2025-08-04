@@ -7,6 +7,7 @@ Type=simple
 User=pi
 WorkingDirectory=/home/pi/SandstoneDashboard
 ExecStart=/usr/bin/python3 getADS1115.py
+Environment=PYTHONUNBUFFERED=1
 
 Restart=always
 RestartSec=10
