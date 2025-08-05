@@ -10,8 +10,8 @@
       ansible.builtin.file:
         path: "{{ app_dir }}"
         state: directory
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0755'
       tags:
         - pip
@@ -22,8 +22,8 @@
       ansible.builtin.copy:
         src: ../requirements.txt
         dest: "{{ requirements_file }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       tags: pip
 
@@ -50,8 +50,8 @@
       ansible.builtin.copy:
         src: "../src/.env.{{ dotenv_host }}"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0600'
       tags: dotenv
 
@@ -59,8 +59,8 @@
       ansible.builtin.copy:
         src: "../src/constants.py"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart shared services
       tags: app_files
@@ -69,8 +69,8 @@
       ansible.builtin.copy:
         src: "../src/getADS1115.py"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getPressures.service
       tags: app_files
@@ -79,8 +79,8 @@
       ansible.builtin.copy:
         src: "../src/getSHT30.py"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getSHT30.service
       tags: app_files
@@ -89,8 +89,8 @@
       ansible.builtin.copy:
         src: "../src/getTemps.py"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getTemps.service
       tags: app_files
@@ -99,8 +99,8 @@
       ansible.builtin.copy:
         src: "../src/getWeather.py"
         dest: "{{ app_dir }}"
-        owner: pi
-        group: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getWeather.service
       tags: app_files
