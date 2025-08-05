@@ -19,7 +19,6 @@ from smb.SMBConnection import SMBConnection
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
 DEBUG = True
-RUN_CONTINUE = False # set to True to run continuously, False to run once and exit
 
 HOSTNAME = socket.gethostname()
 
@@ -69,18 +68,16 @@ if KERNEL_MOD_LOAD_FAIL is True:
     print("Exiting")
     sys.exit(1)
 
-## Delete read_temp() if it's no longer being used
-
-
 try:
-
-
     result = client.query('select * from "raw_data" where time >= now() - 5s and time <= now()')
 
-    if DEBUG is True:
-        print("Query recieved.")
-        print(result)
-        print(" ")
+
+    print("Query recieved.")
+    print(result)
+    print(" ")
+
+    
+
 
 except InfluxDBServerError as e:
     print("server failed, reason: " + str(e))
