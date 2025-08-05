@@ -1,0 +1,84 @@
+---
+- name: Deploy and manage systemd services and Python venv
+  hosts: all
+
+  vars:
+    app_dir: /home/pi/SandstoneDashboard
+    venv_path: "{{ app_dir }}/venv"
+    requirements_file: "{{ app_dir }}/requirements.txt"
+
+    services:
+      - getPressures
+      - getSHT30
+      - getTemps
+      - getWeather
+
+  tasks:
+
+    - name: Ensure app directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: pi
+        group: pi
+        mode: '0755'
+      tags: pip
+
+    - name: Copy requirements files to the app dir
+      ansible.builtin.copy:
+        src: ../requirements.txt
+        dest: "{{ requirements_file }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      tags: pip
+
+    - name: Update pip to the latest version
+      ansible.builtin.pip:
+        name: ['pip', 'setuptools']
+        state: latest
+        virtualenv: "{{ venv_path }}"
+        virtualenv_command: "python3 -m venv"
+      register: result
+      until: result is succeeded
+      retries: 3
+      delay: 5
+      tags: pip
+
+    - name: Install Python requirements in virtualenv
+      ansible.builtin.pip:
+        requirements: "{{ requirements_file }}"
+        virtualenv: "{{ venv_path }}"
+        virtualenv_command: "python3 -m venv"
+      register: result
+      until: result is succeeded
+      retries: 3
+      delay: 5
+      tags: pip
+
+    - name: Copy systemd service files
+      ansible.builtin.copy:
+        src: "systemd/{{ item }}.service"
+        dest: "/etc/systemd/system/{{ item }}.service"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ services }}"
+      notify: Reload systemd daemon
+      become: true
+      tags: systemd
+
+    - name: Enable and start each service
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: "{{ services }}"
+      become: true
+      tags: systemd
+
+  handlers:
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+      become: true

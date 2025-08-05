@@ -18,22 +18,38 @@ chmod 600 .ssh/authorized_keys
 
 #### Manage the Raspberry Pi's
 
-Preflight checks
+Linting & syntax checks
 
 ```shell
-ansible-lint systemd_playbook.yml  # lint check
+yamllint systemd_playbook.yaml  # yaml lint check
 
-ansible-playbook systemd_playbook.yml --syntax-check  # check for syntax errors
+ansible-lint systemd_playbook.yaml  # ansible lint check
 
+ansible-playbook systemd_playbook.yaml --syntax-check  # check for syntax errors
+```
+
+Preflight check
+
+```shell
 # Dry run, show what will change, only hosts in the monitors group in inventory.ini:
-ansible-playbook systemd_playbook.yml -i inventory.ini -l monitors --diff --check
+ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors --diff --check
 ```
 
 Run the playbook
 
 ```shell
-# Run the playbook against the monitors group in inventory.ini (add --diff to see changes):
-ansible-playbook systemd_playbook.yml -i inventory.ini -l monitors
+# Run the pip (tagged) tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors -t pip
+
+# Run the systemd (tagged) tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors -t systemd
+
+# Run all tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors
+
+# Add --check to see which tasks will make changes.
+
+# Add --diff to see the changes.
 ```
 
 #### Ansible inventory file example
