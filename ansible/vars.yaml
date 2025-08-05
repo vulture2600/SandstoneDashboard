@@ -1,0 +1,17 @@
+---
+app_dir: "/home/{{ ansible_user }}/SandstoneDashboard"
+venv_path: "{{ app_dir }}/venv"
+requirements_file: "{{ app_dir }}/requirements.txt"
+
+app_files:
+  - constants.py
+  - getADS1115.py
+  - getSHT30.py
+  - getTemps.py
+  - getWeather.py
+
+services:
+  - getPressures
+  - getSHT30
+  - getTemps
+  - getWeather

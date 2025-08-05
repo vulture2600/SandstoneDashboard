@@ -21,31 +21,40 @@ chmod 600 .ssh/authorized_keys
 Linting & syntax checks
 
 ```shell
-yamllint systemd_playbook.yaml  # yaml lint check
+yamllint deploy_app_playbook.yaml  # yaml lint check
 
-ansible-lint systemd_playbook.yaml  # ansible lint check
+ansible-lint deploy_app_playbook.yaml  # ansible lint check
 
-ansible-playbook systemd_playbook.yaml --syntax-check  # check for syntax errors
+ansible-playbook deploy_app_playbook.yaml --syntax-check  # check for syntax errors
 ```
 
 Preflight check
 
 ```shell
 # Dry run, show what will change, only hosts in the monitors group in inventory.ini:
-ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors --diff --check
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors --diff --check
 ```
 
 Run the playbook
 
 ```shell
-# Run the pip (tagged) tasks in the playbook against the monitors group in inventory.ini:
-ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors -t pip
+# Run the 'pip' tagged tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors -t pip
 
-# Run the systemd (tagged) tasks in the playbook against the monitors group in inventory.ini:
-ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors -t systemd
+# Run the 'dotenv' tagged tasks against the monitors group in inventory.ini:
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors -t dotenv
+
+# Run the 'app_files' tagged tasks against the monitors group in inventory.ini:
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors -t app_files
+
+# Run the 'systemd' tagged tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors -t systemd
+
+# Run the 'verify_services' tagged tasks in the playbook against the monitors group in inventory.ini:
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors -t verify_services
 
 # Run all tasks in the playbook against the monitors group in inventory.ini:
-ansible-playbook systemd_playbook.yaml -i inventory.ini -l monitors
+ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l monitors
 
 # Add --check to see which tasks will make changes.
 
@@ -58,5 +67,5 @@ inventory.ini
 
 ```ini
 [monitors]
-HOSTNAME ansible_host=FQDN_HOSTNAME ansible_user=SSH_USER ansible_port=PORT
+HOSTNAME ansible_host=FQDN_HOSTNAME ansible_user=SSH_USER ansible_port=PORT dotenv_host=HOSTNAME
 ```

@@ -1,0 +1,212 @@
+---
+- name: Deploy Systemd services and Python virtualenv for SandstoneDashboard
+  hosts: all
+  vars_files:
+    - vars.yaml
+
+  tasks:
+
+    - name: Ensure app directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: pi
+        group: pi
+        mode: '0755'
+      tags:
+        - pip
+        - dotenv
+        - app_files
+
+    - name: Copy requirements files to the app dir
+      ansible.builtin.copy:
+        src: ../requirements.txt
+        dest: "{{ requirements_file }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      tags: pip
+
+    - name: Update pip, setuptools to latest in virtualenv
+      ansible.builtin.pip:
+        name: ['pip', 'setuptools']
+        state: latest
+        virtualenv: "{{ venv_path }}"
+        virtualenv_command: "python3 -m venv"
+      tags: pip
+
+    - name: Install Python requirements in virtualenv
+      ansible.builtin.pip:
+        requirements: "{{ requirements_file }}"
+        virtualenv: "{{ venv_path }}"
+        virtualenv_command: "python3 -m venv"
+      register: pip_requirements_result
+      until: pip_requirements_result is succeeded
+      retries: 3
+      delay: 5
+      tags: pip
+
+    - name: Copy dotenv file to the app dir
+      ansible.builtin.copy:
+        src: "../src/.env.{{ dotenv_host }}"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0600'
+      tags: dotenv
+
+    - name: Copy constants.py to the app dir
+      ansible.builtin.copy:
+        src: "../src/constants.py"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      notify: Restart shared services
+      tags: app_files
+
+    - name: Copy getADS1115.py to the app dir
+      ansible.builtin.copy:
+        src: "../src/getADS1115.py"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      notify: Restart getPressures.service
+      tags: app_files
+
+    - name: Copy getSHT30.py to the app dir
+      ansible.builtin.copy:
+        src: "../src/getSHT30.py"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      notify: Restart getSHT30.service
+      tags: app_files
+
+    - name: Copy getTemps.py to the app dir
+      ansible.builtin.copy:
+        src: "../src/getTemps.py"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      notify: Restart getTemps.service
+      tags: app_files
+
+    - name: Copy getWeather.py to the app dir
+      ansible.builtin.copy:
+        src: "../src/getWeather.py"
+        dest: "{{ app_dir }}"
+        owner: pi
+        group: pi
+        mode: '0644'
+      notify: Restart getWeather.service
+      tags: app_files
+
+    - name: Deploy systemd getPressures.service
+      ansible.builtin.copy:
+        src: "systemd/getPressures.service"
+        dest: "/etc/systemd/system/getPressures.service"
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd daemon
+        - Restart getPressures.service
+      become: true
+      tags: systemd
+
+    - name: Deploy systemd getSHT30.service
+      ansible.builtin.copy:
+        src: "systemd/getSHT30.service"
+        dest: "/etc/systemd/system/getSHT30.service"
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd daemon
+        - Restart getSHT30.service
+      become: true
+      tags: systemd
+
+    - name: Deploy systemd getTemps.service
+      ansible.builtin.copy:
+        src: "systemd/getTemps.service"
+        dest: "/etc/systemd/system/getTemps.service"
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd daemon
+        - Restart getTemps.service
+      become: true
+      tags: systemd
+
+    - name: Deploy systemd getWeather.service
+      ansible.builtin.copy:
+        src: "systemd/getWeather.service"
+        dest: "/etc/systemd/system/getWeather.service"
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd daemon
+        - Restart getWeather.service
+      become: true
+      tags: systemd
+
+  handlers:
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+      become: true
+
+    - name: Restart getPressures.service
+      ansible.builtin.systemd:
+        name: getPressures.service
+        enabled: true
+        state: restarted
+      become: true
+      listen: Restart shared services
+
+    - name: Restart getSHT30.service
+      ansible.builtin.systemd:
+        name: getSHT30.service
+        enabled: true
+        state: restarted
+      become: true
+      listen: Restart shared services
+
+    - name: Restart getTemps.service
+      ansible.builtin.systemd:
+        name: getTemps.service
+        enabled: true
+        state: restarted
+      become: true
+      listen: Restart shared services
+
+    - name: Restart getWeather.service
+      ansible.builtin.systemd:
+        name: getWeather.service
+        enabled: true
+        state: restarted
+      become: true
+      listen: Restart shared services
+
+- name: Ensure services are running
+  hosts: all
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Ensure each service is running and enabled
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ services }}"
+      become: true
+      tags: verify_services
