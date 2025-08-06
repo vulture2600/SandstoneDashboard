@@ -2,4 +2,5 @@ Adafruit_ADS1x15==1.0.2
 python-dotenv==1.1.1
 pi1wire==0.3.0
 influxdb==5.3.2
+smbus==1.1.post2
 smbus2==0.5.0

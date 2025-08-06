@@ -6,7 +6,7 @@ After=multi-user.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/SandstoneDashboard
-ExecStart=/usr/bin/python3 getSHT30.py
+ExecStart=/home/pi/SandstoneDashboard/venv/bin/python getSHT30.py
 Environment=PYTHONUNBUFFERED=1
 
 Restart=always
