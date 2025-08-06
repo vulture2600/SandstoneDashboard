@@ -109,5 +109,6 @@ while True:
 
     SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
     SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
+
     print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes")
     time.sleep(GET_WEATHER_SLEEP_SECS)

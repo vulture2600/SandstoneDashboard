@@ -181,4 +181,4 @@ while True:
     except InfluxDBServerError as e:
         print("Failure writing to or reading from InfluxDB:", e)
 
-    time.sleep(5)
+    time.sleep(1)
