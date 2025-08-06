@@ -1,6 +1,6 @@
 """
 steve.a.mccluskey@gmail.com
-Read Adafruit ADS1115 ADC (Analog-to-Digital Converter) breakout board and write to InfluxDB.
+Read Adafruit ADC (Analog-to-Digital Converter) breakout board and write to InfluxDB.
 This uses the I2C (Inter-Integrated Circuit) protocol to get water pressure readings.
 THIS FILE IS TO BE COMPLETELY REWRITTEN using JSON master config data. All channel variables have been removed from env template.
 """
@@ -11,6 +11,7 @@ import time
 import Adafruit_ADS1x15
 from influxdb import InfluxDBClient
 from dotenv import load_dotenv
+from constants import PRESSURE_SENSOR_TYPE
 
 HOSTNAME = socket.gethostname()
 
@@ -26,6 +27,8 @@ INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
+
+PRESSURE_SENSOR_ID = os.getenv("PRESSURE_SENSOR_ID")
 
 print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
@@ -139,9 +142,9 @@ while True:
                 "sensor":   0,
                 "location": channel0ID,
                 "title"   : channel0name,
-                "id":       "i2c:0x48",
+                "id":       PRESSURE_SENSOR_ID,
                 "channel":  channel0,
-                "type":     "ADS1115"
+                "type":     PRESSURE_SENSOR_TYPE
 
             },
             "fields": {
@@ -157,9 +160,9 @@ while True:
                 "sensor":   1,
                 "location": channel1ID,
                 "title":    channel1name,
-                "id":       "i2c:0x48",
+                "id":       PRESSURE_SENSOR_ID,
                 "channel":  channel1,
-                "type":     "ADS1115"
+                "type":     PRESSURE_SENSOR_TYPE
             },
             "fields": {
                 "pressure": psi1
@@ -174,9 +177,9 @@ while True:
                 "sensor":   2,
                 "location": channel2ID,
                 "title":    channel2name,
-                "id":       "i2c:0x48",
+                "id":       PRESSURE_SENSOR_ID,
                 "channel":  channel2,
-                "type":     "ADS1115"
+                "type":     PRESSURE_SENSOR_TYPE
             },
             "fields": {
                 "pressure": psi2
@@ -191,9 +194,9 @@ while True:
                 "sensor":   3,
                 "location": channel3ID,
                 "title":    channel3name,
-                "id":       "i2c:0x48",
+                "id":       PRESSURE_SENSOR_ID,
                 "channel":  channel3,
-                "type":     "ADS1115"
+                "type":     PRESSURE_SENSOR_TYPE
             },
             "fields": {
                 "pressure": psi3

@@ -10,6 +10,7 @@ import time
 from dotenv import load_dotenv
 import smbus
 from influxdb import InfluxDBClient
+from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
 
 # Set to True to print query result:
 DEBUG = False
@@ -28,6 +29,10 @@ INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
+
+SENSOR_LOCATION = os.getenv("HUMIDITY_TEMP_SENSOR_LOCATION")
+SENSOR_ID = os.getenv("HUMIDITY_TEMP_SENSOR_ID")
+SENSOR_TITLE = os.getenv("HUMIDITY_TEMP_SENSOR_TITLE")
 
 print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
@@ -52,9 +57,6 @@ while True:
         fTemp = format(float((cTemp * 1.8) + 32), '.1f')
         print(str(fTemp), "F")
 
-        if int(fTemp) < -40:
-            pass
-
         humidity = format(float(100 * (data1[3] * 256 + data1[4]) / 65535.0), '.1f')
         print(str(humidity), "%")
 
@@ -63,10 +65,10 @@ while True:
 
             "tags": {
                 "sensor":   1,
-                "location": "shedSHT30",
-                "id":       "i2c:0x44",
-                "type":     "sht30",
-                "title":    "Shed SHT30"
+                "location": SENSOR_LOCATION,
+                "id":       SENSOR_ID,
+                "type":     SENSOR_TYPE,
+                "title":    SENSOR_TITLE
             },
 
             "fields": {
