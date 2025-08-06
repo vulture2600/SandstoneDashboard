@@ -9,14 +9,15 @@ import ast
 import datetime
 import os
 import socket
+import time
 import sys
 import subprocess
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
-# Set to True to print query result:
-DEBUG = False
+DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
 
@@ -117,6 +118,7 @@ while True:
                 TITLE = ROOMS.get(room_id, {}).get('title')
             else:
                 TITLE = "Untitled"
+
             ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
             TITLE_IN_QUOTES   = str("'" + TITLE + "'")
 
@@ -148,7 +150,7 @@ while True:
                     "temp_flt": float(TEMP)
                 }
             }
-
+            print(f"Point: {point}")
             series.append(point)
 
         except:
@@ -163,19 +165,20 @@ while True:
             "timeStamp": dateTimeNow
         }
     }
-
+    print(f"Point: {point}")
     series.append(point)
-    print(str(i + 1) + " sensors collected.")
-    print(series)
+
+    print(f"{i + 1} sensors collected.")
 
     try:
         client.write_points(series)
-        print("Data posted to DB.")
+        print("Series written to InfluxDB.")
 
-        result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
-        print("Query received")
         if DEBUG is True:
-            print(result)
+            query_result = client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
+            print(f"Query results: {query_result}")
+
     except InfluxDBServerError as e:
-        # print("Server timeout")
-        print("server failed, reason: " + str(e))
+        print("Failure writing to or reading from InfluxDB:", e)
+
+    time.sleep(5)

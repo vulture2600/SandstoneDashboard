@@ -10,10 +10,10 @@ import time
 from dotenv import load_dotenv
 import smbus
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
 
-# Set to True to print query result:
-DEBUG = False
+DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
 
@@ -70,26 +70,27 @@ while True:
                 "type":     SENSOR_TYPE,
                 "title":    SENSOR_TITLE
             },
-
             "fields": {
                 "temp_flt": float(fTemp),
                 "humidity": humidity
             }
         }
-
+        print(f"Point: {point}")
         series.append(point)
+
     except:
         print("SHT30 not responding.")
+        continue
 
     try:
         client.write_points(series)
-        print("Data posted to DB.")
+        print("Series written to InfluxDB.")
 
-        result = client.query('select * from "temps" where time >= now() - 5s and time <= now()')
-        print("Query received")
         if DEBUG is True:
-            print(result)
-    except:
-        print("Server timeout")
+            query_result = client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
+            print(f"Query results: {query_result}")
+
+    except InfluxDBServerError as e:
+        print("Failure writing to or reading from InfluxDB:", e)
 
     time.sleep(10)

@@ -11,7 +11,8 @@ from requests import get
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
-DEBUG = False
+DEBUG = False  # set to True to print query result
+
 TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
 HOSTNAME = socket.gethostname()
@@ -88,9 +89,9 @@ while True:
                 "timeStamp": dateTimeNow
             }
         }
-
         print(f"Point: {point}")
         series.append(point)
+
     except:
         print("Failure parsing weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
         continue
@@ -98,9 +99,11 @@ while True:
     try:
         client.write_points(series)
         print("Series written to InfluxDB.")
+
         if DEBUG is True:
-            query_result = client.query("SELECT * FROM weather WHERE time >= now() - 10m")
+            query_result = client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
             print(f"Query results: {query_result}")
+
     except InfluxDBServerError as e:
         print("Failure writing to or reading from InfluxDB:", e)
 

@@ -10,8 +10,11 @@ import socket
 import time
 import Adafruit_ADS1x15
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 from dotenv import load_dotenv
 from constants import PRESSURE_SENSOR_TYPE
+
+DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
 
@@ -151,7 +154,7 @@ while True:
                 "pressure": psi0
             }
         }
-        print(point)
+        print(f"Point: {point}")
         series.append(point)
 
         point = {
@@ -168,7 +171,7 @@ while True:
                 "pressure": psi1
             }
         }
-        print(point)
+        print(f"Point: {point}")
         series.append(point)
 
         point = {
@@ -185,7 +188,7 @@ while True:
                 "pressure": psi2
             }
         }
-        print(point)
+        print(f"Point: {point}")
         series.append(point)
 
         point = {
@@ -202,18 +205,22 @@ while True:
                 "pressure": psi3
             }
         }
-        print(point)
+        print(f"Point: {point}")
         series.append(point)
 
     except:
         print("ADC not responding.")
+        continue
+
     try:
         client.write_points(series)
-        print("Data posted to DB.")
-        result = client.query('select * from "pressures" where time >= now() - 5s and time <= now()')
-        print("QUERY RECEIVED")
-        # print(result)
-    except Exception as e:
-        print("Server timeout", e)
+        print("Series written to InfluxDB.")
 
-    time.sleep(2)
+        if DEBUG is True:
+            query_result = client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
+            print(f"Query results: {query_result}")
+
+    except InfluxDBServerError as e:
+        print("Failure writing to or reading from InfluxDB:", e)
+
+    time.sleep(5)
