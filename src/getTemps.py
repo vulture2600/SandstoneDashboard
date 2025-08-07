@@ -60,7 +60,7 @@ if KERNEL_MOD_LOAD_FAIL is True:
     print("Exiting")
     sys.exit(1)
 
-def read_temp(file) -> str:
+def read_temp(file):
     """Read temperature from 1-Wire temp sensor attached to the system bus"""
     device_file = f"{DEVICES_PATH}{file}/{W1_SLAVE_FILE}"
     print(f"Device file: {device_file}")
@@ -77,12 +77,12 @@ def read_temp(file) -> str:
             if position != -1:
                 temp_string = dev_file_lines[1][position + 2:]
                 temp_c 		= float(temp_string) / 1000.0
-                temp_f 		= format((temp_c * 1.8 + 32.0), '.1f')
+                temp_f 		= round(temp_c * 1.8 + 32.0, 1)
                 return temp_f
         except:
-            return "Off"
+            return None
     else:
-        return "Off"
+        return None
 
 def key_exists(roomID, keys) -> bool:
     """Check whether roomID exists"""
@@ -91,7 +91,7 @@ def key_exists(roomID, keys) -> bool:
     return not keys and roomID is not None
 
 while True:
-    print("Reading Sensors:")
+    print("Reading Sensors")
     series = []
     dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(CONFIG_FILE) as open_file:
@@ -102,71 +102,50 @@ while True:
     room_count = len(ROOMS)
 
     for i in range(room_count):
-        try:
-            room_id = list(ROOMS.keys())[i]
-            if key_exists(ROOMS, [room_id, 'id']):
-                SENSOR_ID = ROOMS.get(room_id, {}).get('id')
-                TEMP 	  = read_temp(SENSOR_ID)
-                STATUS = "On"
-            else:
-                SENSOR_ID = "unassigned"
-                TEMP 	  = "Off"
-                # TEMP 	  = -100.0
-                # STATUS = "Off"
 
-            if key_exists(ROOMS, [room_id, 'title']):
-                TITLE = ROOMS.get(room_id, {}).get('title')
-            else:
-                TITLE = "Untitled"
+        STATUS = "On"
+        room_id = list(ROOMS.keys())[i]
+        if key_exists(ROOMS, [room_id, 'id']):
+            SENSOR_ID = ROOMS.get(room_id, {}).get('id')
+            TEMP 	  = read_temp(SENSOR_ID)
+        else:
+            SENSOR_ID = "unassigned"
+            TEMP 	  = None
+            STATUS    = "Off"
 
-            ROOM_ID_IN_QUOTES = str("'" + room_id + "'")
-            TITLE_IN_QUOTES   = str("'" + TITLE + "'")
+        if key_exists(ROOMS, [room_id, 'title']):
+            TITLE = ROOMS.get(room_id, {}).get('title')
+        else:
+            TITLE = "Untitled"
 
-            print(
-                "Sensor " + str(i + 1).zfill(2) + ") collected. " +
-                "Room ID: " + str(ROOM_ID_IN_QUOTES).ljust(21, ' ') +
-                "Title: " + str(TITLE_IN_QUOTES).ljust(29, ' ') +
-                "Sensor ID: " + str(SENSOR_ID).center(15, '-') +
-                ", Temp = " + str(TEMP) + "F"
-            )
-
-            if TEMP == "Off":
-                # print(f"temp is {TEMP}, skipping room {room_id}")
-                # continue
-                STATUS = "Off"
-                # TEMP = -100.0
-
-            point = {
-                "measurement": "temps",
-                "tags": {
-                    "sensor": i + 1,
-                    "location": room_id,
-                    "id": SENSOR_ID,
-                    "type": TEMP_SENSOR_MODEL,
-                    "title": TITLE
-                },
-                "fields": {
-                    "status": str(STATUS),
-                    "temp_flt": float(TEMP)
-                }
+        point = {
+            "measurement": "temps",
+            "tags": {
+                "sensor": i + 1,
+                "location": room_id,
+                "id": SENSOR_ID,
+                "type": TEMP_SENSOR_MODEL,
+                "title": TITLE
+            },
+            "fields": {
+                "status": STATUS,
+                "temp_flt": TEMP
             }
-            print(f"Point: {point}")
-            series.append(point)
-
-        except:
-            i = i + 1
-
-    point = {
-        "measurement": "temps",
-        "tags": {
-            "TempSensorData" : "mostRecent"
-        },
-        "fields": {
-            "timeStamp": dateTimeNow
         }
-    }
-    print(f"Point: {point}")
-    series.append(point)
+        print(f"Point: {point}")
+        series.append(point)
+
+    # point = {
+    #     "measurement": "temps",
+    #     "tags": {
+    #         "TempSensorData" : "mostRecent"
+    #     },
+    #     "fields": {
+    #         "timeStamp": dateTimeNow
+    #     }
+    # }
+    # print(f"Point: {point}")
+    # series.append(point)
 
     print(f"{i + 1} sensors collected.")
 
