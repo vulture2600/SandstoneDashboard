@@ -1,9 +1,10 @@
 """
 steve.a.mccluskey@gmail.com
 Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env files for required config file.
-THIS FILE CAN BE REPLACED/MERGED WITH getTemps.py FROM BRANCH "Steve".
-All references to old config file have been removed and updated to use JSON format.
 """
+
+# This file will be merged with getTemps.py from branch master_config_file.
+# All references to old config file have been removed and updated to use JSON format.
 
 import ast
 import datetime
@@ -60,29 +61,41 @@ if KERNEL_MOD_LOAD_FAIL is True:
     print("Exiting")
     sys.exit(1)
 
-def read_temp(file):
+def read_temp(device_file):
     """Read temperature from 1-Wire temp sensor attached to the system bus"""
-    device_file = f"{DEVICES_PATH}{file}/{W1_SLAVE_FILE}"
+
+    marker = "t="
     print(f"Device file: {device_file}")
 
-    if os.path.exists(device_file):
-        try:
-            with open(device_file) as open_dev_file:
-                dev_file_lines = open_dev_file.readlines()
+    try:
+        with open(device_file, "r") as f:
+            lines = f.readlines()
 
-            print(f"Lines in dev_file: {dev_file_lines}")
-
-            position = dev_file_lines[1].find('t=')
-
-            if position != -1:
-                temp_string = dev_file_lines[1][position + 2:]
-                temp_c 		= float(temp_string) / 1000.0
-                temp_f 		= round(temp_c * 1.8 + 32.0, 1)
-                return temp_f
-        except:
+        if len(lines) < 2:
+            print("Error: Device file has fewer than 2 lines.")
             return None
-    else:
-        return None
+
+        print(f"Device file lines: {lines}")
+        line = lines[1].strip()
+        position = line.find(marker)
+
+        if position == -1:
+            print(f"Error: Marker '{marker}' not found in line: {line}")
+            return None
+
+        temp_string = line[position + len(marker):]
+        temp_c = float(temp_string) / 1000.0
+        temp_f = round(temp_c * 1.8 + 32.0, 1)
+        return temp_f
+
+    except FileNotFoundError as e:
+        print(f"File not found: {device_file} — {e}")
+    except ValueError as e:
+        print(f"Error parsing temperature value: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
 
 def key_exists(roomID, keys) -> bool:
     """Check whether roomID exists"""
@@ -98,7 +111,6 @@ while True:
         ROOMS = open_file.read()
     ROOMS = ast.literal_eval(ROOMS)
 
-    # get number of rooms from config file and make arrays:
     room_count = len(ROOMS)
 
     for i in range(room_count):
@@ -107,7 +119,7 @@ while True:
         room_id = list(ROOMS.keys())[i]
         if key_exists(ROOMS, [room_id, 'id']):
             SENSOR_ID = ROOMS.get(room_id, {}).get('id')
-            TEMP 	  = read_temp(SENSOR_ID)
+            TEMP 	  = read_temp(f"{DEVICES_PATH}{SENSOR_ID}/{W1_SLAVE_FILE}")
         else:
             SENSOR_ID = "unassigned"
             TEMP 	  = None
@@ -134,18 +146,6 @@ while True:
         }
         print(f"Point: {point}")
         series.append(point)
-
-    # point = {
-    #     "measurement": "temps",
-    #     "tags": {
-    #         "TempSensorData" : "mostRecent"
-    #     },
-    #     "fields": {
-    #         "timeStamp": dateTimeNow
-    #     }
-    # }
-    # print(f"Point: {point}")
-    # series.append(point)
 
     print(f"{i + 1} sensors collected.")
 
