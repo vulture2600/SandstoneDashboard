@@ -7,7 +7,6 @@ Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env fil
 # All references to old config file have been removed and updated to use JSON format.
 
 import ast
-import datetime
 import os
 import socket
 import time
@@ -84,9 +83,9 @@ def read_temp(device_file):
             return None
 
         temp_string = line[position + len(marker):]
-        temp_c = float(temp_string) / 1000.0
-        temp_f = round(temp_c * 1.8 + 32.0, 1)
-        return temp_f
+        temp_C = float(temp_string) / 1000.0
+        temp_F = round(temp_C * 1.8 + 32, 1)
+        return temp_F
 
     except FileNotFoundError as e:
         print(f"File not found: {device_file} — {e}")
@@ -106,7 +105,6 @@ def key_exists(roomID, keys) -> bool:
 while True:
     print("Reading Sensors")
     series = []
-    dateTimeNow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(CONFIG_FILE) as open_file:
         ROOMS = open_file.read()
     ROOMS = ast.literal_eval(ROOMS)
