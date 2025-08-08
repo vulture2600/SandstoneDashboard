@@ -6,6 +6,7 @@ This uses SMBus (System Management Bus), a subset of the I2C (Inter-Integrated C
 
 import os
 import socket
+import struct
 import time
 from dotenv import load_dotenv
 import smbus
@@ -34,6 +35,12 @@ SENSOR_LOCATION = os.getenv("HUMIDITY_TEMP_SENSOR_LOCATION")
 SENSOR_ID = os.getenv("HUMIDITY_TEMP_SENSOR_ID")
 SENSOR_TITLE = os.getenv("HUMIDITY_TEMP_SENSOR_TITLE")
 
+I2C_ADDR = 0x44
+WRITE_REGISTER = 0x2C
+READ_REGISTER = 0x00
+WRITE_DATA = [0x06]
+LENGTH_BYTES = 6
+
 print("Connecting to the database")
 client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
 databases = client.get_list_database()
@@ -46,19 +53,31 @@ print(f"InfluxDB client ok! Using {SENSOR_DATABASE}")
 bus = smbus.SMBus(1)
 
 while True:
-    print("Reading Sensors:")
+    series = []
+    print("Reading SHT30 sensors")
+
     try:
-        series = []
-        bus.write_i2c_block_data(0x44, 0x2C, [0x06])
+        print("Writing to I2C bus")
+        bus.write_i2c_block_data(I2C_ADDR, WRITE_REGISTER, WRITE_DATA)
         time.sleep(0.5)
-        data1 = bus.read_i2c_block_data(0x44, 0x00, 6)
+        print("Reading from I2C bus")
+        i2c_block_data = bus.read_i2c_block_data(I2C_ADDR, READ_REGISTER, LENGTH_BYTES)
 
-        cTemp = ((((data1[0] * 256.0) + data1[1]) * 175) / 65535.0) - 45
-        fTemp = format(float((cTemp * 1.8) + 32), '.1f')
-        print(str(fTemp), "F")
+        print("I2C block data:", i2c_block_data)
 
-        humidity = format(float(100 * (data1[3] * 256 + data1[4]) / 65535.0), '.1f')
-        print(str(humidity), "%")
+        if len(i2c_block_data) < 5:
+            print("Error: I2C block data has fewer than 4 items.")
+            continue
+
+        temp_MSB, temp_LSB = i2c_block_data[0:2]
+        humidity_MSB, humidity_LSB = i2c_block_data[3:5]
+
+        raw_temp = struct.unpack(">H", bytes([temp_MSB, temp_LSB]))[0]
+        temp_C = -45 + (175 * raw_temp / 65535.0)
+        temp_F = round(temp_C * 1.8 + 32, 1)
+
+        raw_hum = struct.unpack(">H", bytes([humidity_MSB, humidity_LSB]))[0]
+        humidity = round(100 * raw_hum / 65535.0, 1)
 
         point = {
             "measurement": "temps",
@@ -71,15 +90,18 @@ while True:
                 "title":    SENSOR_TITLE
             },
             "fields": {
-                "temp_flt": float(fTemp),
-                "humidity": humidity
+                "temp_flt": temp_F,
+                "humidity": str(humidity)
             }
         }
         print(f"Point: {point}")
         series.append(point)
 
-    except:
-        print("SHT30 not responding.")
+    except OSError as e:
+        print(f"I2C read failed: {e}")
+        continue
+    except Exception as e:
+        print(f"Unexpected error: {e}")
         continue
 
     try:
