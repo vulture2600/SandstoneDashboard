@@ -284,11 +284,7 @@ while True:
                 series.append(point)
                 i += 1
 
-        if DEBUG is True:
-            print(" ")
-            print("Series to post: ")
-            print(series)
-            print(" ")
+
     except:
         print("Error reading sensors.")
 
