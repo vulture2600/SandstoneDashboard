@@ -5,7 +5,10 @@
 Activate/deactivate
 
 ```shell
-source ~/SandstoneDashboard/venv/bin/activate
+# If the directory has a .venv symlink, try using the 'activate' alias instead of the source command.
+
+cd ~/SandstoneDashboard  # or any directory with a venv
+source venv/bin/activate
 
 deactivate
 ```
@@ -15,7 +18,7 @@ Install Python packages from [requirements.txt](../requirements.txt)
 ```shell
 # Make sure the virtual environment is activated.
 
-pip install --upgrade pip  # nice, but not required
+pip install --upgrade pip setuptools  # nice, but not required
 
 pip install -r requirements.txt
 
