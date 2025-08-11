@@ -96,36 +96,32 @@ def read_temp(device_file):
 
     return None
 
-def key_exists(roomID, keys) -> bool:
-    """Check whether roomID exists"""
-    if keys and roomID:
-        return key_exists(roomID.get(keys[0]), keys[1:])
-    return not keys and roomID is not None
-
 while True:
-    print("Reading Sensors")
+    print("Reading Sensors...")
     series = []
+
     with open(CONFIG_FILE) as open_file:
         ROOMS = open_file.read()
     ROOMS = ast.literal_eval(ROOMS)
 
     room_count = len(ROOMS)
+    ASSIGNED_SENSOR_COUNT = 0
 
     for i in range(room_count):
 
         STATUS = "On"
         room_id = list(ROOMS.keys())[i]
-        if key_exists(ROOMS, [room_id, 'id']):
-            SENSOR_ID = ROOMS.get(room_id, {}).get('id')
+        SENSOR_ID = ROOMS.get(room_id, {}).get('id')
+        if SENSOR_ID:
             TEMP 	  = read_temp(f"{DEVICES_PATH}{SENSOR_ID}/{W1_SLAVE_FILE}")
+            ASSIGNED_SENSOR_COUNT += 1
         else:
             SENSOR_ID = "unassigned"
             TEMP 	  = None
             STATUS    = "Off"
 
-        if key_exists(ROOMS, [room_id, 'title']):
-            TITLE = ROOMS.get(room_id, {}).get('title')
-        else:
+        TITLE = ROOMS.get(room_id, {}).get('title')
+        if not TITLE:
             TITLE = "Untitled"
 
         point = {
@@ -145,7 +141,7 @@ while True:
         print(f"Point: {point}")
         series.append(point)
 
-    print(f"{i + 1} sensors collected.")
+    print(f"Assigned sensors: {ASSIGNED_SENSOR_COUNT}")
 
     try:
         client.write_points(series)
@@ -158,4 +154,4 @@ while True:
     except InfluxDBServerError as e:
         print("Failure writing to or reading from InfluxDB:", e)
 
-    time.sleep(1)
+    time.sleep(2)
