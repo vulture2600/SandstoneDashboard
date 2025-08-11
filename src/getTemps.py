@@ -13,9 +13,9 @@ import time
 import sys
 import subprocess
 from dotenv import load_dotenv
-from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
+from common_functions import database_connect
 
 DEBUG = False  # set to True to print query result
 
@@ -32,17 +32,10 @@ INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
-TEMP_SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
+DATABASE = os.getenv("SENSOR_DATABASE")
 CONFIG_FILE = os.getenv("CONFIG_FILE")
 
-print("Connecting to the database")
-client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
-databases = client.get_list_database()
-if not any(db['name'] == TEMP_SENSOR_DATABASE for db in databases):
-    print(f"Creating {TEMP_SENSOR_DATABASE}")
-    client.create_database(TEMP_SENSOR_DATABASE)
-    client.switch_database(TEMP_SENSOR_DATABASE)
-print(f"InfluxDB client ok! Using {TEMP_SENSOR_DATABASE}")
+db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
 print("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
@@ -144,11 +137,11 @@ while True:
     print(f"Assigned sensors: {ASSIGNED_SENSOR_COUNT}")
 
     try:
-        client.write_points(series)
+        db_client.write_points(series)
         print("Series written to InfluxDB.")
 
         if DEBUG is True:
-            query_result = client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
+            query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
             print(f"Query results: {query_result}")
 
     except InfluxDBServerError as e:

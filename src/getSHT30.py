@@ -10,9 +10,9 @@ import struct
 import time
 from dotenv import load_dotenv
 import smbus
-from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
+from common_functions import database_connect
 
 DEBUG = False  # set to True to print query result
 
@@ -29,7 +29,7 @@ INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
-SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
+DATABASE = os.getenv("SENSOR_DATABASE")
 
 SENSOR_LOCATION = os.getenv("HUMIDITY_TEMP_SENSOR_LOCATION")
 SENSOR_ID = os.getenv("HUMIDITY_TEMP_SENSOR_ID")
@@ -41,14 +41,7 @@ READ_REGISTER = 0x00
 WRITE_DATA = [0x06]
 LENGTH_BYTES = 6
 
-print("Connecting to the database")
-client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
-databases = client.get_list_database()
-if not any(db['name'] == SENSOR_DATABASE for db in databases):
-    print(f"Creating {SENSOR_DATABASE}")
-    client.create_database(SENSOR_DATABASE)
-    client.switch_database(SENSOR_DATABASE)
-print(f"InfluxDB client ok! Using {SENSOR_DATABASE}")
+db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
 bus = smbus.SMBus(1)
 
@@ -105,11 +98,11 @@ while True:
         continue
 
     try:
-        client.write_points(series)
+        db_client.write_points(series)
         print("Series written to InfluxDB.")
 
         if DEBUG is True:
-            query_result = client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
+            query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
             print(f"Query results: {query_result}")
 
     except InfluxDBServerError as e:

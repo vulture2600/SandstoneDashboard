@@ -8,8 +8,8 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 from requests import get
-from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
+from common_functions import database_connect
 
 DEBUG = False  # set to True to print query result
 
@@ -28,7 +28,7 @@ INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
-TEMP_SENSOR_DATABASE = os.getenv("TEMP_SENSOR_DATABASE")
+DATABASE = os.getenv("TEMP_SENSOR_DATABASE")
 OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
 
 LOCATION = os.getenv("LOCATION")
@@ -46,14 +46,7 @@ OPENWEATHERMAP_URL = (
     f"&units={UNITS}"
 )
 
-print("Connecting to the database")
-client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, TEMP_SENSOR_DATABASE)
-databases = client.get_list_database()
-if not any(db['name'] == TEMP_SENSOR_DATABASE for db in databases):
-    print(f"Creating {TEMP_SENSOR_DATABASE}")
-    client.create_database(TEMP_SENSOR_DATABASE)
-    client.switch_database(TEMP_SENSOR_DATABASE)
-print(f"InfluxDB client ok! Using {TEMP_SENSOR_DATABASE}")
+db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
 while True:
     try:
@@ -97,11 +90,11 @@ while True:
         continue
 
     try:
-        client.write_points(series)
+        db_client.write_points(series)
         print("Series written to InfluxDB.")
 
         if DEBUG is True:
-            query_result = client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
+            query_result = db_client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
             print(f"Query results: {query_result}")
 
     except InfluxDBServerError as e:

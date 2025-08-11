@@ -9,10 +9,10 @@ import os
 import socket
 import time
 import Adafruit_ADS1x15
-from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from dotenv import load_dotenv
 from constants import PRESSURE_SENSOR_TYPE
+from common_functions import database_connect
 
 DEBUG = False  # set to True to print query result
 
@@ -29,18 +29,10 @@ INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
-SENSOR_DATABASE = os.getenv("SENSOR_DATABASE")
-
+DATABASE = os.getenv("SENSOR_DATABASE")
 PRESSURE_SENSOR_ID = os.getenv("PRESSURE_SENSOR_ID")
 
-print("Connecting to the database")
-client = InfluxDBClient(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, SENSOR_DATABASE)
-databases = client.get_list_database()
-if not any(db['name'] == SENSOR_DATABASE for db in databases):
-    print(f"Creating {SENSOR_DATABASE}")
-    client.create_database(SENSOR_DATABASE)
-    client.switch_database(SENSOR_DATABASE)
-print(f"InfluxDB client ok! Using {SENSOR_DATABASE}")
+db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
 print("Loading environment variables for all channels")
 
@@ -213,11 +205,11 @@ while True:
         continue
 
     try:
-        client.write_points(series)
+        db_client.write_points(series)
         print("Series written to InfluxDB.")
 
         if DEBUG is True:
-            query_result = client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
+            query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
             print(f"Query results: {query_result}")
 
     except InfluxDBServerError as e:
