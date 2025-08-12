@@ -57,3 +57,4 @@ if __name__ == "__main__":
 
     print("Now run:")
     print("sudo rmmod i2c_bcm2835 && sudo modprobe i2c_bcm2835")
+    print("i2cdetect -y 1")
