@@ -11,7 +11,9 @@ import time
 import sys
 import subprocess
 from dotenv import load_dotenv
-from influxdb.exceptions import InfluxDBServerError
+from requests.exceptions import Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 from common_functions import database_connect, load_json_file
 
@@ -101,15 +103,16 @@ while True:
         continue
 
     room_count = len(ROOMS)
+
     if room_count == 0:
         print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE}")
         print(f"Trying again in {SLEEP_MINUTES_FORMATTED} minute(s)")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
-    print("Reading Sensors...")
     series = []
     ASSIGNED_SENSOR_COUNT = 0
+    print("Reading 1-Wire temperature sensors...")
 
     for i in range(room_count):
 
@@ -155,7 +158,7 @@ while True:
             query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
             print(f"Query results: {query_result}")
 
-    except InfluxDBServerError as e:
+    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
-
+        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
     time.sleep(5)
