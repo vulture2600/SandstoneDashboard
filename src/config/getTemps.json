@@ -1,0 +1,108 @@
+{
+    "SandstonePi3bPlusSchoolRoom": {
+        "UpSchlRmOutsideTemp": {
+            "id": "28-000000833db4",
+            "title": "Upper School Room Outside Temp"
+        },
+        "bootWallOutsideTemp": {
+            "id": "28-00000085376d",
+            "title": "Booty Wall Outside Temp"
+        },
+        "bootyWallEnclTemp": {
+            "id": "28-00000031265e",
+            "title": "Booty Wall Enclosure Temp"
+        },
+        "bootyWallWaterTemp": {
+            "id": "28-000000832378",
+            "title": "Booty Wall Water Temp"
+        },
+        "schoolRmEnclTemp": {
+            "id": "28-0000003119e8",
+            "title": "School Room Enclosure Temp"
+        },
+        "schoolRmOutsideTemp": {
+            "id": "28-00000082fa0b",
+            "title": "School Room Outside Temp"
+        },
+        "schoolRmWaterTemp": {
+            "id": "28-00000083293b",
+            "title": "School Room Water Temp"
+        },
+        "upSchlRmEnclTemp": {
+            "id": "28-0000003122cd",
+            "title": "Upper SchlRm Enclosure Temp"
+        },
+        "upSchlRmWaterTemp": {
+            "id": "28-00000087f623",
+            "title": "Upper School Room Water Temp"
+        }
+    },
+    "SandstonePi3bPlusStageWall": {
+        "derrickOutsideTemp": {
+            "id": "28-0000006b3473",
+            "title": "Derrick Wall Outside Temp"
+        },
+        "derrickWallEnclTemp": {
+            "id": "28-00000031f935",
+            "title": "Derrick Wall Enclosure Temp"
+        },
+        "derrickWallWaterTemp": {
+            "id": "28-0000006b6a2e",
+            "title": "Derrick Wall Water Temp"
+        },
+        "mainFlowEnclTemp": {
+            "id": "28-00000030e8c8",
+            "title": "Main Flow Enclosure Temp"
+        },
+        "mainFlowOutsideTemp": {
+            "id": "28-00000082defb",
+            "title": "Main Flow Outside Temp"
+        },
+        "mainFlowWaterTemp": {
+            "id": "28-0000006b0b9b",
+            "title": "Main Flow Water Temp"
+        },
+        "northEndEnclTemp": {
+            "id": "28-0000006b0b9b",
+            "title": "Main Flow Water Temp"
+        },
+        "northEndOutsideTemp": {
+            "id": "28-00000083107f",
+            "title": "North End Outside Temp"
+        },
+        "northEndWaterTemp": {
+            "id": "28-0000006b69a7",
+            "title": "North End Water Temp"
+        },
+        "stageWallBoxTemp": {
+            "id": "28-012054239ca8",
+            "title": "Stage Wall Box Temp"
+        },
+        "stageWallEnclTemp": {
+            "id": "28-1c93d4447096",
+            "title": "Stage Wall Enclosure Temp"
+        },
+        "stageWallOutsideTemp": {
+            "id": "28-000000831cda",
+            "title": "Stage Wall Outside Temp"
+        },
+        "stageWallWaterTemp": {
+            "id": "28-00000087fbf5",
+            "title": "Stage Wall Water Temp"
+        }
+    },
+    "SandstoneRasPi4b8GbPowerMonitor": {
+        "manifoldTemp": {
+            "id": "28-01192f160fa9",
+            "title": "Manifold Temp"
+        },
+        "shedInside": {
+            "id": "28-01192ef8ea7d",
+            "title": "Shed Inside"
+    },
+        "shedOutside": {
+            "id": "28-012052f64fb2",
+            "title": "Shed Outside"
+        }
+    }
+}
