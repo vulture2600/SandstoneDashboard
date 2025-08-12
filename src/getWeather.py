@@ -8,14 +8,18 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 from requests import get
-from influxdb.exceptions import InfluxDBServerError
+from requests.exceptions import Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from common_functions import database_connect
 
 DEBUG = False  # set to True to print query result
 
+HOSTNAME = socket.gethostname()
 TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
-HOSTNAME = socket.gethostname()
+SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
+SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
 
 if 'INVOCATION_ID' in os.environ:
     print(f"Running under Systemd, using .env.{HOSTNAME} file")
@@ -51,8 +55,9 @@ db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, D
 while True:
     try:
         weatherData = get(OPENWEATHERMAP_URL, timeout=5).json()
-    except:
-        print(f"Failed to get weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
+    except Exception as e:
+        print(f"Failed to get weather data: {e}")
+        print(f"Trying again in {TRY_AGAIN_SECS} seconds...")
         time.sleep(TRY_AGAIN_SECS)
         continue
 
@@ -85,8 +90,10 @@ while True:
         print(f"Point: {point}")
         series.append(point)
 
-    except:
-        print("Failure parsing weather data. Trying again in {TRY_AGAIN_SECS} seconds.")
+    except Exception as e:
+        print(f"Failure parsing weather data: {e}")
+        print(f"Trying again in {TRY_AGAIN_SECS} seconds...")
+        time.sleep(TRY_AGAIN_SECS)
         continue
 
     try:
@@ -97,11 +104,9 @@ while True:
             query_result = db_client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
             print(f"Query results: {query_result}")
 
-    except InfluxDBServerError as e:
-        print("Failure writing to or reading from InfluxDB:", e)
+    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+        print(f"Failure writing to or reading from InfluxDB: {e}")
+        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
-    SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
-
-    print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes")
+    print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
     time.sleep(GET_WEATHER_SLEEP_SECS)
