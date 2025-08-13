@@ -1,12 +1,21 @@
+# Python
 __pycache__/
 *.py[cod]
 
+# dotenv
 .env*
 !.env.template
 
 # Ansible
 inventory.ini
 
+# Config
+getSHT30.json
+getTemps.json
+
+# VS Code
 .vscode
 *.code-workspace
+
+# Misc
 .DS_Store

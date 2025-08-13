@@ -1,8 +1,0 @@
-{
-    "SandstoneRasPi4b8GbPowerMonitor": {
-        "shedSHT30": {
-            "id": "i2c:0x44",
-            "title": "Shed SHT30"
-        }
-    }
-}
