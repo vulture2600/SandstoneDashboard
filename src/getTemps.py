@@ -15,6 +15,7 @@ import time
 from os import path
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from smb.SMBConnection import SMBConnection
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 
