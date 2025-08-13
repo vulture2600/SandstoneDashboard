@@ -16,6 +16,7 @@
       tags:
         - pip
         - dotenv
+        - config_files
         - app_files
 
     - name: Ensure config directory exists
