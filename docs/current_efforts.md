@@ -22,11 +22,11 @@ We are implementing a master sensor config file for 1-Wire and i2c sensors conne
         * Room ID
             * i2c addresses
             * Channels
-* i2c humidity sensors
+* i2c SHT30 temp/humidity sensor
     * Raspberry Pi hostname
         * Room ID
-            * i2c addresses
-            * Channels
+            * i2c address
+            
 
 ##### Python script updates:
 
