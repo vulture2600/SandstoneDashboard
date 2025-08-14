@@ -2,7 +2,7 @@
 
 ## Sensor config file
 
-We are implementing a master sensor config file for 1-Wire and i2c sensors connected Raspberry Pi's.
+We are implementing sensor config files for 1-Wire and i2c sensor connected Raspberry Pi's. These config files will be pulled from a network share each time the the sensor data is read. This way new sensors can be added or removed without restarting the systemd services.
 
 #### Requirements
 
@@ -34,7 +34,7 @@ We are implementing a master sensor config file for 1-Wire and i2c sensors conne
 
 * Update the Python scripts to pull the sensor config file each time with the most recent local copy as the fallback
 
-* The config file will be hosted on a Windows share on the NAS
+* The config file will be hosted on an SMB network share
 
 * The assign_sensors script will need to be run which will update the sensor config file on the NAS Windows share
 
@@ -96,4 +96,4 @@ if temp == "Off":
 
 Eventually remove the int/float data conversions from [getWeather.py](../src/getWeather.py) - A new table will need to be used.
 
-Implement logging or use ```python -u``` so that all lines appear in the journal.
+Currently all print lines write to the system journal. We may switch to logging depending on our needs.

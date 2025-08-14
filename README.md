@@ -10,7 +10,7 @@ See [Current Efforts](docs/current_efforts.md) for more.
 
 #### Data Source
 
-* Adafruit ADS1115 Analog-to-Digital converter used to measure water pressure
+* Adafruit ADS1115 (Analog-to-Digital converter) connected water pressure sensor
 * Adafruit SHT30 Humidity and Temperature Sensor
 * Adafruit 1-Wire temperature sensor
 * [Open Weather API](https://openweathermap.org/api)
@@ -25,10 +25,10 @@ See [Current Efforts](docs/current_efforts.md) for more.
 
 #### Data Storage
 
-* I2C and 1-Wire sensor data is written to [InfluxDB](docs/influxdb.md) time series database
+* Sensor and weather data is written to an [InfluxDB](docs/influxdb.md) time series database
 
 #### Visualization, Monitoring, and Alerting
 
-* Grafana dashboard
+* Grafana dashboards
 * Slack or Discord alert channels
 * See [Alerting](docs/alerting.md) for more
