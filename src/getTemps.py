@@ -138,10 +138,11 @@ while True:
                 "location": room_id,
                 "id": SENSOR_ID,
                 "type": TEMP_SENSOR_MODEL,
-                "title": TITLE
+                "title": TITLE,
+                "status": STATUS,
+                "hostname": HOSTNAME
             },
             "fields": {
-                "status": STATUS,
                 "temp_flt": TEMP
             }
         }
