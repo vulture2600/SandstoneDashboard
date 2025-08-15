@@ -94,7 +94,7 @@ def read_temp(device_file):
 
 while True:
 
-    print("Loading config file")
+    print(f"Loading {CONFIG_FILE}")
     ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
     if ROOMS is None:
         print(f"Hostname not found in {CONFIG_FILE}")
@@ -103,6 +103,7 @@ while True:
         continue
 
     room_count = len(ROOMS)
+    print(f"Rooms in {CONFIG_FILE}: {room_count}")
 
     if room_count == 0:
         print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE}")
@@ -111,21 +112,20 @@ while True:
         continue
 
     series = []
-    ASSIGNED_SENSOR_COUNT = 0
+    WORKING_SENSOR_COUNT = 0
     print("Reading 1-Wire temperature sensors...")
 
     for i in range(room_count):
 
-        STATUS = "On"
-        room_id = list(ROOMS.keys())[i]
+        STATUS    = "On"
+        room_id   = list(ROOMS.keys())[i]
         SENSOR_ID = ROOMS.get(room_id, {}).get('id')
-        if SENSOR_ID:
-            TEMP 	  = read_temp(f"{DEVICES_PATH}{SENSOR_ID}/{W1_SLAVE_FILE}")
-            ASSIGNED_SENSOR_COUNT += 1
+        TEMP 	  = read_temp(f"{DEVICES_PATH}{SENSOR_ID}/{W1_SLAVE_FILE}")
+
+        if TEMP:
+            WORKING_SENSOR_COUNT += 1
         else:
-            SENSOR_ID = "unassigned"
-            TEMP 	  = None
-            STATUS    = "Off"
+            STATUS = "Off"
 
         TITLE = ROOMS.get(room_id, {}).get('title')
         if not TITLE:
@@ -148,7 +148,7 @@ while True:
         print(f"Point: {point}")
         series.append(point)
 
-    print(f"Assigned sensors: {ASSIGNED_SENSOR_COUNT}")
+    print(f"Working sensors: {WORKING_SENSOR_COUNT}")
 
     try:
         db_client.write_points(series)
