@@ -20,10 +20,12 @@ from common_functions import database_connect, load_json_file
 DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
-CONFIG_FILE = "config/getTemps.json"
+CONFIG_FILE_NAME = "getTemps.json"
+CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 SLEEP_MINUTES = CONFIG_FILE_TRY_AGAIN_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
+SENSOR_PREFIX = "28-"
 
 if 'INVOCATION_ID' in os.environ:
     print(f"Running under Systemd, using .env.{HOSTNAME} file")
@@ -94,28 +96,42 @@ def read_temp(device_file):
 
 while True:
 
-    print(f"Loading {CONFIG_FILE}")
+    print(f"Loading {CONFIG_FILE_NAME}")
     ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
+    ROOM_COUNT = 0
+
     if ROOMS is None:
-        print(f"Hostname not found in {CONFIG_FILE}")
-        print(f"Trying again in {SLEEP_MINUTES_FORMATTED} minute(s)")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+        print(f"Hostname not found in {CONFIG_FILE_NAME}")
+    else:
+        ROOM_COUNT = len(ROOMS)
 
-    room_count = len(ROOMS)
-    print(f"Rooms in {CONFIG_FILE}: {room_count}")
+    if ROOM_COUNT == 0:
+        print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+    else:
+        print(f"Sensors in {CONFIG_FILE_NAME}: {ROOM_COUNT}")
 
-    if room_count == 0:
-        print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE}")
-        print(f"Trying again in {SLEEP_MINUTES_FORMATTED} minute(s)")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+    try:
+        sensor_ids = os.listdir(DEVICES_PATH)
+    except Exception as e:
+        print(f"Cannot list {DEVICES_PATH} - {e}")
+    sensor_ids = [sensor_id for sensor_id in sensor_ids if sensor_id.startswith(SENSOR_PREFIX)]
+    print(f"Attached sensors: {len(sensor_ids)}")
+
+    ids_from_config = {room['id'] for room in ROOMS.values()}
+    unassigned_ids = [sid for sid in sensor_ids if sid not in ids_from_config]
+
+    for idx, sid in enumerate(unassigned_ids, start=1):
+        KEY = f"Unassigned{idx}"
+        ROOMS[KEY] = {"id": sid, "title": "Untitled"}
+
+    ROOM_COUNT = len(ROOMS)
+    print(f"All sensors: {ROOM_COUNT}")
 
     series = []
     WORKING_SENSOR_COUNT = 0
     print("Reading 1-Wire temperature sensors...")
 
-    for i in range(room_count):
+    for i in range(ROOM_COUNT):
 
         STATUS    = "On"
         room_id   = list(ROOMS.keys())[i]
