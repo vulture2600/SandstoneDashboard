@@ -17,6 +17,12 @@ from common_functions import choose_dotenv, database_connect, load_json_file
 
 DEBUG = False  # set to True to print query result
 
+I2C_ADDR = 0x44
+WRITE_REGISTER = 0x2C
+READ_REGISTER = 0x00
+WRITE_DATA = [0x06]
+LENGTH_BYTES = 6
+
 HOSTNAME = socket.gethostname()
 CONFIG_FILE = "config/getSHT30.json"
 CONFIG_FILE_TRY_AGAIN_SECS = 60
@@ -28,12 +34,6 @@ INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
-
-I2C_ADDR = 0x44
-WRITE_REGISTER = 0x2C
-READ_REGISTER = 0x00
-WRITE_DATA = [0x06]
-LENGTH_BYTES = 6
 
 db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
