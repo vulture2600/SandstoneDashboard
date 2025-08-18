@@ -6,12 +6,11 @@ import os
 import socket
 import time
 from datetime import datetime
-from dotenv import load_dotenv
 from requests import get
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
-from common_functions import database_connect
+from common_functions import choose_dotenv, database_connect
 
 DEBUG = False  # set to True to print query result
 
@@ -21,12 +20,7 @@ GET_WEATHER_SLEEP_SECS = 600
 SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
 
-if 'INVOCATION_ID' in os.environ:
-    print(f"Running under Systemd, using .env.{HOSTNAME} file")
-    load_dotenv(override=True, dotenv_path=f".env.{HOSTNAME}")
-else:
-    print("Using .env file")
-    load_dotenv(override=True)
+choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

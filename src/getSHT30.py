@@ -8,13 +8,12 @@ import os
 import socket
 import struct
 import time
-from dotenv import load_dotenv
 import smbus
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
-from common_functions import database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, load_json_file
 
 DEBUG = False  # set to True to print query result
 
@@ -22,12 +21,7 @@ HOSTNAME = socket.gethostname()
 CONFIG_FILE = "config/getSHT30.json"
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 
-if 'INVOCATION_ID' in os.environ:
-    print(f"Running under Systemd, using .env.{HOSTNAME} file")
-    load_dotenv(override=True, dotenv_path=f".env.{HOSTNAME}")
-else:
-    print("Using .env file")
-    load_dotenv(override=True)
+choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

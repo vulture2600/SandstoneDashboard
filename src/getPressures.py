@@ -11,23 +11,17 @@ import os
 import socket
 import time
 import Adafruit_ADS1x15
-from dotenv import load_dotenv
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import PRESSURE_SENSOR_TYPE
-from common_functions import database_connect
+from common_functions import choose_dotenv, database_connect
 
 DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
 
-if 'INVOCATION_ID' in os.environ:
-    print(f"Running under Systemd, using .env.{HOSTNAME} file")
-    load_dotenv(override=True, dotenv_path=f".env.{HOSTNAME}")
-else:
-    print("Using .env file")
-    load_dotenv(override=True)
+choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

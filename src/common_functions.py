@@ -1,7 +1,19 @@
 """Common functions for SandstoneDashboard"""
 
 import json
+import os
+from dotenv import load_dotenv
 from influxdb import InfluxDBClient
+
+def choose_dotenv(hostname):
+    """Choose and load the dotenv file"""
+
+    if 'INVOCATION_ID' in os.environ:
+        print(f"Running under Systemd, using .env.{hostname} file")
+        load_dotenv(override=True, dotenv_path=f".env.{hostname}")
+    else:
+        print("Using .env file")
+        load_dotenv(override=True)
 
 def database_connect(influxdb_host, influxdb_port, username, password, database):
     """Connect to the database, create if it doesn't exist"""

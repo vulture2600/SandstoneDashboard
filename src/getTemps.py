@@ -10,12 +10,11 @@ import socket
 import time
 import sys
 import subprocess
-from dotenv import load_dotenv
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
-from common_functions import database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, load_json_file
 
 DEBUG = False  # set to True to print query result
 
@@ -27,12 +26,7 @@ SLEEP_MINUTES = CONFIG_FILE_TRY_AGAIN_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
 SENSOR_PREFIX = "28-"
 
-if 'INVOCATION_ID' in os.environ:
-    print(f"Running under Systemd, using .env.{HOSTNAME} file")
-    load_dotenv(override=True, dotenv_path=f".env.{HOSTNAME}")
-else:
-    print("Using .env file")
-    load_dotenv(override=True)
+choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
