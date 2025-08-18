@@ -113,6 +113,7 @@ while True:
 
     ids_from_config = {room['id'] for room in ROOMS.values()}
     unassigned_ids = [sid for sid in sensor_ids if sid not in ids_from_config]
+    print("Unassigned sensors:", len(unassigned_ids))
 
     for idx, sid in enumerate(unassigned_ids, start=1):
         KEY = f"Unassigned{idx}"
