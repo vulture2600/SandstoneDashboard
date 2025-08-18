@@ -11,8 +11,10 @@ import os
 import socket
 import time
 import Adafruit_ADS1x15
-from influxdb.exceptions import InfluxDBServerError
 from dotenv import load_dotenv
+from requests.exceptions import Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import PRESSURE_SENSOR_TYPE
 from common_functions import database_connect
 
@@ -214,7 +216,8 @@ while True:
             query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
             print(f"Query results: {query_result}")
 
-    except InfluxDBServerError as e:
+    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
+        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
     time.sleep(5)

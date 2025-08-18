@@ -105,7 +105,7 @@ while True:
             print(f"Query results: {query_result}")
 
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        print(f"Failure writing to or reading from InfluxDB: {e}")
+        print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
     print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
