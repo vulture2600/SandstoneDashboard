@@ -20,7 +20,6 @@ from common_functions import choose_dotenv, database_connect
 DEBUG = False  # set to True to print query result
 
 HOSTNAME = socket.gethostname()
-
 choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")

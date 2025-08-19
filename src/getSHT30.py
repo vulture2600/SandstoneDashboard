@@ -23,10 +23,11 @@ READ_REGISTER = 0x00
 WRITE_DATA = [0x06]
 LENGTH_BYTES = 6
 
-HOSTNAME = socket.gethostname()
-CONFIG_FILE = "config/getSHT30.json"
+CONFIG_FILE_NAME = "getSHT30.json"
+CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 
+HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
@@ -41,8 +42,9 @@ bus = smbus.SMBus(1)
 
 while True:
 
-    print("Loading config file")
+    print(f"Loading {CONFIG_FILE_NAME}")
     SENSORS = load_json_file(CONFIG_FILE).get(HOSTNAME)
+
     if SENSORS is None:
         print(f"Hostname not found in {CONFIG_FILE}")
         print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")

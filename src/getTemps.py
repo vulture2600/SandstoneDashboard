@@ -18,14 +18,11 @@ from common_functions import choose_dotenv, database_connect, load_json_file
 
 DEBUG = False  # set to True to print query result
 
-HOSTNAME = socket.gethostname()
+SENSOR_PREFIX = "28-"
 CONFIG_FILE_NAME = "getTemps.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
-CONFIG_FILE_TRY_AGAIN_SECS = 60
-SLEEP_MINUTES = CONFIG_FILE_TRY_AGAIN_SECS / 60
-SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
-SENSOR_PREFIX = "28-"
 
+HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")

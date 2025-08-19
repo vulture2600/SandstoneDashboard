@@ -14,12 +14,12 @@ from common_functions import choose_dotenv, database_connect
 
 DEBUG = False  # set to True to print query result
 
-HOSTNAME = socket.gethostname()
 TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
 SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
 
+HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
