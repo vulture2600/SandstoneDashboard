@@ -14,7 +14,7 @@ from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
-from common_functions import choose_dotenv, database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
 DEBUG = False  # set to True to print query result
 
@@ -25,13 +25,34 @@ CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
+SMB_SERVER_IP = os.getenv("SMB_SERVER_IP")
+SMB_SERVER_PORT = os.getenv("SMB_SERVER_PORT")
+SMB_SHARE_NAME = os.getenv("SMB_SHARE_NAME")
+SMB_CONFIG_DIR = os.getenv("SMB_CONFIG_DIR")
+SMB_USERNAME = os.getenv("SMB_USERNAME")
+SMB_PASSWORD = os.getenv("SMB_PASSWORD")
+
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
-db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+smb_client = SMBFileTransfer(SMB_SERVER_IP,
+                             SMB_SERVER_PORT,
+                             SMB_SHARE_NAME,
+                             SMB_CONFIG_DIR,
+                             CONFIG_FILE_NAME,
+                             CONFIG_FILE,
+                             SMB_USERNAME,
+                             SMB_PASSWORD)
+smb_client.connect()
+
+db_client = database_connect(INFLUXDB_HOST,
+                             INFLUXDB_PORT,
+                             USERNAME,
+                             PASSWORD,
+                             DATABASE)
 
 print("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
@@ -86,6 +107,10 @@ def read_temp(device_file):
     return None
 
 while True:
+
+    print(f"Updating {CONFIG_FILE_NAME} if needed")
+    get_json_successful = smb_client.get_json_config()
+    # print(f"Get JSON Success: {get_json_successful}")
 
     print(f"Loading {CONFIG_FILE_NAME}")
     ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
@@ -170,5 +195,8 @@ while True:
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+
+    if get_json_successful is False:
+        smb_client.connect()
 
     time.sleep(5)
