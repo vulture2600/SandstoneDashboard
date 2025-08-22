@@ -104,7 +104,8 @@ while True:
                 "location": SENSOR_LOCATION,
                 "id":       SENSOR_ID,
                 "type":     SENSOR_TYPE,
-                "title":    SENSOR_TITLE
+                "title":    SENSOR_TITLE,
+                "hostname": HOSTNAME
             },
             "fields": {
                 "temp_flt": temp_F,
