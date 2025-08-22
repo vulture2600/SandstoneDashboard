@@ -13,7 +13,7 @@ from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
-from common_functions import choose_dotenv, database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
 DEBUG = False  # set to True to print query result
 
@@ -23,12 +23,19 @@ READ_REGISTER = 0x00
 WRITE_DATA = [0x06]
 LENGTH_BYTES = 6
 
+CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getSHT30.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
-CONFIG_FILE_TRY_AGAIN_SECS = 60
 
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
+
+SMB_SERVER_IP = os.getenv("SMB_SERVER_IP")
+SMB_SERVER_PORT = os.getenv("SMB_SERVER_PORT")
+SMB_SHARE_NAME = os.getenv("SMB_SHARE_NAME")
+SMB_CONFIG_DIR = os.getenv("SMB_CONFIG_DIR")
+SMB_USERNAME = os.getenv("SMB_USERNAME")
+SMB_PASSWORD = os.getenv("SMB_PASSWORD")
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
@@ -36,11 +43,29 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
-db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+smb_client = SMBFileTransfer(SMB_SERVER_IP,
+                             SMB_SERVER_PORT,
+                             SMB_SHARE_NAME,
+                             SMB_CONFIG_DIR,
+                             CONFIG_FILE_NAME,
+                             CONFIG_FILE,
+                             SMB_USERNAME,
+                             SMB_PASSWORD)
+smb_client.connect()
+
+db_client = database_connect(INFLUXDB_HOST,
+                             INFLUXDB_PORT,
+                             USERNAME,
+                             PASSWORD,
+                             DATABASE)
 
 bus = smbus.SMBus(1)
 
 while True:
+
+    print(f"Updating {CONFIG_FILE_NAME} if needed")
+    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+    # print(f"Get JSON Success: {GET_JSON_SUCCESSFUL}")
 
     print(f"Loading {CONFIG_FILE_NAME}")
     SENSORS = load_json_file(CONFIG_FILE).get(HOSTNAME)
@@ -104,7 +129,8 @@ while True:
                 "location": SENSOR_LOCATION,
                 "id":       SENSOR_ID,
                 "type":     SENSOR_TYPE,
-                "title":    SENSOR_TITLE
+                "title":    SENSOR_TITLE,
+                "hostname": HOSTNAME
             },
             "fields": {
                 "temp_flt": temp_F,
@@ -132,5 +158,8 @@ while True:
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+
+    if GET_JSON_SUCCESSFUL is False:
+        smb_client.connect()
 
     time.sleep(10)

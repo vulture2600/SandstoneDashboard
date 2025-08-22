@@ -3,8 +3,6 @@ steve.a.mccluskey@gmail.com
 Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env files for required config file.
 """
 
-# This file will be merged with getTemps.py from branch master_config_file.
-
 import os
 import socket
 import time
@@ -56,8 +54,10 @@ db_client = database_connect(INFLUXDB_HOST,
 
 print("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(
+    ["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(
+    ["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
 
 KERNEL_MOD_LOAD_FAIL = False
 
@@ -109,8 +109,8 @@ def read_temp(device_file):
 while True:
 
     print(f"Updating {CONFIG_FILE_NAME} if needed")
-    get_json_successful = smb_client.get_json_config()
-    # print(f"Get JSON Success: {get_json_successful}")
+    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+    # print(f"Get JSON Success: {GET_JSON_SUCCESSFUL}")
 
     print(f"Loading {CONFIG_FILE_NAME}")
     ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
@@ -196,7 +196,7 @@ while True:
         print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    if get_json_successful is False:
+    if GET_JSON_SUCCESSFUL is False:
         smb_client.connect()
 
     time.sleep(5)
