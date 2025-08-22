@@ -23,27 +23,20 @@ CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
-SMB_SERVER_IP = os.getenv("SMB_SERVER_IP")
-SMB_SERVER_PORT = os.getenv("SMB_SERVER_PORT")
-SMB_SHARE_NAME = os.getenv("SMB_SHARE_NAME")
-SMB_CONFIG_DIR = os.getenv("SMB_CONFIG_DIR")
-SMB_USERNAME = os.getenv("SMB_USERNAME")
-SMB_PASSWORD = os.getenv("SMB_PASSWORD")
-
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
-smb_client = SMBFileTransfer(SMB_SERVER_IP,
-                             SMB_SERVER_PORT,
-                             SMB_SHARE_NAME,
-                             SMB_CONFIG_DIR,
+smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
+                             os.getenv("SMB_SERVER_PORT"),
+                             os.getenv("SMB_SHARE_NAME"),
+                             os.getenv("SMB_CONFIG_DIR"),
+                             os.getenv("SMB_USERNAME"),
+                             os.getenv("SMB_PASSWORD"),
                              CONFIG_FILE_NAME,
-                             CONFIG_FILE,
-                             SMB_USERNAME,
-                             SMB_PASSWORD)
+                             CONFIG_FILE)
 smb_client.connect()
 
 db_client = database_connect(INFLUXDB_HOST,

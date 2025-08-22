@@ -37,16 +37,16 @@ def database_connect(influxdb_host, influxdb_port, username, password, database)
 class SMBFileTransfer:
     """Create connection to SMB share and copy files"""
 
-    def __init__(self, server, port, share, remote_path, config_file_name, config_file, username, password):
+    def __init__(self, server, port, share, remote_dir, username, password, config_file_name, config_file):
         self.server = server
         self.port = port
         self.share = share
-        self.remote_path = remote_path
-        self.config_file_name = config_file_name
-        self.config_file = config_file
+        self.remote_dir = remote_dir
         self.username = username
         self.password = password
-        self.remote_file = f"\\\\{self.server}\\{self.share}\\{self.remote_path}\\{self.config_file_name}"
+        self.config_file_name = config_file_name
+        self.config_file = config_file
+        self.remote_file = f"\\\\{self.server}\\{self.share}\\{self.remote_dir}\\{self.config_file_name}"
 
     def connect(self):
         """Connect to the SMB server"""
