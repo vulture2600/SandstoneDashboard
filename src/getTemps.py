@@ -101,19 +101,19 @@ def read_temp(device_file):
 
 while True:
 
-    print(f"Updating {CONFIG_FILE_NAME} if older than remote copy")
+    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
     print(f"Loading {CONFIG_FILE_NAME}")
     ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
-    ROOM_COUNT = len(ROOMS)
 
-    if not ROOMS:
+    if ROOMS is None:
+        ROOMS = {}
         print(f"Hostname not found in {CONFIG_FILE_NAME}")
-    elif ROOM_COUNT == 0:
+    elif not ROOMS:
         print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
     else:
-        print(f"Sensors in {CONFIG_FILE_NAME}: {ROOM_COUNT}")
+        print(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
 
     try:
         sensor_ids = os.listdir(DEVICES_PATH)
