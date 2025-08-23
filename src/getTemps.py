@@ -105,15 +105,18 @@ while True:
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
     print(f"Loading {CONFIG_FILE_NAME}")
-    ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
+    json_config = load_json_file(CONFIG_FILE)
 
-    if ROOMS is None:
-        ROOMS = {}
-        print(f"Hostname not found in {CONFIG_FILE_NAME}")
-    elif not ROOMS:
-        print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-    else:
-        print(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
+    ROOMS = {}
+    if json_config:
+        ROOMS = json_config.get(HOSTNAME)
+
+        if ROOMS is None:
+            print(f"Hostname not found in {CONFIG_FILE_NAME}")
+        elif not ROOMS:
+            print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+        else:
+            print(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
 
     try:
         sensor_ids = os.listdir(DEVICES_PATH)
@@ -123,6 +126,8 @@ while True:
         print(f"Cannot list {DEVICES_PATH} - {e}")
         sensor_ids = []
 
+    if ROOMS is None:
+        ROOMS = {}
     ids_from_config = {room['id'] for room in ROOMS.values()}
     unassigned_ids = [sid for sid in sensor_ids if sid not in ids_from_config]
     print("Unassigned sensors:", len(unassigned_ids))

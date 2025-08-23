@@ -120,4 +120,4 @@ def load_json_file(json_file):
         print(f"Error opening {json_file}: {e}")
     except Exception as e:
         print(f"An unexpected error has occurred: {e}")
-    return {}
+    return None
