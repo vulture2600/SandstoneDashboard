@@ -6,7 +6,16 @@
 
   tasks:
 
-    - name: Ensure app directory exists
+    - name: Install python3-venv package
+      ansible.builtin.apt:
+        name: python3-venv
+        state: present
+        update_cache: true
+      become: true
+      tags:
+        - pip
+
+    - name: Create app directory
       ansible.builtin.file:
         path: "{{ app_dir }}"
         state: directory
@@ -19,7 +28,7 @@
         - config_files
         - app_files
 
-    - name: Ensure config directory exists
+    - name: Create config directory
       ansible.builtin.file:
         path: "{{ config_dir }}"
         state: directory
@@ -104,6 +113,7 @@
         group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getPressures.service
+      when: "'shed' in group_names"
       tags: app_files
 
     - name: Copy getSHT30.py to the app dir
@@ -114,6 +124,7 @@
         group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getSHT30.service
+      when: "'stagewall' not in group_names"
       tags: app_files
 
     - name: Copy getTemps.py to the app dir
@@ -134,6 +145,7 @@
         group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getWeather.service
+      when: "'shed' in group_names"
       tags: app_files
 
     - name: Deploy systemd getPressures.service
@@ -147,6 +159,7 @@
         - Reload systemd daemon
         - Restart getPressures.service
       become: true
+      when: "'shed' in group_names"
       tags: systemd
 
     - name: Deploy systemd getSHT30.service
@@ -160,6 +173,7 @@
         - Reload systemd daemon
         - Restart getSHT30.service
       become: true
+      when: "'stagewall' not in group_names"
       tags: systemd
 
     - name: Deploy systemd getTemps.service
@@ -186,6 +200,7 @@
         - Reload systemd daemon
         - Restart getWeather.service
       become: true
+      when: "'shed' in group_names"
       tags: systemd
 
   handlers:
@@ -201,6 +216,7 @@
         enabled: true
         state: restarted
       become: true
+      when: "'shed' in group_names"
       listen: Restart shared services
 
     - name: Restart getSHT30.service
@@ -209,6 +225,7 @@
         enabled: true
         state: restarted
       become: true
+      when: "'stagewall' not in group_names"
       listen: Restart shared services
 
     - name: Restart getTemps.service
@@ -226,6 +243,7 @@
         state: restarted
       become: true
       listen: Restart shared services
+      when: "'shed' in group_names"
 
 - name: Ensure services are running
   hosts: all
@@ -240,4 +258,5 @@
         enabled: true
       loop: "{{ services }}"
       become: true
+      when: "'shed' in group_names"
       tags: verify_services

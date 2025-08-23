@@ -13,19 +13,18 @@ from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
-from common_functions import choose_dotenv, database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
 DEBUG = False  # set to True to print query result
 
-I2C_ADDR = 0x44
 WRITE_REGISTER = 0x2C
 READ_REGISTER = 0x00
 WRITE_DATA = [0x06]
 LENGTH_BYTES = 6
 
+CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getSHT30.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
-CONFIG_FILE_TRY_AGAIN_SECS = 60
 
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
@@ -36,31 +35,56 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
-db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
+                             os.getenv("SMB_SERVER_PORT"),
+                             os.getenv("SMB_SHARE_NAME"),
+                             os.getenv("SMB_CONFIG_DIR"),
+                             os.getenv("SMB_USERNAME"),
+                             os.getenv("SMB_PASSWORD"),
+                             CONFIG_FILE_NAME,
+                             CONFIG_FILE)
+smb_client.connect()
+
+db_client = database_connect(INFLUXDB_HOST,
+                             INFLUXDB_PORT,
+                             USERNAME,
+                             PASSWORD,
+                             DATABASE)
 
 bus = smbus.SMBus(1)
 
 while True:
 
+    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+
     print(f"Loading {CONFIG_FILE_NAME}")
-    SENSORS = load_json_file(CONFIG_FILE).get(HOSTNAME)
+    json_config = load_json_file(CONFIG_FILE)
+
+    if json_config is None:
+        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
+
+    SENSORS = json_config.get(HOSTNAME)
 
     if SENSORS is None:
-        print(f"Hostname not found in {CONFIG_FILE}")
+        print(f"Hostname not found in {CONFIG_FILE_NAME}")
+        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
+
+    if not SENSORS:
+        print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
         print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
     sensor_count = len(SENSORS)
-
-    if sensor_count == 0:
-        print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE}")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+    print(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
 
     if sensor_count > 1:
-        print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE}")
+        print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
         print("Not currently handling multiple SHT30 sensors per host")
         print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
@@ -68,6 +92,7 @@ while True:
 
     SENSOR_LOCATION = list(SENSORS.keys())[0]
     SENSOR_ID = SENSORS[SENSOR_LOCATION]["id"]
+    I2C_ADDR = int(SENSOR_ID.split(':')[1], 16)
     SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
 
     series = []
@@ -133,5 +158,8 @@ while True:
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+
+    if GET_JSON_SUCCESSFUL is False:
+        smb_client.connect()
 
     time.sleep(10)

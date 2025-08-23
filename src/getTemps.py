@@ -3,8 +3,6 @@ steve.a.mccluskey@gmail.com
 Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env files for required config file.
 """
 
-# This file will be merged with getTemps.py from branch master_config_file.
-
 import os
 import socket
 import time
@@ -14,7 +12,7 @@ from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
-from common_functions import choose_dotenv, database_connect, load_json_file
+from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
 DEBUG = False  # set to True to print query result
 
@@ -31,12 +29,28 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
-db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
+                             os.getenv("SMB_SERVER_PORT"),
+                             os.getenv("SMB_SHARE_NAME"),
+                             os.getenv("SMB_CONFIG_DIR"),
+                             os.getenv("SMB_USERNAME"),
+                             os.getenv("SMB_PASSWORD"),
+                             CONFIG_FILE_NAME,
+                             CONFIG_FILE)
+smb_client.connect()
+
+db_client = database_connect(INFLUXDB_HOST,
+                             INFLUXDB_PORT,
+                             USERNAME,
+                             PASSWORD,
+                             DATABASE)
 
 print("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
-kernel_mod_loads.append(subprocess.run(["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(
+    ["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
+kernel_mod_loads.append(subprocess.run(
+    ["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True))
 
 KERNEL_MOD_LOAD_FAIL = False
 
@@ -87,27 +101,33 @@ def read_temp(device_file):
 
 while True:
 
+    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+
     print(f"Loading {CONFIG_FILE_NAME}")
-    ROOMS = load_json_file(CONFIG_FILE).get(HOSTNAME)
-    ROOM_COUNT = 0
+    json_config = load_json_file(CONFIG_FILE)
 
-    if ROOMS is None:
-        print(f"Hostname not found in {CONFIG_FILE_NAME}")
-    else:
-        ROOM_COUNT = len(ROOMS)
+    ROOMS = {}
+    if json_config:
+        ROOMS = json_config.get(HOSTNAME)
 
-    if ROOM_COUNT == 0:
-        print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-    else:
-        print(f"Sensors in {CONFIG_FILE_NAME}: {ROOM_COUNT}")
+        if ROOMS is None:
+            print(f"Hostname not found in {CONFIG_FILE_NAME}")
+        elif not ROOMS:
+            print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+        else:
+            print(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
 
     try:
         sensor_ids = os.listdir(DEVICES_PATH)
+        sensor_ids = [sensor_id for sensor_id in sensor_ids if sensor_id.startswith(SENSOR_PREFIX)]
+        print(f"Attached sensors: {len(sensor_ids)}")
     except Exception as e:
         print(f"Cannot list {DEVICES_PATH} - {e}")
-    sensor_ids = [sensor_id for sensor_id in sensor_ids if sensor_id.startswith(SENSOR_PREFIX)]
-    print(f"Attached sensors: {len(sensor_ids)}")
+        sensor_ids = []
 
+    if ROOMS is None:
+        ROOMS = {}
     ids_from_config = {room['id'] for room in ROOMS.values()}
     unassigned_ids = [sid for sid in sensor_ids if sid not in ids_from_config]
     print("Unassigned sensors:", len(unassigned_ids))
@@ -170,5 +190,8 @@ while True:
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
         print("Failure writing to or reading from InfluxDB:", e)
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+
+    if GET_JSON_SUCCESSFUL is False:
+        smb_client.connect()
 
     time.sleep(5)
