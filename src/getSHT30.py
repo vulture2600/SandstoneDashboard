@@ -17,7 +17,6 @@ from common_functions import choose_dotenv, database_connect, SMBFileTransfer, l
 
 DEBUG = False  # set to True to print query result
 
-I2C_ADDR = 0x44
 WRITE_REGISTER = 0x2C
 READ_REGISTER = 0x00
 WRITE_DATA = [0x06]
@@ -56,29 +55,34 @@ bus = smbus.SMBus(1)
 
 while True:
 
-    print(f"Updating {CONFIG_FILE_NAME} if needed")
+    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
-    # print(f"Get JSON Success: {GET_JSON_SUCCESSFUL}")
 
     print(f"Loading {CONFIG_FILE_NAME}")
-    SENSORS = load_json_file(CONFIG_FILE).get(HOSTNAME)
+    json_config = load_json_file(CONFIG_FILE)
 
-    if SENSORS is None:
-        print(f"Hostname not found in {CONFIG_FILE}")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+    SENSORS = {}
+    if json_config:
+        SENSORS = json_config.get(HOSTNAME)
+
+        if SENSORS is None:
+            print(f"Hostname not found in {CONFIG_FILE_NAME}")
+            print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
+
+        if not SENSORS:
+            print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+            print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
+
+        print(f"Sensors in {CONFIG_FILE_NAME}: {len(SENSORS)}")
 
     sensor_count = len(SENSORS)
 
-    if sensor_count == 0:
-        print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE}")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
-
     if sensor_count > 1:
-        print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE}")
+        print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
         print("Not currently handling multiple SHT30 sensors per host")
         print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
@@ -86,6 +90,7 @@ while True:
 
     SENSOR_LOCATION = list(SENSORS.keys())[0]
     SENSOR_ID = SENSORS[SENSOR_LOCATION]["id"]
+    I2C_ADDR = int(SENSOR_ID.split(':')[1], 16)
     SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
 
     series = []
