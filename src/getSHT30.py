@@ -61,25 +61,27 @@ while True:
     print(f"Loading {CONFIG_FILE_NAME}")
     json_config = load_json_file(CONFIG_FILE)
 
-    SENSORS = {}
-    if json_config:
-        SENSORS = json_config.get(HOSTNAME)
+    if json_config is None:
+        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
 
-        if SENSORS is None:
-            print(f"Hostname not found in {CONFIG_FILE_NAME}")
-            print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-            continue
+    SENSORS = json_config.get(HOSTNAME)
 
-        if not SENSORS:
-            print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-            print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-            continue
+    if SENSORS is None:
+        print(f"Hostname not found in {CONFIG_FILE_NAME}")
+        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
 
-        print(f"Sensors in {CONFIG_FILE_NAME}: {len(SENSORS)}")
+    if not SENSORS:
+        print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
 
     sensor_count = len(SENSORS)
+    print(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
 
     if sensor_count > 1:
         print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
