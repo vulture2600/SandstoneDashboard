@@ -3,7 +3,9 @@ Get weather data from OpenWeather and write to InfluxDB.
 """
 
 import os
+import logging
 import socket
+import sys
 import time
 from datetime import datetime
 from requests import get
@@ -12,13 +14,19 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from common_functions import choose_dotenv, database_connect
 
-DEBUG = False  # set to True to print query result
-
 TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
 SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
+LOG_FILE = "/var/log/getWeather.log"
 
+LOG_LEVEL = os.getenv("LOG_LEVEL_GET_WEATHER", "INFO").upper()
+FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
+print(f"Logging to {LOG_FILE}")
+
+logging.info(f"Python version: {sys.version}")
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
@@ -50,8 +58,8 @@ while True:
     try:
         weatherData = get(OPENWEATHERMAP_URL, timeout=5).json()
     except Exception as e:
-        print(f"Failed to get weather data: {e}")
-        print(f"Trying again in {TRY_AGAIN_SECS} seconds...")
+        logging.error(f"Failed to get weather data: {e}")
+        logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
         time.sleep(TRY_AGAIN_SECS)
         continue
 
@@ -81,26 +89,26 @@ while True:
                 "timeStamp": dateTimeNow
             }
         }
-        print(f"Point: {point}")
+        logging.debug(f"Point: {point}")
         series.append(point)
 
     except Exception as e:
-        print(f"Failure parsing weather data: {e}")
-        print(f"Trying again in {TRY_AGAIN_SECS} seconds...")
+        logging.error(f"Failure parsing weather data: {e}")
+        logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
         time.sleep(TRY_AGAIN_SECS)
         continue
 
     try:
         db_client.write_points(series)
-        print("Series written to InfluxDB.")
+        logging.info("Series written to InfluxDB.")
 
-        if DEBUG is True:
+        if LOG_LEVEL == 'DEBUG':
             query_result = db_client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
-            print(f"Query results: {query_result}")
+            logging.debug(f"Query results: {query_result}")
 
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        print("Failure writing to or reading from InfluxDB:", e)
+        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    print(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
+    logging.info(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
     time.sleep(GET_WEATHER_SLEEP_SECS)

@@ -5,8 +5,10 @@ This uses SMBus (System Management Bus), a subset of the I2C (Inter-Integrated C
 """
 
 import os
+import logging
 import socket
 import struct
+import sys
 import time
 import smbus
 from requests.exceptions import Timeout
@@ -14,8 +16,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
-
-DEBUG = False  # set to True to print query result
 
 WRITE_REGISTER = 0x2C
 READ_REGISTER = 0x00
@@ -25,7 +25,15 @@ LENGTH_BYTES = 6
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getSHT30.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
+LOG_FILE = "/var/log/getSHT30.log"
 
+LOG_LEVEL = os.getenv("LOG_LEVEL_GET_SHT30", "INFO").upper()
+FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
+print(f"Logging to {LOG_FILE}")
+
+logging.info(f"Python version: {sys.version}")
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
@@ -35,8 +43,10 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
+SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
+
 smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
-                             os.getenv("SMB_SERVER_PORT"),
+                             SMB_SERVER_PORT,
                              os.getenv("SMB_SHARE_NAME"),
                              os.getenv("SMB_CONFIG_DIR"),
                              os.getenv("SMB_USERNAME"),
@@ -55,38 +65,38 @@ bus = smbus.SMBus(1)
 
 while True:
 
-    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
-    print(f"Loading {CONFIG_FILE_NAME}")
+    logging.info(f"Loading {CONFIG_FILE_NAME}")
     json_config = load_json_file(CONFIG_FILE)
 
     if json_config is None:
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
     SENSORS = json_config.get(HOSTNAME)
 
     if SENSORS is None:
-        print(f"Hostname not found in {CONFIG_FILE_NAME}")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
     if not SENSORS:
-        print(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
     sensor_count = len(SENSORS)
-    print(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
+    logging.info(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
 
     if sensor_count > 1:
-        print(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
-        print("Not currently handling multiple SHT30 sensors per host")
-        print(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        logging.warning(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
+        logging.warning("Not currently handling multiple SHT30 sensors per host")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
         time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
         continue
 
@@ -96,19 +106,19 @@ while True:
     SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
 
     series = []
-    print("Reading SHT30 sensors")
+    logging.info("Reading SHT30 sensors")
 
     try:
-        print("Writing to I2C bus")
+        logging.info("Writing to I2C bus")
         bus.write_i2c_block_data(I2C_ADDR, WRITE_REGISTER, WRITE_DATA)
         time.sleep(0.5)
-        print("Reading from I2C bus")
+        logging.info("Reading from I2C bus")
         i2c_block_data = bus.read_i2c_block_data(I2C_ADDR, READ_REGISTER, LENGTH_BYTES)
 
-        print("I2C block data:", i2c_block_data)
+        logging.info(f"I2C block data: {i2c_block_data}")
 
         if len(i2c_block_data) < 5:
-            print("Error: I2C block data has fewer than 4 items.")
+            logging.error("I2C block data has fewer than 4 items.")
             continue
 
         temp_MSB, temp_LSB = i2c_block_data[0:2]
@@ -137,26 +147,26 @@ while True:
                 "humidity": str(humidity)
             }
         }
-        print(f"Point: {point}")
+        logging.debug(f"Point: {point}")
         series.append(point)
 
     except OSError as e:
-        print(f"I2C read failed: {e}")
+        logging.error(f"I2C read failed: {e}")
         continue
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error: {e}")
         continue
 
     try:
         db_client.write_points(series)
-        print("Series written to InfluxDB.")
+        logging.info("Series written to InfluxDB.")
 
-        if DEBUG is True:
+        if LOG_LEVEL == 'DEBUG':
             query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
-            print(f"Query results: {query_result}")
+            logging.debug(f"Query results: {query_result}")
 
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        print("Failure writing to or reading from InfluxDB:", e)
+        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
     if GET_JSON_SUCCESSFUL is False:

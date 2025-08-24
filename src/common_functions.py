@@ -1,6 +1,7 @@
 """Common functions for SandstoneDashboard"""
 
 import json
+import logging
 import os
 import tempfile
 from datetime import datetime
@@ -8,29 +9,31 @@ import smbclient
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 
+logger = logging.getLogger(__name__)
+
 def choose_dotenv(hostname):
     """Choose and load the dotenv file"""
 
     if 'INVOCATION_ID' in os.environ:
-        print(f"Running under Systemd, using .env.{hostname} file")
+        logger.info(f"Running under Systemd, using .env.{hostname}")
         load_dotenv(override=True, dotenv_path=f".env.{hostname}")
     else:
-        print("Using .env file")
+        logger.info("Using .env")
         load_dotenv(override=True)
 
 def database_connect(influxdb_host, influxdb_port, username, password, database):
     """Connect to the database, create if it doesn't exist"""
 
-    print(f"Connecting InfluxDB: {influxdb_host}")
+    logger.info(f"Connecting InfluxDB: {influxdb_host}")
     client = InfluxDBClient(influxdb_host, influxdb_port, username, password, database)
     databases = client.get_list_database()
 
     if not any(db['name'] == database for db in databases):
-        print(f"Creating {database}")
+        logger.info(f"Creating {database}")
         client.create_database(database)
         client.switch_database(database)
 
-    print(f"InfluxDB client ok! Using {database}")
+    logger.info(f"InfluxDB client ok! Using {database}")
 
     return client
 
@@ -58,13 +61,13 @@ class SMBFileTransfer:
                 username=self.username,
                 password=self.password
                 )
-            print(f"Connected to SMB server: {self.server}")
+            logger.info(f"Connected to SMB server: {self.server}")
             return True
 
         except (OSError, PermissionError) as e:
-            print(f"Connection error to {self.server}: {e}")
+            logger.error(f"Connection error to {self.server}: {e}")
         except Exception as e:
-            print(f"Unknown error while connecting to {self.server}: {e}")
+            logger.error(f"Unknown error while connecting to {self.server}: {e}")
         return False
 
     def get_json_config(self):
@@ -85,7 +88,7 @@ class SMBFileTransfer:
             )
 
             if not update_needed:
-                print("Local config is up to date")
+                logger.info("Local config is up to date")
                 return True
 
             with smbclient.open_file(self.remote_file, "r", encoding="utf-8") as open_smb_file:
@@ -98,13 +101,13 @@ class SMBFileTransfer:
 
             os.replace(tmp.name, self.config_file)
 
-            print("Local config updated from remote")
+            logger.info("Local config updated from remote")
             return True
 
         except json.JSONDecodeError as e:
-            print(f"Invalid JSON: {self.remote_file} - {e}")
+            logger.error(f"Invalid JSON: {self.remote_file} - {e}")
         except Exception as e:
-            print(f"Error fetching config: {e}")
+            logger.error(f"Error fetching config: {e}")
         return False
 
 def load_json_file(json_file):
@@ -113,11 +116,11 @@ def load_json_file(json_file):
         with open(json_file, encoding='utf-8') as open_json_file:
             return json.load(open_json_file)
     except FileNotFoundError:
-        print(f"File not found: {json_file}")
+        logger.error(f"File not found: {json_file}")
     except json.JSONDecodeError as e:
-        print(f"Invalid JSON in {json_file}: {e}")
+        logger.error(f"Invalid JSON in {json_file}: {e}")
     except OSError as e:
-        print(f"Error opening {json_file}: {e}")
+        logger.error(f"Error opening {json_file}: {e}")
     except Exception as e:
-        print(f"An unexpected error has occurred: {e}")
+        logger.error(f"An unexpected error has occurred: {e}")
     return None

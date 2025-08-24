@@ -4,6 +4,7 @@ Read Adafruit 1-Wire temperature sensor data and write to InfluxDB. See .env fil
 """
 
 import os
+import logging
 import socket
 import time
 import sys
@@ -14,12 +15,18 @@ from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
-DEBUG = False  # set to True to print query result
-
 SENSOR_PREFIX = "28-"
 CONFIG_FILE_NAME = "getTemps.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
+LOG_FILE = "/var/log/getTemps.log"
 
+LOG_LEVEL = os.getenv("LOG_LEVEL_GET_TEMPS", "INFO").upper()
+FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
+print(f"Logging to {LOG_FILE}")
+
+logging.info(f"Python version: {sys.version}")
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
@@ -29,8 +36,10 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
+SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
+
 smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
-                             os.getenv("SMB_SERVER_PORT"),
+                             SMB_SERVER_PORT,
                              os.getenv("SMB_SHARE_NAME"),
                              os.getenv("SMB_CONFIG_DIR"),
                              os.getenv("SMB_USERNAME"),
@@ -45,7 +54,7 @@ db_client = database_connect(INFLUXDB_HOST,
                              PASSWORD,
                              DATABASE)
 
-print("Verifying all kernel modules are loaded")
+logging.info("Verifying all kernel modules are loaded")
 kernel_mod_loads = []
 kernel_mod_loads.append(subprocess.run(
     ["modprobe", KERNEL_MOD_W1_GPIO], capture_output=True, text=True))
@@ -56,33 +65,34 @@ KERNEL_MOD_LOAD_FAIL = False
 
 for kernel_mod_load in kernel_mod_loads:
     if kernel_mod_load.returncode != 0:
-        print(kernel_mod_load.stderr.rstrip())
+        err_msg = (kernel_mod_load.stderr or "").strip() or "No stderr output"
+        logging.critical(f"Kernel module load failed: {err_msg}", exc_info=True)
         KERNEL_MOD_LOAD_FAIL = True
 
-if KERNEL_MOD_LOAD_FAIL is True:
-    print("Exiting")
+if KERNEL_MOD_LOAD_FAIL:
+    logging.critical("Exiting due to kernel module load failure(s)", exc_info=True)
     sys.exit(1)
 
 def read_temp(device_file):
     """Read temperature from 1-Wire temp sensor attached to the system bus"""
 
     marker = "t="
-    print(f"Device file: {device_file}")
+    logging.info(f"Device file: {device_file}")
 
     try:
         with open(device_file, "r") as f:
             lines = f.readlines()
 
         if len(lines) < 2:
-            print("Error: Device file has fewer than 2 lines.")
+            logging.error("Device file has fewer than 2 lines.")
             return None
 
-        print(f"Device file lines: {lines}")
+        logging.debug(f"Device file lines: {lines}")
         line = lines[1].strip()
         position = line.find(marker)
 
         if position == -1:
-            print(f"Error: Marker '{marker}' not found in line: {line}")
+            logging.error(f"Marker '{marker}' not found in line: {line}")
             return None
 
         temp_string = line[position + len(marker):]
@@ -91,20 +101,20 @@ def read_temp(device_file):
         return temp_F
 
     except FileNotFoundError as e:
-        print(f"File not found: {device_file} — {e}")
+        logging.error(f"File not found: {device_file} — {e}")
     except ValueError as e:
-        print(f"Error parsing temperature value: {e}")
+        logging.error(f"Error parsing temperature value: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error: {e}")
 
     return None
 
 while True:
 
-    print(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
-    print(f"Loading {CONFIG_FILE_NAME}")
+    logging.info(f"Loading {CONFIG_FILE_NAME}")
     json_config = load_json_file(CONFIG_FILE)
 
     ROOMS = {}
@@ -112,36 +122,36 @@ while True:
         ROOMS = json_config.get(HOSTNAME)
 
         if ROOMS is None:
-            print(f"Hostname not found in {CONFIG_FILE_NAME}")
+            logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
         elif not ROOMS:
-            print(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+            logging.warning(f"No rooms for {HOSTNAME} found in {CONFIG_FILE_NAME}")
         else:
-            print(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
+            logging.info(f"Sensors in {CONFIG_FILE_NAME}: {len(ROOMS)}")
 
     try:
         sensor_ids = os.listdir(DEVICES_PATH)
         sensor_ids = [sensor_id for sensor_id in sensor_ids if sensor_id.startswith(SENSOR_PREFIX)]
-        print(f"Attached sensors: {len(sensor_ids)}")
+        logging.info(f"Attached sensors: {len(sensor_ids)}")
     except Exception as e:
-        print(f"Cannot list {DEVICES_PATH} - {e}")
+        logging.error(f"Cannot list {DEVICES_PATH} - {e}")
         sensor_ids = []
 
     if ROOMS is None:
         ROOMS = {}
     ids_from_config = {room['id'] for room in ROOMS.values()}
     unassigned_ids = [sid for sid in sensor_ids if sid not in ids_from_config]
-    print("Unassigned sensors:", len(unassigned_ids))
+    logging.info(f"Unassigned sensors: {len(unassigned_ids)}")
 
     for idx, sid in enumerate(unassigned_ids, start=1):
         KEY = f"Unassigned{idx}"
         ROOMS[KEY] = {"id": sid, "title": "Untitled"}
 
     ROOM_COUNT = len(ROOMS)
-    print(f"All sensors: {ROOM_COUNT}")
+    logging.info(f"All sensors: {ROOM_COUNT}")
 
     series = []
     WORKING_SENSOR_COUNT = 0
-    print("Reading 1-Wire temperature sensors...")
+    logging.info("Reading 1-Wire temperature sensors...")
 
     for i in range(ROOM_COUNT):
 
@@ -174,21 +184,21 @@ while True:
                 "temp_flt": TEMP
             }
         }
-        print(f"Point: {point}")
+        logging.debug(f"Point: {point}")
         series.append(point)
 
-    print(f"Working sensors: {WORKING_SENSOR_COUNT}")
+    logging.info(f"Working sensors: {WORKING_SENSOR_COUNT}")
 
     try:
         db_client.write_points(series)
-        print("Series written to InfluxDB.")
+        logging.info("Series written to InfluxDB.")
 
-        if DEBUG is True:
+        if LOG_LEVEL == 'DEBUG':
             query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
-            print(f"Query results: {query_result}")
+            logging.debug(f"Query results: {query_result}")
 
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        print("Failure writing to or reading from InfluxDB:", e)
+        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
     if GET_JSON_SUCCESSFUL is False:
