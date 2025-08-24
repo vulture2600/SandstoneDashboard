@@ -26,6 +26,7 @@ numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
+logging.info(f"Python version: {sys.version}")
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
@@ -65,11 +66,11 @@ KERNEL_MOD_LOAD_FAIL = False
 for kernel_mod_load in kernel_mod_loads:
     if kernel_mod_load.returncode != 0:
         err_msg = (kernel_mod_load.stderr or "").strip() or "No stderr output"
-        logging.critical(f"Kernel module load failed: {err_msg}")
+        logging.critical(f"Kernel module load failed: {err_msg}", exc_info=True)
         KERNEL_MOD_LOAD_FAIL = True
 
 if KERNEL_MOD_LOAD_FAIL:
-    logging.critical("Exiting due to kernel module load failure(s)")
+    logging.critical("Exiting due to kernel module load failure(s)", exc_info=True)
     sys.exit(1)
 
 def read_temp(device_file):

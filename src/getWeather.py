@@ -5,6 +5,7 @@ Get weather data from OpenWeather and write to InfluxDB.
 import os
 import logging
 import socket
+import sys
 import time
 from datetime import datetime
 from requests import get
@@ -25,6 +26,7 @@ numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
+logging.info(f"Python version: {sys.version}")
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
 
