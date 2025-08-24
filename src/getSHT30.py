@@ -164,7 +164,7 @@ while True:
             logging.debug(f"Query results: {query_result}")
 
     except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        logging.error("Failure writing to or reading from InfluxDB:", e)
+        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
         db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
     if GET_JSON_SUCCESSFUL is False:
