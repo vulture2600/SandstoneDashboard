@@ -38,8 +38,9 @@ ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed --diff 
 # Add -t <tag> to limit which tasks runs.
 ```
 
-Run the playbook, see [vars.yaml](vars.yaml) for variables.
+Run the playbook
 
+* See [vars.yaml](vars.yaml) for variables
 * To see which tasks will make changes, add **--check**
 * To see the changes, add **--diff**
 
