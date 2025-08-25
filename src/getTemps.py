@@ -163,7 +163,7 @@ while True:
         if TEMP:
             WORKING_SENSOR_COUNT += 1
         else:
-            STATUS = "Off"
+            STATUS = "OFF"  #make caps?
             TEMP  = -100.0   #school room pi is giving an incomplete data read error to DB.
 
         TITLE = ROOMS.get(room_id, {}).get('title')
