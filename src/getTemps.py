@@ -84,7 +84,7 @@ def read_temp(device_file):
             lines = f.readlines()
 
         if len(lines) < 2:
-            logging.error("Device file has fewer than 2 lines.")
+            logging.error(f"Temperature not found in {device_file}")
             return None
 
         logging.debug(f"Device file lines: {lines}")
@@ -163,8 +163,8 @@ while True:
         if TEMP:
             WORKING_SENSOR_COUNT += 1
         else:
-            STATUS = "OFF"  #make caps?
-            TEMP  = -100.0   #school room pi is giving an incomplete data read error to DB.
+            STATUS = "OFF"
+            TEMP  = -999.9
 
         TITLE = ROOMS.get(room_id, {}).get('title')
         if not TITLE:
