@@ -1,5 +1,5 @@
 ---
-- name: Deploy Systemd services and Python virtualenv for SandstoneDashboard
+- name: Deploy the SandstoneDashboard app
   hosts: all
   vars_files:
     - vars.yaml
@@ -75,13 +75,13 @@
         mode: '0600'
       tags: dotenv
 
-    - name: Copy config files the config dir
+    - name: Copy config files to the config dir
       ansible.builtin.copy:
         src: "../src/config/{{ item }}"
         dest: "{{ config_dir }}"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-        mode: '0644'
+        mode: '0600'
       loop: "{{ config_files }}"
       tags: config_files
 
@@ -202,6 +202,30 @@
       become: true
       when: "'shed' in group_names"
       tags: systemd
+
+    - name: Create log files
+      ansible.builtin.file:
+        path: "/var/log/{{ item }}.log"
+        state: touch
+        modification_time: preserve
+        access_time: preserve
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+      loop: "{{ services }}"
+      become: true
+      tags: logging
+
+    - name: Deploy logrotate config files
+      ansible.builtin.copy:
+        src: "logrotate/{{ item }}"
+        dest: "/etc/logrotate.d"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ services }}"
+      become: true
+      tags: logging
 
   handlers:
 

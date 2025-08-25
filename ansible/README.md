@@ -22,46 +22,52 @@ chmod 600 ~/.ssh/authorized_keys
 Linting & syntax checks
 
 ```shell
-yamllint deploy_app_playbook.yaml                         # yaml lint check
+yamllint deploy_sandstonedashboard.yaml                         # yaml lint check
 
-ansible-lint deploy_app_playbook.yaml                     # ansible lint check
+ansible-lint deploy_sandstonedashboard.yaml                     # ansible lint check
 
-ansible-playbook deploy_app_playbook.yaml --syntax-check  # check for syntax errors
+ansible-playbook deploy_sandstonedashboard.yaml --syntax-check  # check for syntax errors
 ```
 
 Preflight check
 
 ```shell
 # Dry run, show what will change:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed --diff --check
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed --diff --check
 
-# Add -t <tag> to limit what runs.
+# Add -t <tag> to limit which tasks runs.
 ```
 
-Run the playbook, see [vars.yaml](vars.yaml)
+Run the playbook, see [vars.yaml](vars.yaml) for variables.
+
+* To see which tasks will make changes, add **--check**
+* To see the changes, add **--diff**
 
 ```shell
 # Create Python virtual env, install packages:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed -t pip
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t pip
 
 # Deploy dotenv file:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed -t dotenv
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t dotenv
 
 # Deploy Python files:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed -t app_files
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t app_files
 
 # Deploy systemd services:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed -t systemd
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t systemd
 
-# Verify systemd services:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed -t verify_services
+# Deploy logrotate config, create log files:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t logging
+```
 
+```shell
 # Run all parts:
-ansible-playbook deploy_app_playbook.yaml -i inventory.ini -l shed
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed
+```
 
-# Add --check to see which tasks will make changes.
-
-# Add --diff to see the changes.
+```shell
+# Verify systemd services:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t verify_services
 ```
 
 #### Ansible inventory file example
