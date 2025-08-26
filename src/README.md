@@ -28,8 +28,8 @@ pip check  # check for broken requirements
 ### Logging
 
 ```shell
-tail -f /var/log/getPressures.log
-tail -f /var/log/getSHT30.log
-tail -f /var/log/getTemps.log
-tail -f /var/log/getWeather.log
+tail -f /var/log/SandstoneDashboard/getPressures.log
+tail -f /var/log/SandstoneDashboard/getSHT30.log
+tail -f /var/log/SandstoneDashboard/getTemps.log
+tail -f /var/log/SandstoneDashboard/getWeather.log
 ```

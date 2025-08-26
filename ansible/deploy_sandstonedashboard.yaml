@@ -203,18 +203,25 @@
       when: "'shed' in group_names"
       tags: systemd
 
-    - name: Create log files
+    - name: Create log directory
       ansible.builtin.file:
-        path: "/var/log/{{ item }}.log"
-        state: touch
-        modification_time: preserve
-        access_time: preserve
+        path: "{{ log_dir }}"
+        state: directory
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-        mode: '0644'
-      loop: "{{ services }}"
+        mode: '0755'
       become: true
       tags: logging
+
+    # Uncomment this after logging on the other hosts has been updated:
+    # - name: Create symlinks for service logs
+    #   ansible.builtin.file:
+    #     src: "{{ log_dir }}/{{ item }}.log"
+    #     dest: "/var/log/{{ item }}.log"
+    #     state: link
+    #   loop: "{{ services }}"
+    #   become: true
+    #   tags: logging
 
     - name: Deploy logrotate config files
       ansible.builtin.copy:

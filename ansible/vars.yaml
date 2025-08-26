@@ -1,4 +1,5 @@
 ---
+log_dir: "/var/log/SandstoneDashboard"
 app_dir: "/home/{{ ansible_user }}/SandstoneDashboard"
 config_dir: "{{ app_dir }}/config"
 venv_path: "{{ app_dir }}/venv"

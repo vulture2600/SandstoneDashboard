@@ -1,4 +1,4 @@
-/var/log/getPressures.log {
+/var/log/SandstoneDashboard/getPressures.log {
     missingok
     notifempty
     weekly
