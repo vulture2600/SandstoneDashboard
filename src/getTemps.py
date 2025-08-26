@@ -153,10 +153,9 @@ while True:
     WORKING_SENSOR_COUNT = 0
     logging.info("Reading 1-Wire temperature sensors...")
 
-    for i in range(ROOM_COUNT):
+    for room_id in ROOMS:
 
         STATUS    = "On"
-        room_id   = list(ROOMS.keys())[i]
         SENSOR_ID = ROOMS.get(room_id, {}).get('id')
         TEMP 	  = read_temp(f"{DEVICES_PATH}{SENSOR_ID}/{W1_SLAVE_FILE}")
 
@@ -173,7 +172,6 @@ while True:
         point = {
             "measurement": "temps",
             "tags": {
-                "sensor": i + 1,
                 "location": room_id,
                 "id": SENSOR_ID,
                 "type": TEMP_SENSOR_MODEL,
