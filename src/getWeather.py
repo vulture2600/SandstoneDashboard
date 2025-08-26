@@ -18,17 +18,18 @@ TRY_AGAIN_SECS = 60
 GET_WEATHER_SLEEP_SECS = 600
 SLEEP_MINUTES = GET_WEATHER_SLEEP_SECS / 60
 SLEEP_MINUTES_FORMATTED = f"{SLEEP_MINUTES:.1f}".rstrip("0").rstrip(".")
-LOG_FILE = "/var/log/getWeather.log"
+
+HOSTNAME = socket.gethostname()
+choose_dotenv(HOSTNAME)
 
 LOG_LEVEL = os.getenv("LOG_LEVEL_GET_WEATHER", "INFO").upper()
+LOG_FILE = os.getenv("LOG_FILE_GET_WEATHER", "/var/log/getWeather.log")
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
 logging.info(f"Python version: {sys.version}")
-HOSTNAME = socket.gethostname()
-choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

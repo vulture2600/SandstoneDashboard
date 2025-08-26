@@ -19,17 +19,17 @@ from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import PRESSURE_SENSOR_TYPE
 from common_functions import choose_dotenv, database_connect
 
-LOG_FILE = "/var/log/getTemps.log"
+HOSTNAME = socket.gethostname()
+choose_dotenv(HOSTNAME)
 
 LOG_LEVEL = os.getenv("LOG_LEVEL_GET_PRESSURES", "INFO").upper()
+LOG_FILE = os.getenv("LOG_FILE_GET_PRESSURES", "/var/log/getPressures.log")
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
 logging.info(f"Python version: {sys.version}")
-HOSTNAME = socket.gethostname()
-choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

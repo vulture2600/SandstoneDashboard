@@ -25,17 +25,18 @@ LENGTH_BYTES = 6
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getSHT30.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
-LOG_FILE = "/var/log/getSHT30.log"
+
+HOSTNAME = socket.gethostname()
+choose_dotenv(HOSTNAME)
 
 LOG_LEVEL = os.getenv("LOG_LEVEL_GET_SHT30", "INFO").upper()
+LOG_FILE = os.getenv("LOG_FILE_GET_SHT30", "/var/log/getSHT30.log")
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
 logging.info(f"Python version: {sys.version}")
-HOSTNAME = socket.gethostname()
-choose_dotenv(HOSTNAME)
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
