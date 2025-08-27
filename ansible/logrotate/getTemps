@@ -1,4 +1,4 @@
-/var/log/getTemps.log {
+/var/log/SandstoneDashboard/getTemps.log {
     missingok
     notifempty
     weekly
