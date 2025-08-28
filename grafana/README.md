@@ -1,4 +1,4 @@
-# Alerting
+# Grafana
 
 ### Slack alerts
 
@@ -18,5 +18,3 @@ In Grafana:
 4) Save it
 
 After this create alerts from the panels in the Grafana dashboard.
-
-See [Issues](issues.md) for current issues.

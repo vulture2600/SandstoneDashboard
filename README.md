@@ -4,8 +4,6 @@
 
 The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https://www.mountainproject.com/area/106915985/sandstone-ice-park) in Sandstone MN. The main focus is monitoring the water lines that carry water to edge of the cliffs and preventing them from freezing entirely. Significant manual intervention is required when lines freeze or break.
 
-See [Current Efforts](docs/current_efforts.md) for more.
-
 ## Data Pipeline
 
 #### Data Source
@@ -17,7 +15,7 @@ See [Current Efforts](docs/current_efforts.md) for more.
 
 #### Data Ingestion
 
-[SystemD](ansible/systemd) driven Python [scripts](src):
+[SystemD](ansible/systemd) services. See [src](src) for Python files.
 * getPressures.service
 * getSHT30.service
 * getTemps.service
@@ -25,10 +23,9 @@ See [Current Efforts](docs/current_efforts.md) for more.
 
 #### Data Storage
 
-* Sensor and weather data is written to an [InfluxDB](docs/influxdb.md) time series database
+* Sensor and weather data is written to an [InfluxDB](influxdb) time series database
 
 #### Visualization, Monitoring, and Alerting
 
-* Grafana dashboards
+* [Grafana](grafana) dashboards and alerting
 * Slack or Discord alert channels
-* See [Alerting](docs/alerting.md) for more

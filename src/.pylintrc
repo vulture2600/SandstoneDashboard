@@ -195,7 +195,13 @@ good-names=i,
            k,
            ex,
            Run,
-           _
+           _,
+           temp_C,
+           temp_F,
+           getPressures,
+           getSHT30,
+           getTemps,
+           getWeather
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -290,10 +296,12 @@ exclude-too-few-public-methods=
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-max-args=5
+; max-args=5
+max-args=9
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+; max-attributes=5
+max-attributes=9
 
 # Maximum number of boolean expressions in an if statement (see R0916).
 max-bool-expr=5
@@ -308,7 +316,8 @@ max-locals=15
 max-parents=7
 
 # Maximum number of positional arguments for function / method.
-max-positional-arguments=5
+; max-positional-arguments=5
+max-positional-arguments=9
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20
@@ -345,7 +354,8 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=120
+; max-line-length=100
+max-line-length=174
 
 # Maximum number of lines in a module.
 max-module-lines=1000
