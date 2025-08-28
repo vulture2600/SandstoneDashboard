@@ -27,9 +27,13 @@ pip check  # check for broken requirements
 
 ### Dotenv
 
-The dotenv file containing values specific to the host is chosen based on whether the Python script was started by systemd or without. See the choose_dotenv function in [common_functions.py](common_functions.py)
+The [dotenv](.env.template) file containing values specific to the host is chosen based on whether the Python script was started by systemd or without. See the choose_dotenv function in [common_functions.py](common_functions.py)
 
 ### Logging
+
+The log file path is set in the [dotenv](.env.template) file.
+
+ Follow any of the log files directly or use the symlinks to each log file in /var/log.
 
 ```shell
 tail -f /var/log/SandstoneDashboard/getPressures.log
@@ -38,11 +42,11 @@ tail -f /var/log/SandstoneDashboard/getTemps.log
 tail -f /var/log/SandstoneDashboard/getWeather.log
 ```
 
-Or use the symlinks to each log file in /var/log
-
 ### Sensor config files
 
-* json files containing sensor ids and locations are pulled from an SMB share each time temperature, humidity, and eventually pressure values are read. This makes the sensors "hot swappable."
+* json files containing sensor ids and locations are read from /config.
+* If the json file is missing or older than the remote copy, the remote copy is pulled from an SMB share each time temperature, humidity, and eventually pressure values are read. This makes the sensors "hot swappable."
+* The local json file (new or old) is read whether or not the remote copy is accessible.
 * Sensors not found in the config files will be read and the data point will be sent to InfluxDB with the location tag set to 'unassigned'.
 * These unassigned sensors will show as untitled and unassigned in Grafana.
 * The top level keys in the json examples below are host names.
