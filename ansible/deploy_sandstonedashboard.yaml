@@ -66,24 +66,26 @@
       delay: 5
       tags: pip
 
-    - name: Copy dotenv file to the app dir
+    - name: Copy dotenv file to the app dir, make backup before
       ansible.builtin.copy:
         src: "../src/.env.{{ dotenv_host }}"
         dest: "{{ app_dir }}"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         mode: '0600'
+        backup: true
       tags: dotenv
 
-    - name: Copy config files to the config dir
-      ansible.builtin.copy:
-        src: "../src/config/{{ item }}"
-        dest: "{{ config_dir }}"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0600'
-      loop: "{{ config_files }}"
-      tags: config_files
+    # Leave this commented out unless the SMB share is unavailable
+    # - name: Copy config files to the config dir
+    #   ansible.builtin.copy:
+    #     src: "../src/config/{{ item }}"
+    #     dest: "{{ config_dir }}"
+    #     owner: "{{ ansible_user }}"
+    #     group: "{{ ansible_user }}"
+    #     mode: '0600'
+    #   loop: "{{ config_files }}"
+    #   tags: config_files
 
     - name: Copy constants.py to the app dir
       ansible.builtin.copy:
@@ -124,7 +126,7 @@
         group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getSHT30.service
-      when: "'stagewall' not in group_names"
+      when: "'shed' in group_names"
       tags: app_files
 
     - name: Copy getTemps.py to the app dir
@@ -173,7 +175,7 @@
         - Reload systemd daemon
         - Restart getSHT30.service
       become: true
-      when: "'stagewall' not in group_names"
+      when: "'shed' in group_names"
       tags: systemd
 
     - name: Deploy systemd getTemps.service
@@ -213,17 +215,7 @@
       become: true
       tags: logging
 
-    # Uncomment this after logging on the other hosts has been updated:
-    # - name: Create symlinks for service logs
-    #   ansible.builtin.file:
-    #     src: "{{ log_dir }}/{{ item }}.log"
-    #     dest: "/var/log/{{ item }}.log"
-    #     state: link
-    #   loop: "{{ services }}"
-    #   become: true
-    #   tags: logging
-
-    - name: Deploy logrotate config files
+    - name: Deploy logrotate config files to shed
       ansible.builtin.copy:
         src: "logrotate/{{ item }}"
         dest: "/etc/logrotate.d"
@@ -232,6 +224,31 @@
         mode: '0644'
       loop: "{{ services }}"
       become: true
+      when: "'shed' in group_names"
+      tags: logging
+
+    - name: Deploy logrotate config files to schoolroom
+      ansible.builtin.copy:
+        src: "logrotate/{{ item }}"
+        dest: "/etc/logrotate.d"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ services_schoolroom }}"
+      become: true
+      when: "'schoolroom' in group_names"
+      tags: logging
+
+    - name: Deploy logrotate config files to stagewall
+      ansible.builtin.copy:
+        src: "logrotate/{{ item }}"
+        dest: "/etc/logrotate.d"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ services_stagewall }}"
+      become: true
+      when: "'stagewall' in group_names"
       tags: logging
 
   handlers:
@@ -256,7 +273,7 @@
         enabled: true
         state: restarted
       become: true
-      when: "'stagewall' not in group_names"
+      when: "'shed' in group_names"
       listen: Restart shared services
 
     - name: Restart getTemps.service
@@ -276,13 +293,13 @@
       listen: Restart shared services
       when: "'shed' in group_names"
 
-- name: Ensure services are running
+- name: Ensure services are enabled and running
   hosts: all
   vars_files:
     - vars.yaml
 
   tasks:
-    - name: Ensure each service is running and enabled
+    - name: Ensure services are running and enabled on the shed host
       ansible.builtin.systemd:
         name: "{{ item }}"
         state: started
@@ -290,4 +307,24 @@
       loop: "{{ services }}"
       become: true
       when: "'shed' in group_names"
+      tags: verify_services
+
+    - name: Ensure services are running and enabled on the schoolroom hosts
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ services_schoolroom }}"
+      become: true
+      when: "'schoolroom' in group_names"
+      tags: verify_services
+
+    - name: Ensure services are running and enabled on the stagewall hosts
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ services_stagewall }}"
+      become: true
+      when: "'schoolroom' in group_names"
       tags: verify_services

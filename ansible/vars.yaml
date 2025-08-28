@@ -21,3 +21,9 @@ services:
   - getSHT30
   - getTemps
   - getWeather
+
+services_schoolroom:
+  - getTemps
+
+services_stagewall:
+  - getTemps
