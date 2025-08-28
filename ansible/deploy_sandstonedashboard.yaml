@@ -222,7 +222,7 @@
         owner: root
         group: root
         mode: '0644'
-      loop: "{{ services }}"
+      loop: "{{ all_services }}"
       become: true
       when: "'shed' in group_names"
       tags: logging
@@ -304,7 +304,7 @@
         name: "{{ item }}"
         state: started
         enabled: true
-      loop: "{{ services }}"
+      loop: "{{ all_services }}"
       become: true
       when: "'shed' in group_names"
       tags: verify_services
@@ -326,5 +326,5 @@
         enabled: true
       loop: "{{ services_stagewall }}"
       become: true
-      when: "'schoolroom' in group_names"
+      when: "'stagewall' in group_names"
       tags: verify_services

@@ -142,7 +142,7 @@ while True:
                 "type":     SENSOR_TYPE,
                 "title":    SENSOR_TITLE,
                 "hostname": HOSTNAME,
-                "status":   "ON" # just to match the others in the list, do of this what you will
+                "status":   "ON"
             },
             "fields": {
                 "temp_flt": temp_F,

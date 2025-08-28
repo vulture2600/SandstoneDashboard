@@ -16,7 +16,7 @@ config_files:
   - getSHT30.json
   - getTemps.json
 
-services:
+all_services:
   - getPressures
   - getSHT30
   - getTemps
