@@ -37,6 +37,21 @@ def database_connect(influxdb_host, influxdb_port, username, password, database)
 
     return client
 
+def load_json_file(json_file):
+    """Load json file, handle exceptions"""
+    try:
+        with open(json_file, encoding='utf-8') as open_json_file:
+            return json.load(open_json_file)
+    except FileNotFoundError:
+        logger.error(f"File not found: {json_file}")
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in {json_file}: {e}")
+    except OSError as e:
+        logger.error(f"Error opening {json_file}: {e}")
+    except Exception as e:
+        logger.error(f"An unexpected error has occurred: {e}")
+    return None
+
 class SMBFileTransfer:
     """Create connection to SMB share and copy files"""
 
@@ -109,18 +124,3 @@ class SMBFileTransfer:
         except Exception as e:
             logger.error(f"Error fetching config: {e}")
         return False
-
-def load_json_file(json_file):
-    """Load json file, handle exceptions"""
-    try:
-        with open(json_file, encoding='utf-8') as open_json_file:
-            return json.load(open_json_file)
-    except FileNotFoundError:
-        logger.error(f"File not found: {json_file}")
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in {json_file}: {e}")
-    except OSError as e:
-        logger.error(f"Error opening {json_file}: {e}")
-    except Exception as e:
-        logger.error(f"An unexpected error has occurred: {e}")
-    return None
