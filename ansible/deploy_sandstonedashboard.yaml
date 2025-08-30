@@ -40,7 +40,7 @@
 
     - name: Copy requirements files to the app dir
       ansible.builtin.copy:
-        src: ../requirements.txt
+        src: ../src/requirements.txt
         dest: "{{ requirements_file }}"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
