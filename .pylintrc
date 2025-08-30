@@ -201,7 +201,8 @@ good-names=i,
            getPressures,
            getSHT30,
            getTemps,
-           getWeather
+           getWeather,
+           test_getTemps
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
