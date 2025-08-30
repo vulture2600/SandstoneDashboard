@@ -226,6 +226,7 @@ if __name__ == "__main__":
 
     if KERNEL_MOD_LOAD_FAIL:
         logging.critical("Exiting due to kernel module load failure(s)", exc_info=True)
+        db_client.close()
         sys.exit(1)
 
     try:
@@ -262,6 +263,6 @@ if __name__ == "__main__":
             time.sleep(5)
 
     except KeyboardInterrupt:
-        logging.info("Shutting down gracefully")
+        logging.info("Exiting gracefully")
     finally:
         db_client.close()

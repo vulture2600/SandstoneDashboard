@@ -262,6 +262,10 @@ lsblk -f
 # Mount the filesystem
 udisksctl mount -b /dev/sda1
 
+# Create a backup dir, example
+cd /media/pi/89E1-A8CA/
+mkdir influxdb_backup.2025.08.30
+
 # Run the backup (use path output by udisksctl)
 influxd backup -portable /path/to/backup
 
