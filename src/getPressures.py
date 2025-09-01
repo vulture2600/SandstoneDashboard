@@ -1,11 +1,10 @@
 """
-steve.a.mccluskey@gmail.com
 Read Adafruit ADC (Analog-to-Digital Converter) breakout board and write to InfluxDB.
 This uses the I2C (Inter-Integrated Circuit) protocol to get water pressure readings.
+Developers: steve.a.mccluskey@gmail.com, see repo for others.
 """
 
-# THIS FILE IS TO BE COMPLETELY REWRITTEN using JSON master config data.
-# All channel variables have been removed from env template.
+# This script will be updated to use a pressure sensor config file
 
 import os
 import logging
@@ -36,7 +35,6 @@ INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
-PRESSURE_SENSOR_ID = os.getenv("PRESSURE_SENSOR_ID")
 
 db_client = database_connect(INFLUXDB_HOST,
                              INFLUXDB_PORT,
@@ -44,51 +42,50 @@ db_client = database_connect(INFLUXDB_HOST,
                              PASSWORD,
                              DATABASE)
 
-logging.info("Loading environment variables for all channels")
+channel0ID   = "schoolRoomDump"
+channel0name = "School Room Dump Pressure"
+channel0     = 0
+ch0GAIN      = 1.0
+ch0maxPSI    = 100
+ch0minPSI    = 0
+ch0minADC    = 4000
+ch0maxADC    = 32760
+ch0enabled   = "Enabled"
 
-i2c_address0  = os.getenv("i2c_address")
+channel1ID   = "upperSchoolRoom"
+channel1name = "Upper School Room Pressure"
+channel1     = 1
+ch1GAIN      = 1.0
+ch1maxPSI    = 100
+ch1minPSI    = 0
+ch1minADC    = 4000
+ch1maxADC    = 15000
+ch1enabled   = "Enabled"
 
-channel0ID   = str(os.getenv("channel0ID"))
-channel0name = str(os.getenv("channel0name"))
-channel0     = int(os.getenv("channel0"))
-ch0GAIN      = float(os.getenv("ch0GAIN"))
-ch0maxPSI    = int(os.getenv("ch0maxPSI"))
-ch0minPSI    = int(os.getenv("ch0minPSI"))
-ch0minADC    = int(os.getenv("ch0minADC"))
-ch0maxADC    = int(os.getenv("ch0maxADC"))
-ch0enabled   = str(os.getenv("ch0enabled"))
+channel2ID   = "bootyWall"
+channel2name = "Booty Wall Pressure"
+channel2     = 2
+ch2GAIN      = 1.0
+ch2maxPSI    = 100
+ch2minPSI    = 0
+ch2minADC    = 4000
+ch2maxADC    = 12000
+ch2enabled   = "Enabled"
 
-channel1ID   = str(os.getenv("channel1ID"))
-channel1name = str(os.getenv("channel1name"))
-channel1     = int(os.getenv("channel1"))
-ch1GAIN      = float(os.getenv("ch1GAIN"))
-ch1maxPSI    = int(os.getenv("ch1maxPSI"))
-ch1minPSI    = int(os.getenv("ch1minPSI"))
-ch1minADC    = int(os.getenv("ch1minADC"))
-ch1maxADC    = int(os.getenv("ch1maxADC"))
-ch1enabled   = str(os.getenv("ch1enabled"))
+channel3ID   = "none"
+channel3name = "none"
+channel3     = 3
+ch3GAIN      = 1.0
+ch3maxPSI    = 100
+ch3minPSI    = 0
+ch3minADC    = 4000
+ch3maxADC    = 29500
+ch3enabled   = "Disabled"
 
-channel2ID   = str(os.getenv("channel2ID"))
-channel2name = str(os.getenv("channel2name"))
-channel2     = int(os.getenv("channel2"))
-ch2GAIN      = float(os.getenv("ch2GAIN"))
-ch2maxPSI    = int(os.getenv("ch2maxPSI"))
-ch2minPSI    = int(os.getenv("ch2minPSI"))
-ch2minADC    = int(os.getenv("ch2minADC"))
-ch2maxADC    = int(os.getenv("ch2maxADC"))
-ch2enabled   = str(os.getenv("ch2enabled"))
+PRESSURE_SENSOR_ID = "i2c:0x48"
+I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
 
-channel3ID   = str(os.getenv("channel3ID"))
-channel3name = str(os.getenv("channel3name"))
-channel3     = int(os.getenv("channel3"))
-ch3GAIN      = float(os.getenv("ch3GAIN"))
-ch3maxPSI    = int(os.getenv("ch3maxPSI"))
-ch3minPSI    = int(os.getenv("ch3minPSI"))
-ch3minADC    = int(os.getenv("ch3minADC"))
-ch3maxADC    = int(os.getenv("ch3maxADC"))
-ch3enabled   = str(os.getenv("ch3enabled"))
-
-adc = Adafruit_ADS1x15.ADS1115()
+adc = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
 
 while True:
     logging.info("Reading ADC:")
