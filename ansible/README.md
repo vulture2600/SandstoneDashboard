@@ -17,6 +17,24 @@ chmod 600 ~/.ssh/authorized_keys
 # The local user might need to logout/login before ssh uses the key.
 ```
 
+#### Ansible Vault
+
+Do not decrypt .vault files in place; .gitignore covers .env files but not those ending with .vault
+
+If you need a decrypted file, use 'view' instead of 'edit' and redirect stdout to .env.somehostname without the .vault 
+
+```shell
+# If using a password file, the permissions should be 600:
+chmod 600 ~/.vault_pass.txt
+
+# Encrypt and rename a dotenv file:
+ansible-vault encrypt .env.somehostname --vault-password-file ~/.vault_pass.txt
+mv .env.somehostname .env.somehostname.vault
+
+# Edit a dotenv file:
+ansible-vault edit vault/.env.somehostname.vault --vault-password-file ~/.vault_pass.txt
+```
+
 #### Manage the Raspberry Pi's
 
 Linting & syntax checks
@@ -49,7 +67,7 @@ Run the playbook
 ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t pip
 
 # Deploy dotenv file:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t dotenv
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t dotenv --vault-password-file ~/.vault_pass.txt
 
 # Deploy Python files:
 ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t app_files
@@ -62,8 +80,8 @@ ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t logg
 ```
 
 ```shell
-# Run all parts:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed
+# Run all parts against all hosts. Remove --check to really do this:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
 ```
 
 ```shell
@@ -85,3 +103,5 @@ HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_p
 [schoolroom]
 HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT dotenv_host=HOSTNAME
 ```
+
+shed, stagewall, and schoolroom are host groups; additional hosts can be added to each.

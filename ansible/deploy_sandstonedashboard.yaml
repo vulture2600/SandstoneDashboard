@@ -66,10 +66,11 @@
       delay: 5
       tags: pip
 
-    - name: Copy dotenv file to the app dir, make backup before
+    - name: Copy dotenv file to the app dir, make backup first
       ansible.builtin.copy:
-        src: "../src/.env.{{ dotenv_host }}"
-        dest: "{{ app_dir }}"
+        src: "vault/.env.{{ dotenv_host }}.vault"
+        dest: "{{ app_dir }}/.env.{{ dotenv_host }}"
+        decrypt: true
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         mode: '0600'

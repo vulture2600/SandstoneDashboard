@@ -4,6 +4,7 @@ __pycache__/
 
 # dotenv
 .env*
+!.env.*.vault
 !.env.template
 
 # Ansible
