@@ -1,5 +1,11 @@
 # Grafana
 
+[Dashboards](dashboards) in Grafana display temperatures, humidity, pressure readings, and weather data.
+
+### Log monitoring
+
+[Promtail](../ansible/promtail/) sends logs to Loki which is connected to Grafana as a datasource. 
+
 ### Slack alerts
 
 https://api.slack.com/apps > Grafana Alerts > Incoming Webhooks

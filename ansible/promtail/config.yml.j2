@@ -1,0 +1,41 @@
+---
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://{{ loki_host }}:3100/loki/api/v1/push
+
+scrape_configs:
+  # - job_name: system
+  #   static_configs:
+  #     - targets:
+  #         - localhost
+  #       labels:
+  #         job: varlogs
+  #         __path__: /var/log/*.log  # symlinks in /var/log are seen as logs
+  - job_name: SandstoneDashboard
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: getTemps
+          __path__: /var/log/SandstoneDashboard/getTemps.log
+      - targets:
+          - localhost
+        labels:
+          service: getSHT30
+          __path__: /var/log/SandstoneDashboard/getSHT30.log
+      - targets:
+          - localhost
+        labels:
+          service: getWeather
+          __path__: /var/log/SandstoneDashboard/getWeather.log
+      - targets:
+          - localhost
+        labels:
+          service: getPressures
+          __path__: /var/log/SandstoneDashboard/getPressures.log
