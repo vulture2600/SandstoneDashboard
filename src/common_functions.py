@@ -9,6 +9,7 @@ import smbclient
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 
+logging.getLogger("smbprotocol").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def choose_dotenv(hostname):
