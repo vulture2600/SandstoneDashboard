@@ -1,10 +1,16 @@
 # Grafana
 
-[Dashboards](dashboards) in Grafana display temperatures, humidity, pressure readings, and weather data.
+#### Sensor readings
 
-### Log monitoring
+Temperatures, humidity, pressure readings, and weather data from OpenWeatherMap are stored in InfluxDB.
 
-[Promtail](../ansible/promtail/) sends logs to Loki which is connected to Grafana as a datasource. 
+#### Log monitoring
+
+Promtail sends logs to [Loki](loki) which indexes log metadata.
+
+#### System metrics
+
+[Prometheus](prometheus) pulls system metrics from clients running Prometheus Node Exporter
 
 ### Slack alerts
 
