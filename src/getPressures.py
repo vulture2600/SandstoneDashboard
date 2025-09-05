@@ -4,8 +4,6 @@ This uses the I2C (Inter-Integrated Circuit) protocol to get water pressure read
 Developers: steve.a.mccluskey@gmail.com, see repo for others.
 """
 
-# This script will be updated to use a pressure sensor config file
-
 import os
 import logging
 import socket
@@ -16,7 +14,11 @@ from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import PRESSURE_SENSOR_TYPE
-from common_functions import choose_dotenv, database_connect
+from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
+
+CONFIG_FILE_TRY_AGAIN_SECS = 60
+CONFIG_FILE_NAME = "getPressures.json"
+CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 
 HOSTNAME = socket.gethostname()
 choose_dotenv(HOSTNAME)
@@ -36,51 +38,23 @@ USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 DATABASE = os.getenv("SENSOR_DATABASE")
 
+SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
+
+smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
+                             SMB_SERVER_PORT,
+                             os.getenv("SMB_SHARE_NAME"),
+                             os.getenv("SMB_CONFIG_DIR"),
+                             os.getenv("SMB_USERNAME"),
+                             os.getenv("SMB_PASSWORD"),
+                             CONFIG_FILE_NAME,
+                             CONFIG_FILE)
+smb_client.connect()
+
 db_client = database_connect(INFLUXDB_HOST,
                              INFLUXDB_PORT,
                              USERNAME,
                              PASSWORD,
                              DATABASE)
-
-channel0ID   = "schoolRoomDump"
-channel0name = "School Room Dump Pressure"
-channel0     = 0
-ch0GAIN      = 1.0
-ch0maxPSI    = 100
-ch0minPSI    = 0
-ch0minADC    = 4000
-ch0maxADC    = 32760
-ch0enabled   = "Enabled"
-
-channel1ID   = "upperSchoolRoom"
-channel1name = "Upper School Room Pressure"
-channel1     = 1
-ch1GAIN      = 1.0
-ch1maxPSI    = 100
-ch1minPSI    = 0
-ch1minADC    = 4000
-ch1maxADC    = 15000
-ch1enabled   = "Enabled"
-
-channel2ID   = "bootyWall"
-channel2name = "Booty Wall Pressure"
-channel2     = 2
-ch2GAIN      = 1.0
-ch2maxPSI    = 100
-ch2minPSI    = 0
-ch2minADC    = 4000
-ch2maxADC    = 12000
-ch2enabled   = "Enabled"
-
-channel3ID   = "none"
-channel3name = "none"
-channel3     = 3
-ch3GAIN      = 1.0
-ch3maxPSI    = 100
-ch3minPSI    = 0
-ch3minADC    = 4000
-ch3maxADC    = 29500
-ch3enabled   = "Disabled"
 
 PRESSURE_SENSOR_ID = "i2c:0x48"
 I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
@@ -88,62 +62,94 @@ I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
 adc = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
 
 while True:
+
+    logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+
+    logging.info(f"Loading {CONFIG_FILE_NAME}")
+    json_config = load_json_file(CONFIG_FILE)
+
+    if json_config is None:
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
+
+    CHANNELS = json_config.get(HOSTNAME)
+
+    if CHANNELS is None:
+        logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
+
+    if not CHANNELS:
+        logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+        continue
+
+    channel_count = len(CHANNELS)
+    logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
+
     logging.info("Reading ADC:")
     series = []
     try:
-        if ch0enabled == "Enabled":
-            logging.info(f"Reading channel {channel0}...")
-            #value0  = adc.read_adc(0, gain = 1)
-            value0  = adc.read_adc(channel0, gain = ch0GAIN)
-            psi0 = format((((value0 - ch0minADC) * (ch0maxPSI - ch0minPSI)) / (ch0maxADC - ch0minADC) + ch0minPSI), '.1f')
+        ch0 = CHANNELS["channel0"]
+        if ch0["ch0enabled"] == "Enabled":
+            logging.info(f"Reading channel {ch0['channel0']}...")
+            value0  = adc.read_adc(ch0["channel0"], gain = ch0["ch0GAIN"])
+            psi0 = format((((value0 - ch0["ch0minADC"]) * (ch0["ch0maxPSI"] - ch0["ch0minPSI"])) / (ch0["ch0maxADC"] - ch0["ch0minADC"]) + ch0["ch0minPSI"]), '.1f')
             if float(psi0) < 0.2:
                 psi0 = "Off"
-            logging.info(f"{psi0} {value0} {channel0}")
+            logging.info(f"{psi0} {value0} {ch0['channel0']}")
         else:
             psi0 = "OFF"
-            logging.info(f"{psi0}, channel {channel0} disabled.")
+            logging.info(f"{psi0}, channel {ch0['channel0']} disabled.")
 
-        if ch1enabled == "Enabled":
-            logging.info(f"Reading channel {channel1}...")
-            value1 = adc.read_adc(channel1, gain = ch1GAIN)
-            psi1 = format((((value1 - ch1minADC) * (ch1maxPSI - ch1minPSI)) / (ch1maxADC - ch1minADC) + ch1minPSI), '.1f')
+        ch1 = CHANNELS["channel1"]
+        if ch1["ch1enabled"] == "Enabled":
+            logging.info(f"Reading channel {ch1['channel1']}...")
+            value1 = adc.read_adc(ch1["channel1"], gain = ch1["ch1GAIN"])
+            psi1 = format((((value1 - ch1["ch1minADC"]) * (ch1["ch1maxPSI"] - ch1["ch1minPSI"])) / (ch1["ch1maxADC"] - ch1["ch1minADC"]) + ch1["ch1minPSI"]), '.1f')
             if float(psi1) < 0.2:
                 psi1 = "Off"
-            logging.info(f"{psi1} {value1} {channel1}")
+            logging.info(f"{psi1} {value1} {ch1['channel1']}")
         else:
             psi1 = "OFF"
-            logging.info(f"{psi1}, channel {channel1} disabled.")
+            logging.info(f"{psi1}, channel {ch1['channel1']} disabled.")
 
-        if ch2enabled == "Enabled":
-            logging.info(f"Reading channel {channel2}...")
-            value2 = adc.read_adc(channel2, gain = ch2GAIN)
-            psi2 = format((((value2 - ch2minADC) * (ch2maxPSI - ch2minPSI)) / (ch2maxADC - ch2minADC) + ch2minPSI), '.1f')
+        ch2 = CHANNELS["channel2"]
+        if ch2["ch2enabled"] == "Enabled":
+            logging.info(f"Reading channel {ch2['channel2']}...")
+            value2 = adc.read_adc(ch2["channel2"], gain = ch2["ch2GAIN"])
+            psi2 = format((((value2 - ch2["ch2minADC"]) * (ch2["ch2maxPSI"] - ch2["ch2minPSI"])) / (ch2["ch2maxADC"] - ch2["ch2minADC"]) + ch2["ch2minPSI"]), '.1f')
             if float(psi2) < 0.2:
                 psi2 = "Off"
-            logging.info(f"{psi2} {value2}, channel2")
+            logging.info(f"{psi2} {value2} {ch2['channel2']}")
         else:
             psi2 = "OFF"
-            logging.info(f"{psi2}, channel {channel2} disabled.")
+            logging.info(f"{psi2}, channel {ch2['channel2']} disabled.")
 
-        if ch3enabled == "Enabled":
-            logging.info(f"Reading channel {channel3}...")
-            value3 = adc.read_adc(channel3, gain = ch2GAIN)
-            psi3 = format((((value3 - ch3minADC) * (ch3maxPSI - ch2minPSI)) / (ch3maxADC - ch3minADC) + ch3minPSI), '.1f')
+        ch3 = CHANNELS["channel3"]
+        if ch3["ch3enabled"] == "Enabled":
+            logging.info(f"Reading channel {ch3['channel3']}...")
+            value3 = adc.read_adc(ch3["channel3"], gain = ch3["ch2GAIN"])
+            psi3 = format((((value3 - ch3["ch3minADC"]) * (ch3["ch3maxPSI"] - ch3["ch2minPSI"])) / (ch3["ch3maxADC"] - ch3["ch3minADC"]) + ch3["ch3minPSI"]), '.1f')
             if float(psi3) < 0.2:
                 psi3 = "Off"
-            logging.info(psi3, value3, channel3)
+            logging.info(f"{psi3} {value3} {ch3['channel3']}")
         else:
             psi3 = "OFF"
-            logging.info(f"{psi3}, channel {channel3} disabled.")
+            logging.info(f"{psi3}, channel {ch3['channel3']} disabled.")
 
         point = {
             "measurement": "pressures",
             "tags": {
                 "sensor":   0,
-                "location": channel0ID,
-                "title":    channel0name,
+                "location": ch0["channel0ID"],
+                "title":    ch0["channel0name"],
                 "id":       PRESSURE_SENSOR_ID,
-                "channel":  channel0,
+                "channel":  ch0["channel0"],
                 "type":     PRESSURE_SENSOR_TYPE,
                 "hostname": HOSTNAME
             },
@@ -158,10 +164,10 @@ while True:
             "measurement": "pressures",
             "tags": {
                 "sensor":   1,
-                "location": channel1ID,
-                "title":    channel1name,
+                "location": ch1["channel1ID"],
+                "title":    ch1["channel1name"],
                 "id":       PRESSURE_SENSOR_ID,
-                "channel":  channel1,
+                "channel":  ch1["channel1"],
                 "type":     PRESSURE_SENSOR_TYPE,
                 "hostname": HOSTNAME
             },
@@ -176,10 +182,10 @@ while True:
             "measurement": "pressures",
             "tags": {
                 "sensor":   2,
-                "location": channel2ID,
-                "title":    channel2name,
+                "location": ch2["channel2ID"],
+                "title":    ch2["channel2name"],
                 "id":       PRESSURE_SENSOR_ID,
-                "channel":  channel2,
+                "channel":  ch2["channel2"],
                 "type":     PRESSURE_SENSOR_TYPE,
                 "hostname": HOSTNAME
             },
@@ -194,10 +200,10 @@ while True:
             "measurement": "pressures",
             "tags": {
                 "sensor":   3,
-                "location": channel3ID,
-                "title":    channel3name,
+                "location": ch3["channel3ID"],
+                "title":    ch3["channel3name"],
                 "id":       PRESSURE_SENSOR_ID,
-                "channel":  channel3,
+                "channel":  ch3["channel3"],
                 "type":     PRESSURE_SENSOR_TYPE,
                 "hostname": HOSTNAME
             },
@@ -208,8 +214,8 @@ while True:
         logging.debug(f"Point: {point}")
         series.append(point)
 
-    except:
-        logging.error("ADC not responding.")
+    except Exception as e:
+        logging.error(f"ADC not responding. {e}")
         continue
 
     try:
