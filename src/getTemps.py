@@ -53,13 +53,23 @@ class GetTempSensors:
             self.sensor_ids = []
 
     def find_unassigned_sensors(self):
-        """Find sensors attached to the host that are not in the config file"""
+        """
+        Find sensors attached to the host that are not in the config file.
+        Log sensors in the config file that are not attached to the host.
+        """
         if self.rooms is None:
             self.rooms = {}
         ids_from_config = {room['id'] for room in self.rooms.values()}
 
         self.unassigned_ids = [sid for sid in self.sensor_ids if sid not in ids_from_config]
-        logging.info(f"Unassigned sensors: {len(self.unassigned_ids)}")
+        logging.info(f"Attached unassigned sensors: {len(self.unassigned_ids)}")
+        for unassigned_sensor in self.unassigned_ids:
+            logging.info(f"Attached unassigned: {unassigned_sensor}")
+
+        assigned_unattached_ids = [sid for sid in ids_from_config if sid not in self.sensor_ids]
+        logging.info(f"Assigned unattached sensors: {len(assigned_unattached_ids)}")
+        for assigned_unattached_id in assigned_unattached_ids:
+            logging.info(f"Assigned unattached sensor: {assigned_unattached_id}")
 
     def combine_unassigned_assigned(self):
         """
@@ -232,13 +242,12 @@ if __name__ == "__main__":
     try:
         while True:
 
-            logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
+            logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
             GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
             logging.info(f"Loading {CONFIG_FILE_NAME}")
             loaded_json_config = load_json_file(CONFIG_FILE)
 
-            logging.info("Getting all temperature sensors")
             temp_sensors = GetTempSensors(loaded_json_config, HOSTNAME)
             room_temp_sensor_map = temp_sensors.run()
 
@@ -264,5 +273,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         logging.info("Exiting gracefully")
+        print()
     finally:
         db_client.close()

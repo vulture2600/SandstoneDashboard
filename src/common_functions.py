@@ -104,7 +104,7 @@ class SMBFileTransfer:
             )
 
             if not update_needed:
-                logger.info("Local config is up to date")
+                logger.info(f"Local {self.config_file_name} is already up to date")
                 return True
 
             with smbclient.open_file(self.remote_file, "r", encoding="utf-8") as open_smb_file:
