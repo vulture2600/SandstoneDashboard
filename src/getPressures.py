@@ -16,6 +16,11 @@ from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from constants import PRESSURE_SENSOR_TYPE
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
+PRESSURE_SENSOR_ID = "i2c:0x48"
+I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
+PSI_LOWER_BOUND = 0.2
+NO_PSI = -999.9
+
 CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getPressures.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
@@ -56,14 +61,96 @@ db_client = database_connect(INFLUXDB_HOST,
                              PASSWORD,
                              DATABASE)
 
-PRESSURE_SENSOR_ID = "i2c:0x48"
-I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
+ADC = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
 
-adc = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
+class PressureSensorReader:
+    """Read attached pressure sensors"""
+    def __init__(self, adc, channels, hostname, sensor_id, sensor_type):
+        """
+        adc        -> ADC device instance
+        channels   -> dict of channel configs (from JSON)
+        hostname   -> string, host name
+        sensor_id  -> string, sensor id (like i2c:0x48)
+        sensor_type-> string, sensor type
+        """
+        self.adc = adc
+        self.channels = channels
+        self.hostname = hostname
+        self.sensor_id = sensor_id
+        self.sensor_type = sensor_type
+
+    def read_channels(self):
+        """
+        Read all enabled channels in config.
+        Return {channel: psi_float or NO_PSI}
+        Example: {'channel0': 4.8, 'channel1': NO_PSI}
+        """
+        results = {}
+
+        for channel, ch_cfg in self.channels.items():
+            results[channel] = NO_PSI
+
+            try:
+                ch_num = ch_cfg["channel"]
+
+                if ch_cfg.get("ch_enabled") != "Enabled":
+                    logging.info(f"Channel {ch_num} disabled")
+                    continue
+
+                logging.info(f"Reading channel {ch_num}...")
+
+                value = self.adc.read_adc(ch_num, gain=ch_cfg["ch_gain"])
+
+                psi = (
+                    (float(value) - ch_cfg["ch_minADC"]) *
+                    (ch_cfg["ch_maxPSI"] - ch_cfg["ch_minPSI"]) /
+                    (ch_cfg["ch_maxADC"] - ch_cfg["ch_minADC"]) +
+                    ch_cfg["ch_minPSI"]
+                )
+                psi_str = f"{psi:.1f}"
+                if psi < PSI_LOWER_BOUND:
+                    psi_str = "OFF"
+
+                logging.info(f"Channel {ch_num}, ADC {value}, PSI {psi_str}")
+                results[channel] = psi
+
+            except Exception as e:
+                logging.error(f"Error reading {channel}: {e}")
+
+        return results
+
+    def construct_points(self, readings):
+        """Construct points for InfluxDB from readings. Return series."""
+
+        series = []
+        for channel, psi in readings.items():
+            psi_str = f"{psi:.1f}"
+            if psi < PSI_LOWER_BOUND:
+                psi_str = "OFF"
+
+            ch_cfg = self.channels[channel]
+            point = {
+                "measurement": "pressures",
+                "tags": {
+                    "location": ch_cfg["channel_ID"],
+                    "title": ch_cfg["channel_name"],
+                    "id": self.sensor_id,
+                    "channel": ch_cfg["channel"],
+                    "type": self.sensor_type,
+                    "hostname": self.hostname,
+                },
+                "fields": {
+                    "pressure": psi_str,
+                    "pressure_flt": psi
+                },
+            }
+            logging.debug(f"Point: {point}")
+            series.append(point)
+        return series
 
 while True:
 
-    logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
+    logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
     GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
     logging.info(f"Loading {CONFIG_FILE_NAME}")
@@ -91,135 +178,21 @@ while True:
     channel_count = len(CHANNELS)
     logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
 
-    logging.info("Reading ADC:")
-    series = []
-    try:
-        ch0 = CHANNELS["channel0"]
-        if ch0["ch0enabled"] == "Enabled":
-            logging.info(f"Reading channel {ch0['channel0']}...")
-            value0  = adc.read_adc(ch0["channel0"], gain = ch0["ch0GAIN"])
-            psi0 = format((((value0 - ch0["ch0minADC"]) * (ch0["ch0maxPSI"] - ch0["ch0minPSI"])) / (ch0["ch0maxADC"] - ch0["ch0minADC"]) + ch0["ch0minPSI"]), '.1f')
-            if float(psi0) < 0.2:
-                psi0 = "Off"
-            logging.info(f"{psi0} {value0} {ch0['channel0']}")
-        else:
-            psi0 = "OFF"
-            logging.info(f"{psi0}, channel {ch0['channel0']} disabled.")
+    logging.info("Reading ADC")
 
-        ch1 = CHANNELS["channel1"]
-        if ch1["ch1enabled"] == "Enabled":
-            logging.info(f"Reading channel {ch1['channel1']}...")
-            value1 = adc.read_adc(ch1["channel1"], gain = ch1["ch1GAIN"])
-            psi1 = format((((value1 - ch1["ch1minADC"]) * (ch1["ch1maxPSI"] - ch1["ch1minPSI"])) / (ch1["ch1maxADC"] - ch1["ch1minADC"]) + ch1["ch1minPSI"]), '.1f')
-            if float(psi1) < 0.2:
-                psi1 = "Off"
-            logging.info(f"{psi1} {value1} {ch1['channel1']}")
-        else:
-            psi1 = "OFF"
-            logging.info(f"{psi1}, channel {ch1['channel1']} disabled.")
+    pressure_sensor_reader = PressureSensorReader(
+        adc=ADC,
+        channels=CHANNELS,
+        hostname=HOSTNAME,
+        sensor_id=PRESSURE_SENSOR_ID,
+        sensor_type=PRESSURE_SENSOR_TYPE,
+    )
 
-        ch2 = CHANNELS["channel2"]
-        if ch2["ch2enabled"] == "Enabled":
-            logging.info(f"Reading channel {ch2['channel2']}...")
-            value2 = adc.read_adc(ch2["channel2"], gain = ch2["ch2GAIN"])
-            psi2 = format((((value2 - ch2["ch2minADC"]) * (ch2["ch2maxPSI"] - ch2["ch2minPSI"])) / (ch2["ch2maxADC"] - ch2["ch2minADC"]) + ch2["ch2minPSI"]), '.1f')
-            if float(psi2) < 0.2:
-                psi2 = "Off"
-            logging.info(f"{psi2} {value2} {ch2['channel2']}")
-        else:
-            psi2 = "OFF"
-            logging.info(f"{psi2}, channel {ch2['channel2']} disabled.")
-
-        ch3 = CHANNELS["channel3"]
-        if ch3["ch3enabled"] == "Enabled":
-            logging.info(f"Reading channel {ch3['channel3']}...")
-            value3 = adc.read_adc(ch3["channel3"], gain = ch3["ch2GAIN"])
-            psi3 = format((((value3 - ch3["ch3minADC"]) * (ch3["ch3maxPSI"] - ch3["ch2minPSI"])) / (ch3["ch3maxADC"] - ch3["ch3minADC"]) + ch3["ch3minPSI"]), '.1f')
-            if float(psi3) < 0.2:
-                psi3 = "Off"
-            logging.info(f"{psi3} {value3} {ch3['channel3']}")
-        else:
-            psi3 = "OFF"
-            logging.info(f"{psi3}, channel {ch3['channel3']} disabled.")
-
-        point = {
-            "measurement": "pressures",
-            "tags": {
-                "sensor":   0,
-                "location": ch0["channel0ID"],
-                "title":    ch0["channel0name"],
-                "id":       PRESSURE_SENSOR_ID,
-                "channel":  ch0["channel0"],
-                "type":     PRESSURE_SENSOR_TYPE,
-                "hostname": HOSTNAME
-            },
-            "fields": {
-                "pressure": psi0
-            }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
-
-        point = {
-            "measurement": "pressures",
-            "tags": {
-                "sensor":   1,
-                "location": ch1["channel1ID"],
-                "title":    ch1["channel1name"],
-                "id":       PRESSURE_SENSOR_ID,
-                "channel":  ch1["channel1"],
-                "type":     PRESSURE_SENSOR_TYPE,
-                "hostname": HOSTNAME
-            },
-            "fields": {
-                "pressure": psi1
-            }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
-
-        point = {
-            "measurement": "pressures",
-            "tags": {
-                "sensor":   2,
-                "location": ch2["channel2ID"],
-                "title":    ch2["channel2name"],
-                "id":       PRESSURE_SENSOR_ID,
-                "channel":  ch2["channel2"],
-                "type":     PRESSURE_SENSOR_TYPE,
-                "hostname": HOSTNAME
-            },
-            "fields": {
-                "pressure": psi2
-            }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
-
-        point = {
-            "measurement": "pressures",
-            "tags": {
-                "sensor":   3,
-                "location": ch3["channel3ID"],
-                "title":    ch3["channel3name"],
-                "id":       PRESSURE_SENSOR_ID,
-                "channel":  ch3["channel3"],
-                "type":     PRESSURE_SENSOR_TYPE,
-                "hostname": HOSTNAME
-            },
-            "fields": {
-                "pressure": psi3
-            }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
-
-    except Exception as e:
-        logging.error(f"ADC not responding. {e}")
-        continue
+    PRESSURE_READINGS = pressure_sensor_reader.read_channels()
+    SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
 
     try:
-        db_client.write_points(series)
+        db_client.write_points(SERIES)
         logging.info("Series written to InfluxDB.")
 
         if LOG_LEVEL == 'DEBUG':

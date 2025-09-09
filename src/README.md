@@ -53,6 +53,26 @@ tail -f /var/log/SandstoneDashboard/getWeather.log
 
 #### Format
 
+getPressures.json
+
+```json
+{
+    "SandstoneShed1": {
+        "channel0": {
+            "channel_ID": "schoolRoomDump",
+            "channel_name": "School Room Dump Pressure",
+            "channel": 0,
+            "ch_gain": 1.0,
+            "ch_maxPSI": 100,
+            "ch_minPSI": 0,
+            "ch_minADC": 4000,
+            "ch_maxADC": 32760,
+            "ch_enabled": "Enabled"
+        }
+    }
+}
+```
+
 getSHT30.json
 
 ```json
