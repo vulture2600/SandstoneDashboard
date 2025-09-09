@@ -148,59 +148,66 @@ class PressureSensorReader:
             series.append(point)
         return series
 
-while True:
+try:
+    while True:
 
-    logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
-    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+        logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
+        GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
-    logging.info(f"Loading {CONFIG_FILE_NAME}")
-    json_config = load_json_file(CONFIG_FILE)
+        logging.info(f"Loading {CONFIG_FILE_NAME}")
+        json_config = load_json_file(CONFIG_FILE)
 
-    if json_config is None:
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+        if json_config is None:
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
 
-    CHANNELS = json_config.get(HOSTNAME)
+        CHANNELS = json_config.get(HOSTNAME)
 
-    if CHANNELS is None:
-        logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+        if CHANNELS is None:
+            logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
 
-    if not CHANNELS:
-        logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
+        if not CHANNELS:
+            logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
 
-    channel_count = len(CHANNELS)
-    logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
+        channel_count = len(CHANNELS)
+        logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
 
-    logging.info("Reading ADC")
+        logging.info("Reading ADC")
 
-    pressure_sensor_reader = PressureSensorReader(
-        adc=ADC,
-        channels=CHANNELS,
-        hostname=HOSTNAME,
-        sensor_id=PRESSURE_SENSOR_ID,
-        sensor_type=PRESSURE_SENSOR_TYPE,
-    )
+        pressure_sensor_reader = PressureSensorReader(
+            adc=ADC,
+            channels=CHANNELS,
+            hostname=HOSTNAME,
+            sensor_id=PRESSURE_SENSOR_ID,
+            sensor_type=PRESSURE_SENSOR_TYPE,
+        )
 
-    PRESSURE_READINGS = pressure_sensor_reader.read_channels()
-    SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
+        PRESSURE_READINGS = pressure_sensor_reader.read_channels()
+        SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
 
-    try:
-        db_client.write_points(SERIES)
-        logging.info("Series written to InfluxDB.")
+        try:
+            db_client.write_points(SERIES)
+            logging.info("Series written to InfluxDB.")
 
-        if LOG_LEVEL == 'DEBUG':
-            query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
-            logging.debug(f"Query results: {query_result}")
+            if LOG_LEVEL == 'DEBUG':
+                query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
+                logging.debug(f"Query results: {query_result}")
 
-    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
-        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+        except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+            logging.error(f"Failure writing to or reading from InfluxDB: {e}")
+            db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    time.sleep(5)
+        time.sleep(5)
+
+except KeyboardInterrupt:
+    logging.info("Exiting gracefully")
+    print()
+finally:
+    db_client.close()

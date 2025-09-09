@@ -64,114 +64,122 @@ db_client = database_connect(INFLUXDB_HOST,
 
 bus = smbus.SMBus(1)
 
-while True:
+try:
+    while True:
 
-    logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
-    GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+        logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
+        GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
-    logging.info(f"Loading {CONFIG_FILE_NAME}")
-    json_config = load_json_file(CONFIG_FILE)
+        logging.info(f"Loading {CONFIG_FILE_NAME}")
+        json_config = load_json_file(CONFIG_FILE)
 
-    if json_config is None:
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
-
-    SENSORS = json_config.get(HOSTNAME)
-
-    if SENSORS is None:
-        logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
-
-    if not SENSORS:
-        logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
-
-    sensor_count = len(SENSORS)
-    logging.info(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
-
-    if sensor_count > 1:
-        logging.warning(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
-        logging.warning("Not currently handling multiple SHT30 sensors per host")
-        logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-        time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-        continue
-
-    SENSOR_LOCATION = list(SENSORS.keys())[0]
-    SENSOR_ID = SENSORS[SENSOR_LOCATION]["id"]
-    I2C_ADDR = int(SENSOR_ID.split(':')[1], 16)
-    SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
-
-    series = []
-    logging.info("Reading SHT30 sensors")
-
-    try:
-        logging.info("Writing to I2C bus")
-        bus.write_i2c_block_data(I2C_ADDR, WRITE_REGISTER, WRITE_DATA)
-        time.sleep(0.5)
-        logging.info("Reading from I2C bus")
-        i2c_block_data = bus.read_i2c_block_data(I2C_ADDR, READ_REGISTER, LENGTH_BYTES)
-
-        logging.info(f"I2C block data: {i2c_block_data}")
-
-        if len(i2c_block_data) < 5:
-            logging.error("I2C block data has fewer than 4 items.")
+        if json_config is None:
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
             continue
 
-        temp_MSB, temp_LSB = i2c_block_data[0:2]
-        humidity_MSB, humidity_LSB = i2c_block_data[3:5]
+        SENSORS = json_config.get(HOSTNAME)
 
-        raw_temp = struct.unpack(">H", bytes([temp_MSB, temp_LSB]))[0]
-        temp_C = -45 + (175 * raw_temp / 65535.0)
-        temp_F = round(temp_C * 1.8 + 32, 1)
+        if SENSORS is None:
+            logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
 
-        raw_hum = struct.unpack(">H", bytes([humidity_MSB, humidity_LSB]))[0]
-        humidity = round(100 * raw_hum / 65535.0, 1)
+        if not SENSORS:
+            logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
 
-        point = {
-            "measurement": "temps",
+        sensor_count = len(SENSORS)
+        logging.info(f"Sensors in {CONFIG_FILE_NAME}: {sensor_count}")
 
-            "tags": {
-                "sensor":   1,
-                "location": SENSOR_LOCATION,
-                "id":       SENSOR_ID,
-                "type":     SENSOR_TYPE,
-                "title":    SENSOR_TITLE,
-                "hostname": HOSTNAME,
-                "status":   "ON"
-            },
-            "fields": {
-                "temp_flt": temp_F,
-                "humidity": str(humidity)
+        if sensor_count > 1:
+            logging.warning(f"More than one sensor found for {HOSTNAME} in {CONFIG_FILE_NAME}")
+            logging.warning("Not currently handling multiple SHT30 sensors per host")
+            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+            continue
+
+        SENSOR_LOCATION = list(SENSORS.keys())[0]
+        SENSOR_ID = SENSORS[SENSOR_LOCATION]["id"]
+        I2C_ADDR = int(SENSOR_ID.split(':')[1], 16)
+        SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
+
+        series = []
+        logging.info("Reading SHT30 sensors")
+
+        try:
+            logging.info("Writing to I2C bus")
+            bus.write_i2c_block_data(I2C_ADDR, WRITE_REGISTER, WRITE_DATA)
+            time.sleep(0.5)
+            logging.info("Reading from I2C bus")
+            i2c_block_data = bus.read_i2c_block_data(I2C_ADDR, READ_REGISTER, LENGTH_BYTES)
+
+            logging.info(f"I2C block data: {i2c_block_data}")
+
+            if len(i2c_block_data) < 5:
+                logging.error("I2C block data has fewer than 4 items.")
+                continue
+
+            temp_MSB, temp_LSB = i2c_block_data[0:2]
+            humidity_MSB, humidity_LSB = i2c_block_data[3:5]
+
+            raw_temp = struct.unpack(">H", bytes([temp_MSB, temp_LSB]))[0]
+            temp_C = -45 + (175 * raw_temp / 65535.0)
+            temp_F = round(temp_C * 1.8 + 32, 1)
+
+            raw_hum = struct.unpack(">H", bytes([humidity_MSB, humidity_LSB]))[0]
+            humidity = round(100 * raw_hum / 65535.0, 1)
+
+            point = {
+                "measurement": "temps",
+
+                "tags": {
+                    "sensor":   1,
+                    "location": SENSOR_LOCATION,
+                    "id":       SENSOR_ID,
+                    "type":     SENSOR_TYPE,
+                    "title":    SENSOR_TITLE,
+                    "hostname": HOSTNAME,
+                    "status":   "ON"
+                },
+                "fields": {
+                    "temp_flt": temp_F,
+                    "humidity": str(humidity)
+                }
             }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
+            logging.debug(f"Point: {point}")
+            series.append(point)
 
-    except OSError as e:
-        logging.error(f"I2C read failed: {e}")
-        continue
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        continue
+        except OSError as e:
+            logging.error(f"I2C read failed: {e}")
+            continue
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            continue
 
-    try:
-        db_client.write_points(series)
-        logging.info("Series written to InfluxDB.")
+        try:
+            db_client.write_points(series)
+            logging.info("Series written to InfluxDB.")
 
-        if LOG_LEVEL == 'DEBUG':
-            query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
-            logging.debug(f"Query results: {query_result}")
+            if LOG_LEVEL == 'DEBUG':
+                query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
+                logging.debug(f"Query results: {query_result}")
 
-    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
-        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+        except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+            logging.error(f"Failure writing to or reading from InfluxDB: {e}")
+            db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    if GET_JSON_SUCCESSFUL is False:
-        smb_client.connect()
+        if GET_JSON_SUCCESSFUL is False:
+            smb_client.connect()
 
-    time.sleep(10)
+        time.sleep(10)
+
+except KeyboardInterrupt:
+    logging.info("Exiting gracefully")
+    print()
+finally:
+    bus.close()
+    db_client.close()

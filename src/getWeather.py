@@ -55,61 +55,68 @@ OPENWEATHERMAP_URL = (
 
 db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-while True:
-    try:
-        weatherData = get(OPENWEATHERMAP_URL, timeout=5).json()
-    except Exception as e:
-        logging.error(f"Failed to get weather data: {e}")
-        logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
-        time.sleep(TRY_AGAIN_SECS)
-        continue
+try:
+    while True:
+        try:
+            weatherData = get(OPENWEATHERMAP_URL, timeout=5).json()
+        except Exception as e:
+            logging.error(f"Failed to get weather data: {e}")
+            logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
+            time.sleep(TRY_AGAIN_SECS)
+            continue
 
-    series = []
-    TODAY, TOMORROW = 0, 1
-    dateTimeNow = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        series = []
+        TODAY, TOMORROW = 0, 1
+        dateTimeNow = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    try:
-        point = {
-            "measurement": "weather",
-            "tags": {
-                "location": LOCATION
-            },
-            "fields": {
-                "humidity":               int(weatherData['current']['humidity']),
-                "feelsLike":              float(weatherData['current']['feels_like']),
-                "currentCondition":       weatherData['current']['weather'][0]['main'],
-                "tempHigh":               float(weatherData['daily'][TODAY]['temp']['max']),
-                "tempLow":                float(weatherData['daily'][TODAY]['temp']['min']),
-                "dailyCondition":         weatherData['daily'][TODAY]['weather'][0]['main'],
-                "dailyConditionTomorrow": weatherData['daily'][TOMORROW]['weather'][0]['main'],
-                "tempHighTomorrow":       int(weatherData['daily'][TOMORROW]['temp']['max']),
-                "tempLowTomorrow":        float(weatherData['daily'][TOMORROW]['temp']['min']),
-                "windDirection":          int(weatherData['current']['wind_deg']),
-                "windSpeed":              float(weatherData['current']['wind_speed']),
-                "windGust":               float(weatherData['daily'][TODAY]['wind_gust']),
-                "timeStamp": dateTimeNow
+        try:
+            point = {
+                "measurement": "weather",
+                "tags": {
+                    "location": LOCATION
+                },
+                "fields": {
+                    "humidity":               int(weatherData['current']['humidity']),
+                    "feelsLike":              float(weatherData['current']['feels_like']),
+                    "currentCondition":       weatherData['current']['weather'][0]['main'],
+                    "tempHigh":               float(weatherData['daily'][TODAY]['temp']['max']),
+                    "tempLow":                float(weatherData['daily'][TODAY]['temp']['min']),
+                    "dailyCondition":         weatherData['daily'][TODAY]['weather'][0]['main'],
+                    "dailyConditionTomorrow": weatherData['daily'][TOMORROW]['weather'][0]['main'],
+                    "tempHighTomorrow":       int(weatherData['daily'][TOMORROW]['temp']['max']),
+                    "tempLowTomorrow":        float(weatherData['daily'][TOMORROW]['temp']['min']),
+                    "windDirection":          int(weatherData['current']['wind_deg']),
+                    "windSpeed":              float(weatherData['current']['wind_speed']),
+                    "windGust":               float(weatherData['daily'][TODAY]['wind_gust']),
+                    "timeStamp": dateTimeNow
+                }
             }
-        }
-        logging.debug(f"Point: {point}")
-        series.append(point)
+            logging.debug(f"Point: {point}")
+            series.append(point)
 
-    except Exception as e:
-        logging.error(f"Failure parsing weather data: {e}")
-        logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
-        time.sleep(TRY_AGAIN_SECS)
-        continue
+        except Exception as e:
+            logging.error(f"Failure parsing weather data: {e}")
+            logging.error(f"Trying again in {TRY_AGAIN_SECS} seconds...")
+            time.sleep(TRY_AGAIN_SECS)
+            continue
 
-    try:
-        db_client.write_points(series)
-        logging.info("Series written to InfluxDB.")
+        try:
+            db_client.write_points(series)
+            logging.info("Series written to InfluxDB.")
 
-        if LOG_LEVEL == 'DEBUG':
-            query_result = db_client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
-            logging.debug(f"Query results: {query_result}")
+            if LOG_LEVEL == 'DEBUG':
+                query_result = db_client.query('SELECT * FROM "weather" WHERE time >= now() - 10m')
+                logging.debug(f"Query results: {query_result}")
 
-    except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-        logging.error(f"Failure writing to or reading from InfluxDB: {e}")
-        db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+        except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+            logging.error(f"Failure writing to or reading from InfluxDB: {e}")
+            db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-    logging.info(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
-    time.sleep(GET_WEATHER_SLEEP_SECS)
+        logging.info(f"Sleeping for {SLEEP_MINUTES_FORMATTED} minutes...")
+        time.sleep(GET_WEATHER_SLEEP_SECS)
+
+except KeyboardInterrupt:
+    logging.info("Exiting gracefully")
+    print()
+finally:
+    db_client.close()
