@@ -422,6 +422,7 @@ logging-modules=logging
 
 
 [MESSAGES CONTROL]
+disable=R0801
 
 # Only show warnings with the listed confidence levels. Leave empty to show
 # all. Valid levels: HIGH, CONTROL_FLOW, INFERENCE, INFERENCE_FAILURE,
