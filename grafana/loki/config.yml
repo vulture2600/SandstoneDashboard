@@ -17,7 +17,7 @@ scrape_configs:
   #       labels:
   #         job: varlogs
   #         __path__: /var/log/*.log  # symlinks in /var/log are seen as logs
-  - job_name: SandstoneDashboard
+  - job_name: shed
     static_configs:
       - targets:
           - localhost
