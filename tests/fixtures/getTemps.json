@@ -1,0 +1,44 @@
+{
+    "SandstoneHost1": {
+        "room1": {
+            "id": "28-000000000001",
+            "title": "Room 1"
+        },
+        "room2": {
+            "id": "28-000000000002",
+            "title": "Room 2"
+        },
+        "room3": {
+            "id": "28-000000000003",
+            "title": "Room 3"
+        }
+    },
+    "SandstoneHost2": {
+        "room4": {
+            "id": "28-000000000004",
+            "title": "Room 4"
+        },
+        "room5": {
+            "id": "28-000000000005",
+            "title": "Room 5"
+        },
+        "room6": {
+            "id": "28-000000000006",
+            "title": "Room 6"
+        }
+    },
+    "SandstoneHost3": {
+        "room7": {
+            "id": "28-000000000007",
+            "title": "Room 7"
+        },
+        "room8": {
+            "id": "28-000000000008",
+            "title": "Room 8"
+        },
+        "room9": {
+            "id": "28-000000000009",
+            "title": "Room 9"
+        }
+    }
+}

@@ -15,6 +15,9 @@ getPressures.json
 getSHT30.json
 getTemps.json
 
+# Test config
+!tests/fixtures/getTemps.json 
+
 # VS Code
 .vscode
 *.code-workspace
