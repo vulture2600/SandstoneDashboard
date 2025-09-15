@@ -25,44 +25,6 @@ CONFIG_FILE_TRY_AGAIN_SECS = 60
 CONFIG_FILE_NAME = "getPressures.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 
-HOSTNAME = socket.gethostname()
-choose_dotenv(HOSTNAME)
-
-LOG_LEVEL = os.getenv("LOG_LEVEL_GET_PRESSURES", "INFO").upper()
-LOG_FILE = os.getenv("LOG_FILE_GET_PRESSURES", "/var/log/getPressures.log")
-FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
-logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
-print(f"Logging to {LOG_FILE}")
-
-logging.info(f"Python version: {sys.version}")
-
-INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
-INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
-USERNAME = os.getenv("USERNAME")
-PASSWORD = os.getenv("PASSWORD")
-DATABASE = os.getenv("SENSOR_DATABASE")
-
-SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
-
-smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
-                             SMB_SERVER_PORT,
-                             os.getenv("SMB_SHARE_NAME"),
-                             os.getenv("SMB_CONFIG_DIR"),
-                             os.getenv("SMB_USERNAME"),
-                             os.getenv("SMB_PASSWORD"),
-                             CONFIG_FILE_NAME,
-                             CONFIG_FILE)
-smb_client.connect()
-
-db_client = database_connect(INFLUXDB_HOST,
-                             INFLUXDB_PORT,
-                             USERNAME,
-                             PASSWORD,
-                             DATABASE)
-
-ADC = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
-
 class PressureSensorReader:
     """Read attached pressure sensors"""
     def __init__(self, adc, channels, hostname, sensor_id, sensor_type):
@@ -148,66 +110,106 @@ class PressureSensorReader:
             series.append(point)
         return series
 
-try:
-    while True:
+if __name__ == "__main__":
 
-        logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
-        GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+    HOSTNAME = socket.gethostname()
+    choose_dotenv(HOSTNAME)
 
-        logging.info(f"Loading {CONFIG_FILE_NAME}")
-        json_config = load_json_file(CONFIG_FILE)
+    LOG_LEVEL = os.getenv("LOG_LEVEL_GET_PRESSURES", "INFO").upper()
+    LOG_FILE = os.getenv("LOG_FILE_GET_PRESSURES", "/var/log/getPressures.log")
+    FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+    numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
+    logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
+    print(f"Logging to {LOG_FILE}")
 
-        if json_config is None:
-            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-            continue
+    logging.info(f"Python version: {sys.version}")
 
-        CHANNELS = json_config.get(HOSTNAME)
+    INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
+    INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
+    USERNAME = os.getenv("USERNAME")
+    PASSWORD = os.getenv("PASSWORD")
+    DATABASE = os.getenv("SENSOR_DATABASE")
 
-        if CHANNELS is None:
-            logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
-            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-            continue
+    SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
 
-        if not CHANNELS:
-            logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
-            logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
-            time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
-            continue
+    smb_client = SMBFileTransfer(os.getenv("SMB_SERVER_IP"),
+                                SMB_SERVER_PORT,
+                                os.getenv("SMB_SHARE_NAME"),
+                                os.getenv("SMB_CONFIG_DIR"),
+                                os.getenv("SMB_USERNAME"),
+                                os.getenv("SMB_PASSWORD"),
+                                CONFIG_FILE_NAME,
+                                CONFIG_FILE)
+    smb_client.connect()
 
-        channel_count = len(CHANNELS)
-        logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
+    db_client = database_connect(INFLUXDB_HOST,
+                                INFLUXDB_PORT,
+                                USERNAME,
+                                PASSWORD,
+                                DATABASE)
 
-        logging.info("Reading ADC")
+    ADC = Adafruit_ADS1x15.ADS1115(address=I2C_ADDR, busnum=1)
 
-        pressure_sensor_reader = PressureSensorReader(
-            adc=ADC,
-            channels=CHANNELS,
-            hostname=HOSTNAME,
-            sensor_id=PRESSURE_SENSOR_ID,
-            sensor_type=PRESSURE_SENSOR_TYPE,
-        )
+    try:
+        while True:
 
-        PRESSURE_READINGS = pressure_sensor_reader.read_channels()
-        SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
+            logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
+            GET_JSON_SUCCESSFUL = smb_client.get_json_config()
 
-        try:
-            db_client.write_points(SERIES)
-            logging.info("Series written to InfluxDB.")
+            logging.info(f"Loading {CONFIG_FILE_NAME}")
+            json_config = load_json_file(CONFIG_FILE)
 
-            if LOG_LEVEL == 'DEBUG':
-                query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
-                logging.debug(f"Query results: {query_result}")
+            if json_config is None:
+                logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+                time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+                continue
 
-        except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
-            logging.error(f"Failure writing to or reading from InfluxDB: {e}")
-            db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+            CHANNELS = json_config.get(HOSTNAME)
 
-        time.sleep(5)
+            if CHANNELS is None:
+                logging.warning(f"Hostname not found in {CONFIG_FILE_NAME}")
+                logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+                time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+                continue
 
-except KeyboardInterrupt:
-    logging.info("Exiting gracefully")
-    print()
-finally:
-    db_client.close()
+            if not CHANNELS:
+                logging.warning(f"No sensors for {HOSTNAME} found in {CONFIG_FILE_NAME}")
+                logging.warning(f"Trying again in {CONFIG_FILE_TRY_AGAIN_SECS} seconds")
+                time.sleep(CONFIG_FILE_TRY_AGAIN_SECS)
+                continue
+
+            channel_count = len(CHANNELS)
+            logging.debug(f"Channels in {CONFIG_FILE_NAME}: {CHANNELS}")
+
+            logging.info("Reading ADC")
+
+            pressure_sensor_reader = PressureSensorReader(
+                adc=ADC,
+                channels=CHANNELS,
+                hostname=HOSTNAME,
+                sensor_id=PRESSURE_SENSOR_ID,
+                sensor_type=PRESSURE_SENSOR_TYPE,
+            )
+
+            PRESSURE_READINGS = pressure_sensor_reader.read_channels()
+            SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
+
+            try:
+                db_client.write_points(SERIES)
+                logging.info("Series written to InfluxDB.")
+
+                if LOG_LEVEL == 'DEBUG':
+                    query_result = db_client.query('SELECT * FROM "pressures" WHERE time >= now() - 5s')
+                    logging.debug(f"Query results: {query_result}")
+
+            except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+                logging.error(f"Failure writing to or reading from InfluxDB: {e}")
+                db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+
+            time.sleep(5)
+
+    except KeyboardInterrupt:
+        logging.info("Exiting gracefully")
+        print()
+    finally:
+        db_client.close()
