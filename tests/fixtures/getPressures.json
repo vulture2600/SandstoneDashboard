@@ -1,0 +1,48 @@
+{
+    "SandstoneHost1": {
+        "channel0": {
+            "channel_ID": "manifold",
+            "channel_name": "Manifold Pressure",
+            "channel": 0,
+            "ch_gain": 1.0,
+            "ch_maxPSI": 100,
+            "ch_minPSI": 0,
+            "ch_minADC": 4050,
+            "ch_maxADC": 32760,
+            "ch_enabled": "Enabled"
+        },
+        "channel1": {
+            "channel_ID": "none",
+            "channel_name": "none",
+            "channel": 1,
+            "ch_gain": 1.0,
+            "ch_maxPSI": 100,
+            "ch_minPSI": 0,
+            "ch_minADC": 4000,
+            "ch_maxADC": 15000,
+            "ch_enabled": "Disabled"
+        },
+        "channel2": {
+            "channel_ID": "none",
+            "channel_name": "none",
+            "channel": 2,
+            "ch_gain": 1.0,
+            "ch_maxPSI": 100,
+            "ch_minPSI": 0,
+            "ch_minADC": 4000,
+            "ch_maxADC": 12000,
+            "ch_enabled": "Disabled"
+        },
+        "channel3": {
+            "channel_ID": "none",
+            "channel_name": "none",
+            "channel": 3,
+            "ch_gain": 1.0,
+            "ch_maxPSI": 100,
+            "ch_minPSI": 0,
+            "ch_minADC": 4000,
+            "ch_maxADC": 29500,
+            "ch_enabled": "Disabled"
+        }
+    }
+}

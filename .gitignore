@@ -17,6 +17,7 @@ getTemps.json
 
 # Test config
 !tests/fixtures/getTemps.json 
+!tests/fixtures/getPressures.json 
 
 # VS Code
 .vscode
