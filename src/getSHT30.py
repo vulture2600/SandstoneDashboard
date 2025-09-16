@@ -10,7 +10,7 @@ import socket
 import struct
 import sys
 import time
-import smbus
+import smbus2
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
@@ -62,7 +62,7 @@ db_client = database_connect(INFLUXDB_HOST,
                              PASSWORD,
                              DATABASE)
 
-bus = smbus.SMBus(1)
+bus = smbus2.SMBus(1)
 
 try:
     while True:
