@@ -6,6 +6,8 @@ import os
 import tempfile
 from datetime import datetime
 import smbclient
+import influxdb_client
+from influxdb_client.client.exceptions import InfluxDBError
 from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 
@@ -36,6 +38,35 @@ def database_connect(influxdb_host, influxdb_port, username, password, database)
 
     logger.info(f"InfluxDB client ok! Using {database}")
 
+    return client
+
+def influxdb_connect(influxdb_host, influxdb_port, influxdb_token, influxdb_org, influxdb_bucket):
+    """Connect to InfluxDB, create the bucket if it doesn't exist"""
+
+    logger.info(f"Connecting InfluxDB: {influxdb_host}")
+    url = f"http://{influxdb_host}:{influxdb_port}"
+    client = influxdb_client.InfluxDBClient(url=url, token=influxdb_token, org=influxdb_org)
+
+    buckets_api = client.buckets_api()
+
+    try:
+        buckets = buckets_api.find_buckets().buckets
+        bucket_names = [b.name for b in buckets]
+
+        if influxdb_bucket not in bucket_names:
+            logger.info(f"Bucket '{influxdb_bucket}' not found. Creating it...")
+            orgs_api = client.organizations_api()
+            org = orgs_api.find_organizations(org=influxdb_org)[0]
+            buckets_api.create_bucket(bucket_name=influxdb_bucket, org_id=org.id)
+            logger.info(f"Bucket '{influxdb_bucket}' created successfully.")
+        else:
+            logger.info(f"Bucket '{influxdb_bucket}' already exists.")
+
+    except InfluxDBError as e:
+        logger.critical(f"Error checking/creating bucket: {e}")
+        raise
+
+    logger.info(f"InfluxDB client ok! Using {influxdb_bucket}")
     return client
 
 def load_json_file(json_file):

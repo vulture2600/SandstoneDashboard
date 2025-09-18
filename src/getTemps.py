@@ -12,11 +12,13 @@ import sys
 import subprocess
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
-from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
+from influxdb_client import Point
+from influxdb_client.client.exceptions import InfluxDBError
 from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
-from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
+from common_functions import choose_dotenv, influxdb_connect, SMBFileTransfer, load_json_file
 
 SENSOR_PREFIX = "28-"
+NO_TEMP = -999.9
 CONFIG_FILE_NAME = "getTemps.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 
@@ -136,22 +138,17 @@ class TempUtils:
         return None
 
     @staticmethod
-    def construct_data_point(room_id, sensor_id, title, status, hostname, temp) -> dict:
+    def construct_data_point(room_id, sensor_id, title, hostname, temp) -> Point:
         """Construct the data point"""
-        return {
-            "measurement": "temps",
-            "tags": {
-                "location": room_id,
-                "id": sensor_id,
-                "type": TEMP_SENSOR_MODEL,
-                "title": title,
-                "status": status,
-                "hostname": hostname
-            },
-            "fields": {
-                "temp_flt": temp
-            }
-        }
+        return (
+            Point("temps")
+            .tag("location", room_id)
+            .tag("id", sensor_id)
+            .tag("type", TEMP_SENSOR_MODEL)
+            .tag("title", title)
+            .tag("hostname", hostname)
+            .field("temp", temp)
+        )
 
 def write_points_to_series(room_sensor_map, hostname) -> list[dict]:
     """Read all devices files and construct data points"""
@@ -160,21 +157,19 @@ def write_points_to_series(room_sensor_map, hostname) -> list[dict]:
     working_sensor_count = 0
     for room_id in room_sensor_map:
 
-        status = "On"
         sensor_id = room_sensor_map.get(room_id, {}).get('id')
         temp = TempUtils.read_temp(f"{DEVICES_PATH}{sensor_id}/{W1_SLAVE_FILE}")
 
         if temp:
             working_sensor_count += 1
         else:
-            status = "OFF"
-            temp = -999.9
+            temp = NO_TEMP
 
         title = room_sensor_map.get(room_id, {}).get('title')
         if not title:
             title = "Untitled"
 
-        point = TempUtils.construct_data_point(room_id, sensor_id, title, status, hostname, temp)
+        point = TempUtils.construct_data_point(room_id, sensor_id, title, hostname, temp)
         logging.debug(f"Point: {point}")
         point_series.append(point)
 
@@ -197,9 +192,9 @@ if __name__ == "__main__":
 
     INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
     INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
-    USERNAME = os.getenv("USERNAME")
-    PASSWORD = os.getenv("PASSWORD")
-    DATABASE = os.getenv("SENSOR_DATABASE")
+    INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
+    INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+    INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
 
     SMB_SERVER_PORT = int(os.getenv("SMB_SERVER_PORT", "445"))
 
@@ -213,11 +208,11 @@ if __name__ == "__main__":
                                 CONFIG_FILE)
     smb_client.connect()
 
-    db_client = database_connect(INFLUXDB_HOST,
+    db_client = influxdb_connect(INFLUXDB_HOST,
                                  INFLUXDB_PORT,
-                                 USERNAME,
-                                 PASSWORD,
-                                 DATABASE)
+                                 INFLUXDB_TOKEN,
+                                 INFLUXDB_ORG,
+                                 INFLUXDB_BUCKET)
 
     logging.info("Verifying all kernel modules are loaded")
     kernel_mod_loads = []
@@ -231,11 +226,11 @@ if __name__ == "__main__":
     for kernel_mod_load in kernel_mod_loads:
         if kernel_mod_load.returncode != 0:
             err_msg = (kernel_mod_load.stderr or "").strip() or "No stderr output"
-            logging.critical(f"Kernel module load failed: {err_msg}", exc_info=True)
+            logging.critical(f"Kernel module load failed: {err_msg}")
             KERNEL_MOD_LOAD_FAIL = True
 
     if KERNEL_MOD_LOAD_FAIL:
-        logging.critical("Exiting due to kernel module load failure(s)", exc_info=True)
+        logging.critical("Exiting due to kernel module load failure(s)")
         db_client.close()
         sys.exit(1)
 
@@ -255,16 +250,13 @@ if __name__ == "__main__":
             data_point_series = write_points_to_series(room_temp_sensor_map, HOSTNAME)
 
             try:
-                db_client.write_points(data_point_series)
+                write_api = db_client.write_api()
+                write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=data_point_series)
                 logging.info("Series written to InfluxDB.")
 
-                if LOG_LEVEL == 'DEBUG':
-                    query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
-                    logging.debug(f"Query results: {query_result}")
-
-            except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
+            except (InfluxDBError, RequestsConnectionError, Timeout) as e:
                 logging.error(f"Failure writing to or reading from InfluxDB: {e}")
-                db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
+                db_client = influxdb_connect(INFLUXDB_HOST, INFLUXDB_PORT, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
 
             if GET_JSON_SUCCESSFUL is False:
                 smb_client.connect()
@@ -275,4 +267,5 @@ if __name__ == "__main__":
         logging.info("Exiting gracefully")
         print()
     finally:
+        write_api.flush()
         db_client.close()
