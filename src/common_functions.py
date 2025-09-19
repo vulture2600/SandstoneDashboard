@@ -6,10 +6,9 @@ import os
 import tempfile
 from datetime import datetime
 import smbclient
-import influxdb
+from dotenv import load_dotenv
 import influxdb_client
 from influxdb_client.client.exceptions import InfluxDBError
-from dotenv import load_dotenv
 from influxdb import InfluxDBClient
 
 logging.getLogger("smbprotocol").setLevel(logging.WARNING)
