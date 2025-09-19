@@ -6,6 +6,7 @@ import os
 import tempfile
 from datetime import datetime
 import smbclient
+import influxdb
 import influxdb_client
 from influxdb_client.client.exceptions import InfluxDBError
 from dotenv import load_dotenv
