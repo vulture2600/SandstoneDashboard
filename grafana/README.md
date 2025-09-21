@@ -12,6 +12,10 @@ Promtail sends logs to [Loki](loki) which indexes log metadata.
 
 [Prometheus](prometheus) pulls system metrics from clients running Prometheus Node Exporter
 
+<br>
+
+![graph](../images_diagrams/monitoring_stack.svg)
+
 ### Slack alerts
 
 https://api.slack.com/apps > Grafana Alerts > Incoming Webhooks
