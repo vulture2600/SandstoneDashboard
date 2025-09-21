@@ -29,3 +29,7 @@ The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https
 
 * [Grafana](grafana) dashboards and alerting
 * Slack or Discord alert channels
+
+<br>
+
+![graph](images_diagrams/monitoring_stack.svg)
