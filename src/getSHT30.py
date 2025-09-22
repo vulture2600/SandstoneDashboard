@@ -164,10 +164,6 @@ try:
             db_client.write_points(series)
             logging.info("Series written to InfluxDB.")
 
-            if LOG_LEVEL == 'DEBUG':
-                query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 10s')
-                logging.debug(f"Query results: {query_result}")
-
         except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
             logging.error(f"Failure writing to or reading from InfluxDB: {e}")
             db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)

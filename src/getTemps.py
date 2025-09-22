@@ -258,10 +258,6 @@ if __name__ == "__main__":
                 db_client.write_points(data_point_series)
                 logging.info("Series written to InfluxDB.")
 
-                if LOG_LEVEL == 'DEBUG':
-                    query_result = db_client.query('SELECT * FROM "temps" WHERE time >= now() - 5s')
-                    logging.debug(f"Query results: {query_result}")
-
             except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:
                 logging.error(f"Failure writing to or reading from InfluxDB: {e}")
                 db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
