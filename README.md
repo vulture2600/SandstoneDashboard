@@ -6,29 +6,29 @@ The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https
 
 ## Data Pipeline
 
-#### Data Source
+#### Source
 
 * Adafruit ADS1115 (Analog-to-Digital converter) connected water pressure sensor
 * Adafruit SHT30 Humidity and Temperature Sensor
 * Adafruit 1-Wire temperature sensor
 * [Open Weather API](https://openweathermap.org/api)
 
-#### Data Ingestion
+#### Ingestion
 
-[SystemD](ansible/systemd) services. See [src](src) for Python files.
+[SystemD](ansible/systemd) services on Raspberry Pi. See [src](src) for Python files and basic installation steps.
 * getPressures.service
 * getSHT30.service
 * getTemps.service
 * getWeather.service
 
-#### Data Storage
+#### Storage
 
 * Sensor and weather data is written to an [InfluxDB](influxdb) time series database
 
 #### Visualization, Monitoring, and Alerting
 
-* [Grafana](grafana) dashboards and alerting
-* Slack or Discord alert channels
+* [Grafana](grafana) dashboards for sensor and log monitoring, and system metrics.
+* Slack or Discord alert channels for alerts from Grafana.
 
 <br>
 
