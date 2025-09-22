@@ -51,23 +51,3 @@ def test_read_channels_disabled_channel(pressures_config):
 
     results = reader.read_channels()
     assert results["channel1"] == NO_PSI
-
-def test_construct_points_with_off_value(pressures_config):
-    """Values below PSI_LOWER_BOUND should be labeled 'OFF'."""
-    adc = MockADC({0: 4050})  # Exactly at minADC -> should calculate near 0
-    reader = PressureSensorReader(
-        adc=adc,
-        channels=pressures_config,
-        hostname="SandstoneHost1",
-        sensor_id="i2c:0x48",
-        sensor_type="pressure"
-    )
-
-    readings = reader.read_channels()
-    series = reader.construct_points(readings)
-
-    assert isinstance(series, list)
-    assert series[0]["measurement"] == "pressures"
-    assert series[0]["tags"]["hostname"] == "SandstoneHost1"
-    assert "pressure" in series[0]["fields"]
-    assert series[0]["fields"]["pressure"] in ("OFF", pytest.approx(float))  # allow OFF or float

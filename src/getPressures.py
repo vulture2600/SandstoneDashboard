@@ -18,7 +18,6 @@ from common_functions import choose_dotenv, database_connect, SMBFileTransfer, l
 
 PRESSURE_SENSOR_ID = "i2c:0x48"
 I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
-PSI_LOWER_BOUND = 0.2
 NO_PSI = -999.9
 
 CONFIG_FILE_TRY_AGAIN_SECS = 60
@@ -69,11 +68,8 @@ class PressureSensorReader:
                     (ch_cfg["ch_maxADC"] - ch_cfg["ch_minADC"]) +
                     ch_cfg["ch_minPSI"]
                 )
-                psi_str = f"{psi:.1f}"
-                if psi < PSI_LOWER_BOUND:
-                    psi_str = "OFF"
 
-                logging.info(f"Channel {ch_num}, ADC {value}, PSI {psi_str}")
+                logging.info(f"Channel {ch_num}, ADC {value}, PSI {psi}")
                 results[channel] = psi
 
             except Exception as e:
@@ -86,9 +82,6 @@ class PressureSensorReader:
 
         series = []
         for channel, psi in readings.items():
-            psi_str = f"{psi:.1f}"
-            if psi < PSI_LOWER_BOUND:
-                psi_str = "OFF"
 
             ch_cfg = self.channels[channel]
             point = {
@@ -102,7 +95,6 @@ class PressureSensorReader:
                     "hostname": self.hostname,
                 },
                 "fields": {
-                    "pressure": psi_str,
                     "pressure_flt": psi
                 },
             }

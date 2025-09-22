@@ -128,10 +128,10 @@ try:
 
             raw_temp = struct.unpack(">H", bytes([temp_MSB, temp_LSB]))[0]
             temp_C = -45 + (175 * raw_temp / 65535.0)
-            temp_F = round(temp_C * 1.8 + 32, 1)
+            temp_F = temp_C * 1.8 + 32
 
             raw_hum = struct.unpack(">H", bytes([humidity_MSB, humidity_LSB]))[0]
-            humidity = round(100 * raw_hum / 65535.0, 1)
+            humidity = 100 * raw_hum / 65535.0
 
             point = {
                 "measurement": "temps",
@@ -147,7 +147,7 @@ try:
                 },
                 "fields": {
                     "temp_flt": temp_F,
-                    "humidity": str(humidity)
+                    "humidity_flt": humidity
                 }
             }
             logging.debug(f"Point: {point}")
