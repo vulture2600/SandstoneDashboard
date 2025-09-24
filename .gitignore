@@ -9,6 +9,7 @@ __pycache__/
 
 # Ansible
 inventory.ini
+secrets.yaml
 
 # Config
 getPressures.json

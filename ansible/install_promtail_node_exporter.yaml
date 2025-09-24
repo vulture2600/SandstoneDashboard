@@ -1,0 +1,61 @@
+---
+- name: Install promtail and prometheus node exporter
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yaml
+    - secrets.yaml.vault
+
+  tasks:
+
+    - name: Install promtail
+      ansible.builtin.apt:
+        name:
+          - promtail
+        state: present
+        update_cache: true
+      notify:
+        - Restart promtail
+
+    - name: Install prometheus-node-exporter
+      ansible.builtin.apt:
+        name:
+          - prometheus-node-exporter
+        state: present
+        update_cache: true
+      notify:
+        - Restart prometheus-node-exporter
+
+    - name: Copy promtail config from template
+      ansible.builtin.template:
+        src: loki/config.yml.j2
+        dest: /etc/promtail/config.yml
+        mode: '0644'
+      notify: Restart promtail
+
+    - name: Copy promtail systemd service file
+      ansible.builtin.copy:
+        src: loki/promtail.service
+        dest: /etc/systemd/system/promtail.service
+        mode: '0644'
+      notify:
+        - Reload systemd daemon
+        - Restart promtail
+
+  handlers:
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart promtail
+      ansible.builtin.systemd:
+        name: promtail.service
+        enabled: true
+        state: restarted
+
+    - name: Restart prometheus-node-exporter
+      ansible.builtin.systemd:
+        name: prometheus-node-exporter.service
+        enabled: true
+        state: restarted
