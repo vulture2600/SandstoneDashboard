@@ -6,11 +6,12 @@
 
   tasks:
 
-    - name: Install python3-pip and python3-venv
+    - name: Install python3-pip, python3-venv, and python3-rpi-lgpio
       ansible.builtin.apt:
         name:
           - python3-pip
           - python3-venv
+          - python3-rpi-lgpio
         state: present
         update_cache: true
       become: true
@@ -140,6 +141,16 @@
         group: "{{ ansible_user }}"
         mode: '0644'
       notify: Restart getTemps.service
+      tags: app_files
+
+    - name: Copy recover_i2c.py to the app dir
+      ansible.builtin.copy:
+        src: "../scripts/recover_i2c.py"
+        dest: "{{ app_dir }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+      when: "'shed' in group_names"
       tags: app_files
 
     - name: Copy getWeather.py to the app dir

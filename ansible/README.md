@@ -1,5 +1,7 @@
 # Ansible
 
+## Setup
+
 #### Create key pair for ssh 
 
 Ansible uses ssh to connect. Create a key pair if one doesn't already exist.
@@ -19,9 +21,9 @@ chmod 600 ~/.ssh/authorized_keys
 
 #### Ansible Vault
 
-Do not decrypt .vault files in place; .gitignore covers .env files but not those ending with .vault
-
-If you need a decrypted file, use 'view' instead of 'edit' and redirect stdout to .env.somehostname without the .vault 
+Some files and variables may be encrypted. Do not decrypt .vault files in place.
+The .gitignore file should include .env files but not those ending with .vault  
+If needed, use 'view' instead of 'edit' and redirect stdout to .env.somehostname without the .vault 
 
 ```shell
 # If using a password file, the permissions should be 600:
@@ -33,60 +35,6 @@ mv .env.somehostname .env.somehostname.vault
 
 # Edit a dotenv file:
 ansible-vault edit vault/.env.somehostname.vault --vault-password-file ~/.vault_pass.txt
-```
-
-#### Manage the Raspberry Pi's
-
-Linting & syntax checks
-
-```shell
-yamllint deploy_sandstonedashboard.yaml                         # yaml lint check
-
-ansible-lint deploy_sandstonedashboard.yaml                     # ansible lint check
-
-ansible-playbook deploy_sandstonedashboard.yaml --syntax-check  # check for syntax errors
-```
-
-Preflight check
-
-```shell
-# Dry run, show what will change:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed --diff --check
-
-# Add -t <tag> to limit which tasks runs.
-```
-
-Run the playbook
-
-* See [vars.yaml](vars.yaml) for variables
-* To see which tasks will make changes, add **--check**
-* To see the changes, add **--diff**
-
-```shell
-# Create Python virtual env, install packages:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t pip
-
-# Deploy dotenv file:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t dotenv --vault-password-file ~/.vault_pass.txt
-
-# Deploy Python files:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t app_files
-
-# Deploy systemd services:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t systemd
-
-# Deploy logrotate config, create log files:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t logging
-```
-
-```shell
-# Run all parts against all hosts. Remove --check to really do this:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
-```
-
-```shell
-# Verify systemd services:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -l shed -t verify_services
 ```
 
 #### Ansible inventory file example
@@ -105,3 +53,55 @@ HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_p
 ```
 
 shed, stagewall, and schoolroom are host groups; additional hosts can be added to each.
+
+
+## Deploy
+
+#### Linting & syntax checks
+
+```shell
+ansible-lint your_playbook.yaml
+```
+
+Preflight check
+
+* See [vars.yaml](vars.yaml) for variables
+* To see the diffs to be / being made, add **--diff**
+* To actually run the playbook, remove **--check**
+* To limit host groups, add something like **-l shed** or **-l shed,schoolroom**
+
+#### Deploy the SandstoneDashboard app
+
+```shell
+# Create Python virtual env, install packages:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t pip --check
+
+# Deploy dotenv file:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t dotenv --vault-password-file ~/.vault_pass.txt --check
+
+# Deploy Python files:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t app_files --check
+
+# Deploy systemd services:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t systemd --check
+
+# Deploy logrotate config, create log files:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t logging --check
+```
+
+```shell
+# Run all parts against all hosts:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
+```
+
+```shell
+# Verify systemd services:
+ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t verify_services
+```
+
+#### Install Promtail and Prometheus Node Exporter
+
+```shell
+# Show which tasks will make changes:
+ansible-playbook install_promtail_node_exporter.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
+```
