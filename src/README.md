@@ -26,7 +26,7 @@ pip check  # check for broken requirements
 
 ### Dotenv
 
-The [dotenv](.env.template) file containing values specific to the host is chosen based on whether the Python script was started by systemd or without. See the choose_dotenv function in [common_functions.py](common_functions.py)
+See [.env.template](.env.template) and the choose_dotenv function in [common_functions.py](common_functions.py)
 
 ### Logging
 
