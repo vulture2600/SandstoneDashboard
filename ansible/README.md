@@ -22,16 +22,16 @@ chmod 600 ~/.ssh/authorized_keys
 #### Ansible Vault
 
 Some files and variables may be encrypted. Do not decrypt .vault files in place.
-The .gitignore file should include .env files but not those ending with .vault  
-If needed, use 'view' instead of 'edit' and redirect stdout to .env.somehostname without the .vault 
+The .gitignore file should include the .env file but not when ending with .vault  
+If needed, use 'view' instead of 'edit' and redirect stdout to .env without the .vault 
 
 ```shell
 # If using a password file, the permissions should be 600:
 chmod 600 ~/.vault_pass.txt
 
 # Encrypt and rename a dotenv file:
-ansible-vault encrypt .env.somehostname --vault-password-file ~/.vault_pass.txt
-mv .env.somehostname .env.somehostname.vault
+ansible-vault encrypt .env --vault-password-file ~/.vault_pass.txt
+mv .env .env.vault
 
 # Edit a dotenv file:
 ansible-vault edit vault/.env.somehostname.vault --vault-password-file ~/.vault_pass.txt
@@ -43,13 +43,13 @@ inventory.ini
 
 ```ini
 [shed]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT dotenv_host=HOSTNAME
+HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
 
 [stagewall]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT dotenv_host=HOSTNAME
+HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
 
 [schoolroom]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT dotenv_host=HOSTNAME
+HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
 ```
 
 shed, stagewall, and schoolroom are host groups; additional hosts can be added to each.

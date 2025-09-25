@@ -71,8 +71,8 @@
 
     - name: Copy dotenv file to the app dir, make backup first
       ansible.builtin.copy:
-        src: "vault/.env.{{ dotenv_host }}.vault"
-        dest: "{{ app_dir }}/.env.{{ dotenv_host }}"
+        src: "vault/.env.vault"
+        dest: "{{ app_dir }}/.env"
         decrypt: true
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"

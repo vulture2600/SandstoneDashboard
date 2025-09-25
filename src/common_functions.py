@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 import tempfile
 from datetime import datetime
 import smbclient
@@ -15,11 +16,13 @@ logger = logging.getLogger(__name__)
 def choose_dotenv(hostname):
     """Choose and load the dotenv file"""
 
-    if 'INVOCATION_ID' in os.environ:
-        logger.info(f"Running under Systemd, using .env.{hostname}")
-        load_dotenv(override=True, dotenv_path=f".env.{hostname}")
+    custom_dotenv = Path(f".env.{hostname}").resolve()
+
+    if custom_dotenv.exists():
+        print(f"Using {custom_dotenv}")
+        load_dotenv(override=True, dotenv_path=custom_dotenv)
     else:
-        logger.info("Using .env")
+        print("Using .env")
         load_dotenv(override=True)
 
 def database_connect(influxdb_host, influxdb_port, username, password, database):
