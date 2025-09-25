@@ -1,15 +1,6 @@
 # InfluxDB
 
-#### Systemctl for InfluxDB
-
-```shell
-sudo systemctl enable influxdb
-sudo systemctl disable influxdb
-
-sudo systemctl start influxdb
-sudo systemctl stop influxdb
-sudo systemctl status influxdb
-```
+Docker image influxdb:1.8
 
 #### Connect to InfluxDB
 
@@ -165,42 +156,6 @@ title Stage Wall Water Temp
 title Upper SchlRm Enclosure Temp
 title Upper School Room Outside Temp
 title Upper School Room Water Temp
-```
-
-```sql
-show tag values from temps with key = location
-```
-
-```
-name: temps
-key      value
----      -----
-location UpSchlRmOutsideTemp
-location bootWallOutsideTemp
-location bootyWallEnclTemp
-location bootyWallWaterTemp
-location derrickOutsideTemp
-location derrickWallEnclTemp
-location derrickWallWaterTemp
-location mainFlowEnclTemp
-location mainFlowOutsideTemp
-location mainFlowWaterTemp
-location manifoldTemp
-location northEndEnclTemp
-location northEndOutsideTemp
-location northEndWaterTemp
-location schoolRmEnclTemp
-location schoolRmOutsideTemp
-location schoolRmWaterTemp
-location shedInside
-location shedOutside
-location shedSHT30
-location stageWallBoxTemp
-location stageWallEnclTemp
-location stageWallOutsideTemp
-location stageWallWaterTemp
-location upSchlRmEnclTemp
-location upSchlRmWaterTemp
 ```
 
 #### Query examples

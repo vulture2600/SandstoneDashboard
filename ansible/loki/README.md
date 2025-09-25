@@ -4,7 +4,7 @@ Log monitoring
 
 #### Server
 
-Create a container from the grafana/loki Docker image.
+Docker image grafana/loki
 
 #### Clients
 

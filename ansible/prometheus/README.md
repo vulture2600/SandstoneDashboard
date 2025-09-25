@@ -4,9 +4,11 @@ Metrics collection
 
 #### Server
 
-Create a container from the prom/prometheus Docker image.
+Docker image prom/prometheus
 
 Replace RASPBERRYPPI_IP_ADDR with the IP address of the Raspberry Pi in /etc/prometheus/[prometheus.yml](prometheus.yml)
+
+This file is not configured by Ansible.
 
 #### Clients
 
