@@ -6,6 +6,8 @@ Stop all services using the i2c bus before running this script.
 import time
 from RPi import GPIO
 
+KERNEL_MOD_I2C = "i2c_bcm2835"
+
 # BCM numbering
 SCL_PIN = 3   # GPIO 3, physical pin 5
 SDA_PIN = 2   # GPIO 2, physical pin 3
@@ -56,5 +58,5 @@ if __name__ == "__main__":
     i2c_bus_recover()
 
     print("Now run:")
-    print("sudo rmmod i2c_bcm2835 && sudo modprobe i2c_bcm2835")
+    print(f"sudo rmmod {KERNEL_MOD_I2C} && sudo modprobe {KERNEL_MOD_I2C}")
     print("i2cdetect -y 1")

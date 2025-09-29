@@ -13,10 +13,18 @@ import subprocess
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
-from constants import DEVICES_PATH, W1_SLAVE_FILE, KERNEL_MOD_W1_GPIO, KERNEL_MOD_W1_THERM, TEMP_SENSOR_MODEL
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
-SENSOR_PREFIX = "28-"
+TEMP_SENSOR_MODEL = "ds18b20"
+
+W1_DEVICES_PATH = "/sys/bus/w1/devices/"
+TEMP_SENSOR_ID_PREFIX = "28-"
+W1_SLAVE_FILE = "w1_slave"
+NO_TEMP = -999.9
+
+KERNEL_MOD_W1_GPIO = "w1-gpio"
+KERNEL_MOD_W1_THERM = "w1_therm"
+
 CONFIG_FILE_NAME = "getTemps.json"
 CONFIG_FILE = f"config/{CONFIG_FILE_NAME}"
 
@@ -45,11 +53,11 @@ class GetTempSensors:
     def get_attached_sensors(self):
         """Get sensors attached to the host"""
         try:
-            self.sensor_ids = os.listdir(DEVICES_PATH)
-            self.sensor_ids = [sensor_id for sensor_id in self.sensor_ids if sensor_id.startswith(SENSOR_PREFIX)]
+            self.sensor_ids = os.listdir(W1_DEVICES_PATH)
+            self.sensor_ids = [sensor_id for sensor_id in self.sensor_ids if sensor_id.startswith(TEMP_SENSOR_ID_PREFIX)]
             logging.info(f"Attached sensors: {len(self.sensor_ids)}")
         except Exception as e:
-            logging.error(f"Cannot list {DEVICES_PATH} - {e}")
+            logging.error(f"Cannot list {W1_DEVICES_PATH} - {e}")
             self.sensor_ids = []
 
     def find_unassigned_sensors(self):
@@ -162,13 +170,13 @@ def write_points_to_series(room_sensor_map, hostname) -> list[dict]:
 
         status = "On"
         sensor_id = room_sensor_map.get(room_id, {}).get('id')
-        temp = TempUtils.read_temp(f"{DEVICES_PATH}{sensor_id}/{W1_SLAVE_FILE}")
+        temp = TempUtils.read_temp(f"{W1_DEVICES_PATH}{sensor_id}/{W1_SLAVE_FILE}")
 
         if temp:
             working_sensor_count += 1
         else:
             status = "OFF"
-            temp = -999.9
+            temp = NO_TEMP
 
         title = room_sensor_map.get(room_id, {}).get('title')
         if not title:

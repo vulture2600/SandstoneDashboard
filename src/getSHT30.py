@@ -14,8 +14,9 @@ import smbus2
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
-from constants import HUMIDITY_TEMP_SENSOR_TYPE as SENSOR_TYPE
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
+
+SENSOR_TYPE = "sht30"
 
 WRITE_REGISTER = 0x2C
 READ_REGISTER = 0x00

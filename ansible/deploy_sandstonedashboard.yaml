@@ -91,16 +91,6 @@
     #   loop: "{{ config_files }}"
     #   tags: config_files
 
-    - name: Copy constants.py to the app dir
-      ansible.builtin.copy:
-        src: "../src/constants.py"
-        dest: "{{ app_dir }}"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0644'
-      notify: Restart shared services
-      tags: app_files
-
     - name: Copy common_functions.py to the app dir
       ansible.builtin.copy:
         src: "../src/common_functions.py"

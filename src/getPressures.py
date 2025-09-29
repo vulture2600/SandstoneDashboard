@@ -13,8 +13,9 @@ import Adafruit_ADS1x15
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
-from constants import PRESSURE_SENSOR_TYPE
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
+
+PRESSURE_SENSOR_TYPE = "ADS1115"
 
 PRESSURE_SENSOR_ID = "i2c:0x48"
 I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
