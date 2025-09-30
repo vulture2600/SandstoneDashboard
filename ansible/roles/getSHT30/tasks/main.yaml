@@ -1,0 +1,38 @@
+- name: Import copy_recover_12c
+  ansible.builtin.import_tasks: ../roles/common/tasks/copy_recover_i2c.yaml
+
+- name: Import copy_common_functions
+  ansible.builtin.import_tasks: ../roles/common/tasks/copy_common_functions.yaml
+
+- name: Copy getSHT30.py to the app dir
+  ansible.builtin.copy:
+    src: "../src/getSHT30.py"
+    dest: "{{ app_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  notify: Restart getSHT30.service
+  tags: app_files
+
+- name: Deploy systemd getSHT30.service
+  ansible.builtin.copy:
+    src: "systemd/getSHT30.service"
+    dest: "/etc/systemd/system/getSHT30.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd daemon
+    - Restart getSHT30.service
+  become: true
+  tags: systemd
+
+- name: Deploy logrotate config file
+  ansible.builtin.copy:
+    src: "logrotate/getSHT30"
+    dest: "/etc/logrotate.d"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: logging

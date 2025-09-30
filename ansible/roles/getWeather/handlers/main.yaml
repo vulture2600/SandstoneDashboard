@@ -1,0 +1,7 @@
+- name: Restart getWeather.service
+  ansible.builtin.systemd:
+    name: getWeather.service
+    enabled: true
+    state: restarted
+  become: true
+  listen: Restart shared services

@@ -1,0 +1,7 @@
+- name: Restart getTemps.service
+  ansible.builtin.systemd:
+    name: getTemps.service
+    enabled: true
+    state: restarted
+  become: true
+  listen: Restart shared services

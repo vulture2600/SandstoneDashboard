@@ -8,7 +8,11 @@ __pycache__/
 !.env.template
 
 # Ansible
+.ansible
 inventory.ini
+inventory.yml
+inventory.yaml
+secrets.yml
 secrets.yaml
 
 # Config

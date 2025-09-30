@@ -1,0 +1,7 @@
+- name: Restart getSHT30.service
+  ansible.builtin.systemd:
+    name: getSHT30.service
+    enabled: true
+    state: restarted
+  become: true
+  listen: Restart shared services

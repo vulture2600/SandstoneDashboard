@@ -1,0 +1,35 @@
+- name: Import copy_common_functions
+  ansible.builtin.import_tasks: ../roles/common/tasks/copy_common_functions.yaml
+
+- name: Copy getTemps.py to the app dir
+  ansible.builtin.copy:
+    src: "../src/getTemps.py"
+    dest: "{{ app_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  notify: Restart getTemps.service
+  tags: app_files
+
+- name: Deploy systemd getTemps.service
+  ansible.builtin.copy:
+    src: "systemd/getTemps.service"
+    dest: "/etc/systemd/system/getTemps.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd daemon
+    - Restart getTemps.service
+  become: true
+  tags: systemd
+
+- name: Deploy logrotate config file
+  ansible.builtin.copy:
+    src: "logrotate/getTemps"
+    dest: "/etc/logrotate.d"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: logging

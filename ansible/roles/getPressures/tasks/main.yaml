@@ -1,0 +1,38 @@
+- name: Import copy_recover_12c
+  ansible.builtin.import_tasks: ../roles/common/tasks/copy_recover_i2c.yaml
+
+- name: Import copy_common_functions
+  ansible.builtin.import_tasks: ../roles/common/tasks/copy_common_functions.yaml
+
+- name: Copy getPressures.py to the app dir
+  ansible.builtin.copy:
+    src: "../src/getPressures.py"
+    dest: "{{ app_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  notify: Restart getPressures.service
+  tags: app_files
+
+- name: Deploy systemd getPressures.service
+  ansible.builtin.copy:
+    src: "systemd/getPressures.service"
+    dest: "/etc/systemd/system/getPressures.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd daemon
+    - Restart getPressures.service
+  become: true
+  tags: systemd
+
+- name: Deploy logrotate config file
+  ansible.builtin.copy:
+    src: "logrotate/getPressures"
+    dest: "/etc/logrotate.d"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: logging
