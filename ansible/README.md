@@ -21,38 +21,89 @@ chmod 600 ~/.ssh/authorized_keys
 
 #### Ansible Vault
 
-Some files and variables may be encrypted. Do not decrypt .vault files in place.
+Some files and variables may be encrypted. Do not decrypt .vault files in place.  
 The .gitignore file should include the .env file but not when ending with .vault  
 If needed, use 'view' instead of 'edit' and redirect stdout to .env without the .vault 
 
 ```shell
-# If using a password file, the permissions should be 600:
+# If using a vault password file, the permissions should be 600:
 chmod 600 ~/.vault_pass.txt
+```
 
+Ansible commands reference [ansible.cfg](ansible.cfg) for the vault_password_file parameter.
+
+```shell
 # Encrypt and rename a dotenv file:
-ansible-vault encrypt .env --vault-password-file ~/.vault_pass.txt
+ansible-vault encrypt .env
 mv .env .env.vault
 
 # Edit a dotenv file:
-ansible-vault edit vault/.env.somehostname.vault --vault-password-file ~/.vault_pass.txt
+ansible-vault edit vault/.env.somehostname.vault
 ```
 
 #### Ansible inventory file example
 
-inventory.ini
+inventory.yaml
 
-```ini
-[shed]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
-
-[stagewall]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
-
-[schoolroom]
-HOSTNAME ansible_host=[FQDN_HOSTNAME or IP ADDR] ansible_user=SSH_USER ansible_port=PORT
+```yaml
+all:
+  hosts:
+    shed:
+      ansible_host: hostname1
+      ansible_user: grigri
+      ansible_port: 22
+    stagewall:
+      ansible_host: hostname2
+      ansible_user: grigri
+      ansible_port: 22
+    schoolroom:
+      ansible_host: hostname3
+      ansible_user: grigri
+      ansible_port: 22
+    weatherstation:
+      ansible_host: hostname4
+      ansible_user: grigri
+      ansible_port: 22
+  children:
+    getTemps:
+      hosts:
+        shed:
+          ansible_host: hostname1
+          ansible_user: grigri
+          ansible_port: 22
+        stagewall:
+          ansible_host: hostname2
+          ansible_user: grigri
+          ansible_port: 22
+        schoolroom:
+          ansible_host: hostname3
+          ansible_user: grigri
+          ansible_port: 22
+        weatherstation:
+          ansible_host: hostname4
+          ansible_user: grigri
+          ansible_port: 22
+    getPressures:
+      hosts:
+        shed:
+          ansible_host: hostname1
+          ansible_user: grigri
+          ansible_port: 22
+    getSHT30:
+      hosts:
+        shed:
+          ansible_host: hostname1
+          ansible_user: grigri
+          ansible_port: 22
+    getWeather:
+      hosts:
+        shed:
+          ansible_host: hostname1
+          ansible_user: grigri
+          ansible_port: 22
 ```
 
-shed, stagewall, and schoolroom are host groups; additional hosts can be added to each.
+getTemps, getPressures, getSHT30, and getWeather are host groups. Hosts can be added or removed from each.
 
 
 ## Deploy
@@ -60,48 +111,37 @@ shed, stagewall, and schoolroom are host groups; additional hosts can be added t
 #### Linting & syntax checks
 
 ```shell
-ansible-lint your_playbook.yaml
+ansible-lint playbooks/your_playbook.yaml
 ```
 
 Preflight check
 
-* See [vars.yaml](vars.yaml) for variables
-* To see the diffs to be / being made, add **--diff**
+* See [vars.yaml](inventory/group_vars/all/vars.yaml) for variables
+* To see the diffs add **--diff**
 * To actually run the playbook, remove **--check**
 * To limit host groups, add something like **-l shed** or **-l shed,schoolroom**
 
 #### Deploy the SandstoneDashboard app
 
 ```shell
-# Create Python virtual env, install packages:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t pip --check
+# Create Python virtual env, install packages, create directories, etc:
+ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t common --check
 
-# Deploy dotenv file:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t dotenv --vault-password-file ~/.vault_pass.txt --check
+# Deploy getPressure service:
+ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t getPressure --check
 
-# Deploy Python files:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t app_files --check
+# Deploy getSHT30 service:
+ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t getSHT30 --check
 
-# Deploy systemd services:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t systemd --check
+# Deploy getTemps service:
+ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t getTemps --check
 
-# Deploy logrotate config, create log files:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t logging --check
-```
-
-```shell
-# Run all parts against all hosts:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
-```
-
-```shell
-# Verify systemd services:
-ansible-playbook deploy_sandstonedashboard.yaml -i inventory.ini -t verify_services
+# Deploy getWeather service:
+ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t getWeather --check
 ```
 
 #### Install Promtail and Prometheus Node Exporter
 
 ```shell
-# Show which tasks will make changes:
-ansible-playbook install_promtail_node_exporter.yaml -i inventory.ini --vault-password-file ~/.vault_pass.txt --check
+ansible-playbook playbooks/install_promtail_node_exporter.yaml --check
 ```
