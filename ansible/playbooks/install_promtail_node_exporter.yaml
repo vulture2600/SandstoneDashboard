@@ -2,9 +2,7 @@
 - name: Install promtail and prometheus node exporter
   hosts: all
   become: true
-  vars_files:
-    - vars.yaml
-    - secrets.yaml.vault
+  vars_files: ../inventory/group_vars/all/secrets.yaml.vault
 
   tasks:
 
@@ -40,14 +38,14 @@
 
     - name: Copy promtail config from template
       ansible.builtin.template:
-        src: loki/config.yml.j2
+        src: ../loki/config.yml.j2
         dest: /etc/promtail/config.yml
         mode: '0644'
       notify: Restart promtail
 
     - name: Copy promtail systemd service file
       ansible.builtin.copy:
-        src: loki/promtail.service
+        src: ../loki/promtail.service
         dest: /etc/systemd/system/promtail.service
         mode: '0644'
       notify:

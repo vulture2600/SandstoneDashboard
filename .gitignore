@@ -9,6 +9,7 @@ __pycache__/
 
 # Ansible
 .ansible
+.facts_cache
 inventory.ini
 inventory.yml
 inventory.yaml

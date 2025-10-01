@@ -1,6 +1,6 @@
 - name: Copy recover_i2c.py to the app dir
   ansible.builtin.copy:
-    src: "../scripts/recover_i2c.py"
+    src: "../../scripts/recover_i2c.py"
     dest: "{{ app_dir }}"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

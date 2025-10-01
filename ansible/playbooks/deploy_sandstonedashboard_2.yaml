@@ -1,34 +1,38 @@
 - name: Deploy SandstoneDashboard common env
   hosts: all
-  gather_facts: false
+  # gather_facts: false
   roles:
     - role: common
       tags: common
 
 - name: Deploy getPressures service
   hosts: getPressures
-  gather_facts: false
+  # gather_facts: false
   roles:
     - role: getPressures
       tags: getPressures
+    - role: handlers
 
 - name: Deploy getTemps service
   hosts: getTemps
-  gather_facts: false
+  # gather_facts: false
   roles:
     - role: getTemps
       tags: getTemps
+    - role: handlers
 
 - name: Deploy getSHT30 service
   hosts: getSHT30
-  gather_facts: false
+  # gather_facts: false
   roles:
     - role: getSHT30
       tags: getSHT30
+    - role: handlers
 
 - name: Deploy getWeather service
   hosts: getWeather
-  gather_facts: false
+  # gather_facts: false
   roles:
     - role: getWeather
       tags: getWeather
+    - role: handlers

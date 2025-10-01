@@ -6,7 +6,7 @@
 
 - name: Copy getPressures.py to the app dir
   ansible.builtin.copy:
-    src: "../src/getPressures.py"
+    src: "../../src/getPressures.py"
     dest: "{{ app_dir }}"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
@@ -16,7 +16,7 @@
 
 - name: Deploy systemd getPressures.service
   ansible.builtin.copy:
-    src: "systemd/getPressures.service"
+    src: "../systemd/getPressures.service"
     dest: "/etc/systemd/system/getPressures.service"
     owner: root
     group: root
@@ -29,7 +29,7 @@
 
 - name: Deploy logrotate config file
   ansible.builtin.copy:
-    src: "logrotate/getPressures"
+    src: "../logrotate/getPressures"
     dest: "/etc/logrotate.d"
     owner: root
     group: root
