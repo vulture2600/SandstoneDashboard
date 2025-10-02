@@ -4,7 +4,7 @@
 
 #### Key pair for SSH 
 
-Ansible uses ssh to connect.
+Ansible uses ssh to connect
 
 ```shell
 # Create a public/private key pair on the local machine as the Ansible user:
@@ -12,12 +12,12 @@ ssh-keygen
 
 # Append the public key to the remote authorized_keys file:
 ssh-copy-id -i your_key.pub -p 22 username@remote_host
-
-# ssh-copy-id does the following:
-# Copy the public key to the remote host and append to ~/.ssh/authorized_keys
-# Set permissions of ~/.ssh to 700
-# Set permissions of ~/.ssh/authorized_keys to 600
 ```
+
+ssh-copy-id does the following
+* Copy the public key to the remote host and append to ~/.ssh/authorized_keys
+* Set permissions of ~/.ssh to 700
+* Set permissions of ~/.ssh/authorized_keys to 600
 
 #### Ansible Vault
 
