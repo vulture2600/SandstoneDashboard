@@ -2,35 +2,35 @@
 
 ## Setup
 
-#### Create key pair for ssh 
+#### Key pair for SSH 
 
-Ansible uses ssh to connect. Create a key pair if one doesn't already exist.
+Ansible uses ssh to connect.
 
 ```shell
-# Create a public/private key pair:
+# Create a public/private key pair on the local machine as the Ansible user:
 ssh-keygen
 
-# Append the PUBLIC key, e.g. id_ed25519.pub, to ~/.ssh/authorized_keys on the remote machine.
+# Append the public key to the remote authorized_keys file:
+ssh-copy-id -i your_key.pub -p 22 username@remote_host
 
-# Verify permissions are correct:
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
-
-# The local user might need to logout/login before ssh uses the key.
+# ssh-copy-id does the following:
+# Copy the public key to the remote host and append to ~/.ssh/authorized_keys
+# Set permissions of ~/.ssh to 700
+# Set permissions of ~/.ssh/authorized_keys to 600
 ```
 
 #### Ansible Vault
 
 Some files and variables may be encrypted. Do not decrypt .vault files in place.  
-The .gitignore file should include the .env file but not when ending with .vault  
+The [.gitignore](../.gitignore) file should ignore .env but not .env.vault  
 If needed, use 'view' instead of 'edit' and redirect stdout to .env without the .vault 
 
 ```shell
-# If using a vault password file, the permissions should be 600:
+# If using a vault password file, the permissions should be 600.
 chmod 600 ~/.vault_pass.txt
 ```
 
-Ansible commands reference [ansible.cfg](ansible.cfg) for the vault_password_file parameter.
+Ansible commands reference [ansible.cfg](ansible.cfg) for the vault password file (vault_password_file).
 
 ```shell
 # Encrypt and rename a dotenv file:
@@ -38,7 +38,10 @@ ansible-vault encrypt .env
 mv .env .env.vault
 
 # Edit a dotenv file:
-ansible-vault edit vault/.env.somehostname.vault
+ansible-vault edit .env.vault
+
+# Decrypt and redirect stdout to .env:
+ansible-vault view .env.vault > .env
 ```
 
 #### Ansible inventory file example
@@ -49,56 +52,56 @@ inventory.yaml
 all:
   hosts:
     shed:
-      ansible_host: hostname1
+      ansible_host: host1
       ansible_user: grigri
       ansible_port: 22
     stagewall:
-      ansible_host: hostname2
+      ansible_host: host2
       ansible_user: grigri
       ansible_port: 22
     schoolroom:
-      ansible_host: hostname3
+      ansible_host: host3
       ansible_user: grigri
       ansible_port: 22
     weatherstation:
-      ansible_host: hostname4
+      ansible_host: host4
       ansible_user: grigri
       ansible_port: 22
   children:
     getTemps:
       hosts:
         shed:
-          ansible_host: hostname1
+          ansible_host: host1
           ansible_user: grigri
           ansible_port: 22
         stagewall:
-          ansible_host: hostname2
+          ansible_host: host2
           ansible_user: grigri
           ansible_port: 22
         schoolroom:
-          ansible_host: hostname3
+          ansible_host: host3
           ansible_user: grigri
           ansible_port: 22
         weatherstation:
-          ansible_host: hostname4
+          ansible_host: host4
           ansible_user: grigri
           ansible_port: 22
     getPressures:
       hosts:
         shed:
-          ansible_host: hostname1
+          ansible_host: host1
           ansible_user: grigri
           ansible_port: 22
     getSHT30:
       hosts:
         shed:
-          ansible_host: hostname1
+          ansible_host: host1
           ansible_user: grigri
           ansible_port: 22
     getWeather:
       hosts:
         shed:
-          ansible_host: hostname1
+          ansible_host: host1
           ansible_user: grigri
           ansible_port: 22
 ```
