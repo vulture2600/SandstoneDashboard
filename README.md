@@ -10,7 +10,7 @@ The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https
 
 * Adafruit ADS1115 (Analog-to-Digital converter) connected water pressure sensor
 * Adafruit SHT30 Humidity and Temperature Sensor
-* Adafruit 1-Wire temperature sensor
+* Dallas 1Wire DS18B20 Digital Temp Sensor
 * [Open Weather API](https://openweathermap.org/api)
 
 #### Ingestion
