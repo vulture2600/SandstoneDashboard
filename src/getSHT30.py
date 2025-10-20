@@ -69,7 +69,7 @@ try:
     while True:
 
         logging.info(f"Updating {CONFIG_FILE_NAME} if old or missing")
-        GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+        get_json_successful = smb_client.get_json_config()
 
         logging.info(f"Loading {CONFIG_FILE_NAME}")
         json_config = load_json_file(CONFIG_FILE)
@@ -105,7 +105,7 @@ try:
 
         SENSOR_LOCATION = list(SENSORS.keys())[0]
         SENSOR_ID = SENSORS[SENSOR_LOCATION]["id"]
-        I2C_ADDR = int(SENSOR_ID.split(':')[1], 16)
+        i2c_addr = int(SENSOR_ID.split(':')[1], 16)
         SENSOR_TITLE = SENSORS[SENSOR_LOCATION]["title"]
 
         series = []
@@ -113,10 +113,10 @@ try:
 
         try:
             logging.info("Writing to I2C bus")
-            bus.write_i2c_block_data(I2C_ADDR, WRITE_REGISTER, WRITE_DATA)
+            bus.write_i2c_block_data(i2c_addr, WRITE_REGISTER, WRITE_DATA)
             time.sleep(0.5)
             logging.info("Reading from I2C bus")
-            i2c_block_data = bus.read_i2c_block_data(I2C_ADDR, READ_REGISTER, LENGTH_BYTES)
+            i2c_block_data = bus.read_i2c_block_data(i2c_addr, READ_REGISTER, LENGTH_BYTES)
 
             logging.info(f"I2C block data: {i2c_block_data}")
 
@@ -169,7 +169,7 @@ try:
             logging.error(f"Failure writing to or reading from InfluxDB: {e}")
             db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-        if GET_JSON_SUCCESSFUL is False:
+        if get_json_successful is False:
             smb_client.connect()
 
         time.sleep(10)

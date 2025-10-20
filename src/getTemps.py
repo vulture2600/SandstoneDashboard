@@ -234,15 +234,15 @@ if __name__ == "__main__":
     kernel_mod_loads.append(subprocess.run(
         ["modprobe", KERNEL_MOD_W1_THERM], capture_output=True, text=True, check=False))
 
-    KERNEL_MOD_LOAD_FAIL = False
+    kernel_mod_load_fail = False
 
     for kernel_mod_load in kernel_mod_loads:
         if kernel_mod_load.returncode != 0:
             err_msg = (kernel_mod_load.stderr or "").strip() or "No stderr output"
             logging.critical(f"Kernel module load failed: {err_msg}", exc_info=True)
-            KERNEL_MOD_LOAD_FAIL = True
+            kernel_mod_load_fail = True
 
-    if KERNEL_MOD_LOAD_FAIL:
+    if kernel_mod_load_fail:
         logging.critical("Exiting due to kernel module load failure(s)", exc_info=True)
         db_client.close()
         sys.exit(1)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
         while True:
 
             logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
-            GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+            get_json_successful = smb_client.get_json_config()
 
             logging.info(f"Loading {CONFIG_FILE_NAME}")
             loaded_json_config = load_json_file(CONFIG_FILE)
@@ -270,7 +270,7 @@ if __name__ == "__main__":
                 logging.error(f"Failure writing to or reading from InfluxDB: {e}")
                 db_client = database_connect(INFLUXDB_HOST, INFLUXDB_PORT, USERNAME, PASSWORD, DATABASE)
 
-            if GET_JSON_SUCCESSFUL is False:
+            if get_json_successful is False:
                 smb_client.connect()
 
             time.sleep(5)

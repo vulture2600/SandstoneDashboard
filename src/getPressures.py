@@ -147,7 +147,7 @@ if __name__ == "__main__":
         while True:
 
             logging.info(f"Updating {CONFIG_FILE_NAME} if missing or old")
-            GET_JSON_SUCCESSFUL = smb_client.get_json_config()
+            get_json_successful = smb_client.get_json_config()
 
             logging.info(f"Loading {CONFIG_FILE_NAME}")
             json_config = load_json_file(CONFIG_FILE)
@@ -184,11 +184,11 @@ if __name__ == "__main__":
                 sensor_type=PRESSURE_SENSOR_TYPE,
             )
 
-            PRESSURE_READINGS = pressure_sensor_reader.read_channels()
-            SERIES = pressure_sensor_reader.construct_points(PRESSURE_READINGS)
+            pressure_readings = pressure_sensor_reader.read_channels()
+            pressure_series = pressure_sensor_reader.construct_points(pressure_readings)
 
             try:
-                db_client.write_points(SERIES)
+                db_client.write_points(pressure_series)
                 logging.info("Series written to InfluxDB.")
 
             except (InfluxDBServerError, InfluxDBClientError, RequestsConnectionError, Timeout) as e:

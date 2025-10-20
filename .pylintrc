@@ -39,7 +39,7 @@ extension-pkg-whitelist=
 fail-on=
 
 # Specify a score threshold under which the program will exit with error.
-fail-under=10
+fail-under=10.0
 
 # Interpret the stdin as a python script, whose filename needs to be passed as
 # the module_or_package argument.
@@ -103,10 +103,6 @@ recursive=no
 # directory used to determine a package namespace for modules located under the
 # source root.
 source-roots=
-
-# When enabled, pylint would attempt to guess common misconfiguration and emit
-# user-friendly hints instead of false-positive error messages.
-suggestion-mode=yes
 
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
@@ -203,7 +199,10 @@ good-names=i,
            getTemps,
            getWeather,
            test_getTemps,
-           psi0, psi1, psi2, psi3
+           psi0,
+           psi1,
+           psi2,
+           psi3
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -242,6 +241,11 @@ name-group=
 # not require a docstring.
 no-docstring-rgx=^_
 
+# Regular expression matching correct parameter specification variable names.
+# If left empty, parameter specification variable names will be checked with
+# the set naming style.
+#paramspec-rgx=
+
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.
 # These decorators are taken in consideration only for invalid-name.
@@ -254,6 +258,10 @@ property-classes=abc.abstractproperty
 # Regular expression matching correct type variable names. If left empty, type
 # variable names will be checked with the set naming style.
 #typevar-rgx=
+
+# Regular expression matching correct type variable tuple names. If left empty,
+# type variable tuple names will be checked with the set naming style.
+#typevartuple-rgx=
 
 # Naming style matching correct variable names.
 variable-naming-style=snake_case
@@ -298,11 +306,9 @@ exclude-too-few-public-methods=
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-; max-args=5
 max-args=9
 
 # Maximum number of attributes for a class (see R0902).
-; max-attributes=5
 max-attributes=9
 
 # Maximum number of boolean expressions in an if statement (see R0916).
@@ -318,7 +324,6 @@ max-locals=15
 max-parents=7
 
 # Maximum number of positional arguments for function / method.
-; max-positional-arguments=5
 max-positional-arguments=9
 
 # Maximum number of public methods for a class (see R0904).
@@ -355,8 +360,9 @@ indent-after-paren=4
 # tab).
 indent-string='    '
 
-# Maximum number of characters on a single line.
-; max-line-length=100
+# Maximum number of characters on a single line. Pylint's default of 100 is
+# based on PEP 8's guidance that teams may choose line lengths up to 99
+# characters.
 max-line-length=174
 
 # Maximum number of lines in a module.
@@ -453,8 +459,8 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-zero,
         logging-fstring-interpolation,
         unspecified-encoding,
-        W0718,
-        R0801
+        broad-exception-caught,
+        duplicate-code
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -471,6 +477,9 @@ timeout-methods=requests.api.delete,requests.api.get,requests.api.head,requests.
 
 
 [MISCELLANEOUS]
+
+# Whether or not to search for fixme's in docstrings.
+check-fixme-in-docstring=no
 
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
