@@ -2,17 +2,44 @@
 
 Docker image influxdb:1.8
 
-#### Connect to InfluxDB
+### Initial setup
+
+1) Copy [.env.template](.env.template) to **.env**. Add host, port, username and password. Source the .env file.
 
 ```shell
-# Connect to InfluxDB running on the localhost:
+cp -i .env.template .env
+# Add usernames and passwords to .env
+source .env
+```
+
+2) Create the user. Update .env and rerun for multiple users.
+
+```shell
+influx -host $INFLUX_HOST -port $INFLUX_PORT -database _internal <<EOF
+CREATE USER $INFLUX_USER WITH PASSWORD '$INFLUX_PASS';
+GRANT ALL PRIVILEGES TO $INFLUX_USER
+EOF
+```
+
+3) Enable authentication
+
+```shell
+docker cp influxdb.conf influxdb_1:/etc/influxdb/influxdb.conf
+
+docker restart influxdb_1
+```
+
+### Connect to InfluxDB
+
+```shell
+# Connect to InfluxDB running on the localhost without authentication enforced:
 influx
 
 # Connect to InfluxDb running on another host:
-influx -host 192.168.1.10 -username <user> -password <password>
+influx -host 192.168.30.40 -username <user> -password <password>
 
 # Same as above and specify the port and database:
-influx -host 192.168.1.10 -port 8086 -username <user> -password <password> -database <database>
+influx -host 192.168.30.40 -port 8086 -username <user> -password <password> -database <database>
 ```
 
 ### Comparison with SQL databases
@@ -57,7 +84,7 @@ weather,location=Minneapolis
 weather,location=Sandstone
 ```
 
-#### Key fields for the series
+### Key fields for the series
 
 ```sql
 show field keys from weather
@@ -82,7 +109,7 @@ windGust               float
 windSpeed              float
 ```
 
-#### Point example as json
+### Point example as json
 
 ```json
 {
@@ -120,7 +147,7 @@ cardinality estimation
 6
 ```
 
-#### Tags
+### Tags
 
 ```sql
 show tag values from temps with key = title
@@ -158,7 +185,7 @@ title Upper School Room Outside Temp
 title Upper School Room Water Temp
 ```
 
-#### Query examples
+### Query examples
 
 ```sql
 -- List the latest 10 temps taken:
@@ -177,7 +204,7 @@ select first(temp_flt) as first_temp_of_day, title from temps where location = '
 select count(*) from temps
 ```
 
-#### Grafana queries
+### Grafana queries
 
 InfluxQL in Grafana for the latest:
 
@@ -193,7 +220,7 @@ Grafana uses the time of the most recent point as the default timestamp in Stat 
 * "autogen": Default retention policy
 * "weather": Measurement (like an SQL table)
 
-#### Retention policies
+### Retention policies
 
 ```sql
 show retention policies
