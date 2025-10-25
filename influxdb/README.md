@@ -4,11 +4,13 @@ Docker image influxdb:1.8
 
 ### Initial setup
 
-1) Copy [.env.template](.env.template) to **.env**. Add host, port, username and password. Source the .env file.
+1) Create and populate .env file.
 
 ```shell
 cp -i .env.template .env
-# Add usernames and passwords to .env
+
+# Add host, port, username, and password to .env
+
 source .env
 ```
 
