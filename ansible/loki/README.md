@@ -12,9 +12,9 @@ Docker image: grafana/loki
 sudo apt install promtail
 ```
 
-Update /etc/promtail/config.yml and /etc/systemd/system/promtail.service.
+Update /etc/promtail/config.yml and /etc/systemd/system/[promtail.service](promtail.service)
 
-See [config.yml.j2](config.yml.j2) and [promtail.service](promtail.service) for examples.
+Ansible uses [config.yml.j2](config.yml.j2) for config.yml
 
 ```shell
 sudo systemctl daemon-reload
