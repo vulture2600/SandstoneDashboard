@@ -2,11 +2,11 @@
 
 Log monitoring
 
-#### Server
+### Server
 
-Docker image grafana/loki
+Docker image: grafana/loki
 
-#### Clients
+### Clients
 
 ```shell
 sudo apt install promtail

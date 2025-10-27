@@ -2,15 +2,19 @@
 
 Metrics collection
 
-#### Server
+### Server
 
-Docker image prom/prometheus
+Docker image: prom/prometheus
 
-Replace RASPBERRYPPI_IP_ADDR with the IP address of the Raspberry Pi in /etc/prometheus/[prometheus.yml](prometheus.yml)
+Edit the targets section in /etc/prometheus/[prometheus.yml](prometheus.yml) as needed.
 
-This file is not configured by Ansible.
+```shell
+docker cp prometheus.yml prometheus-1:/etc/prometheus/prometheus.yml
 
-#### Clients
+docker restart prometheus-1
+```
+
+### Clients
 
 ```shell
 sudo apt install prometheus-node-exporter
