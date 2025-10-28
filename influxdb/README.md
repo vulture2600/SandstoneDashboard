@@ -1,10 +1,10 @@
 # InfluxDB
 
-Docker image influxdb:1.8
+Docker image: influxdb:1.8
 
 ### Initial setup
 
-1) Create and populate .env file.
+1) Create and populate the .env file from [.env.template](.env.template)
 
 ```shell
 cp -i .env.template .env
