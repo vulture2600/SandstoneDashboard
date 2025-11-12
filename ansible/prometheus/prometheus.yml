@@ -27,6 +27,6 @@ scrape_configs:
       - targets: ["192.168.30.5:9100"]
         labels:
           location: "shed"
-      # - targets: ["192.168.30.8:9100"]
-      #   labels:
-      #     location: "stagewall"
+      - targets: ["192.168.30.8:9100"]
+        labels:
+          location: "stagewall"
