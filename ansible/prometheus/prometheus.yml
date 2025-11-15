@@ -30,3 +30,6 @@ scrape_configs:
       - targets: ["192.168.30.8:9100"]
         labels:
           location: "stagewall"
+      - targets: ["192.168.30.9:9100"]
+        labels:
+          location: "schoolroom"
