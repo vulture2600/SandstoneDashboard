@@ -1,8 +1,8 @@
-# my global config
+# global config
 global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-  # scrape_timeout is set to the global default (10s).
+  scrape_interval: 1m      # Default is every 1 minute.
+  evaluation_interval: 1m  # Evaluate rules every 15 seconds. Default is every 1 minute.
+  scrape_timeout: 59s      # Default is (10s).
 
 # Alertmanager configuration
 alerting:
