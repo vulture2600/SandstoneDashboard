@@ -32,4 +32,4 @@ The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https
 
 <br>
 
-![graph](images_diagrams/monitoring_stack.jpg)
+![graph](images_diagrams/monitoring_stack.png)
