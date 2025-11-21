@@ -1,10 +1,12 @@
 # SandstoneDashboard
 
-![Grafana Dashboard](images_diagrams/grafana_dashboard.jpg)
+![Grafana Dashboard](images_diagrams/water_temp_map_dashboard.png)
 
 The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https://www.mountainproject.com/area/106915985/sandstone-ice-park) in Sandstone MN. The main focus is monitoring the [water lines](images_diagrams/README.md#sandstone-ice-park-water-lines) that run to edge of the cliffs and preventing them from freezing. Significant manual intervention is required when lines freeze or break.
 
-## Data Pipeline
+## Sensor Data
+
+![graph](images_diagrams/monitoring_stack.png)
 
 #### Source
 
@@ -29,7 +31,3 @@ The SandstoneDashboard monitors the ice making at the [Sandstone Ice Park](https
 
 * [Grafana](grafana) dashboards for sensor and log monitoring, and system metrics.
 * Slack or Discord alert channels for alerts from Grafana.
-
-<br>
-
-![graph](images_diagrams/monitoring_stack.png)
