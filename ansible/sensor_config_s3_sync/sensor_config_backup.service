@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup SandstoneDashboard sensor config files
+After=network.target
+
+[Service]
+User=pi
+Type=oneshot
+ExecStart=/home/pi/sensor_config_s3_sync/sensor_config_backup.sh
+

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run SandstoneDashboard backup every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Unit=sensor_config_backup.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
