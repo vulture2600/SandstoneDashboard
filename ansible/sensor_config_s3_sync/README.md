@@ -5,9 +5,9 @@ to S3 storage created in QNAP QuObjects.
 
 1) Copy the AWS [config](config) file to ~/.aws/
 
-1) Add your access key and secret key to ~/.aws/credentials
+1) Add the access key and secret key to ~/.aws/credentials
 
-1) Append the following line to /etc/hosts
+1) Append the following line to /etc/hosts. Update the IP address if different.
 
     ```192.168.30.10   quobjects```
 
