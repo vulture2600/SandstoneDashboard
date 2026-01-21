@@ -1,7 +1,7 @@
 # Backup sensor config files to S3
 
 This sets up automatic backups of SandstoneDashboard sensor config files
-to an S3 storage (QNAP QuObjects) using a systemd timer.
+to S3 storage created in QNAP QuObjects.
 
 1) Copy the AWS [config](config) file to ~/.aws/
 
@@ -50,4 +50,21 @@ View logs
 
 ```shell
 journalctl -u sensor_config_backup.service -f
+```
+
+### List objects in the bucket
+
+Activate the virtual environment
+
+```shell
+source ~/sensor_config_s3_sync/venv_s3/bin/activate
+```
+
+List buckets, contents, and versions
+
+```shell
+aws s3 ls                            # list buckets
+aws s3 ls sandstonedashboard-config  # list bucket contents
+
+aws s3api list-object-versions --bucket sandstonedashboard-config
 ```
