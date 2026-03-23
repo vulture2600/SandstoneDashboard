@@ -2,6 +2,12 @@
 __pycache__/
 *.py[cod]
 
+# Virtual environments
+.python-version
+venv/
+Pipfile
+Pipfile.lock
+
 # dotenv
 .env*
 !.env.vault
