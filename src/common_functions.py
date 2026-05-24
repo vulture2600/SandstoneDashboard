@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import shutil
 import tempfile
 from datetime import datetime
 import smbclient
@@ -118,7 +119,7 @@ class SMBFileTransfer:
             with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as tmp:
                 tmp.write(smb_file_content)
 
-            os.replace(tmp.name, self.config_file)
+            shutil.move(tmp.name, self.config_file)
 
             logger.info("Local config updated from remote")
             return True
