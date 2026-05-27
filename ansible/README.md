@@ -1,5 +1,7 @@
 # Ansible
 
+This details the steps required to run Ansible playbooks on the Raspberry Pis along with some basic system configuration.
+
 ## Create key pair for SSH 
 
 Ansible uses ssh to connect.
