@@ -1,25 +1,84 @@
 # Ansible
 
-## Setup
+## Key pair for SSH 
 
-#### Key pair for SSH 
-
-Ansible uses ssh to connect
+Ansible uses ssh to connect.
 
 ```shell
 # Create a public/private key pair on the local machine as the Ansible user:
 ssh-keygen
 
 # Append the public key to the remote authorized_keys file:
-ssh-copy-id -i your_key.pub -p 22 username@remote_host
+ssh-copy-id -i your_key.pub -p 22 USERNSME@REMOTE_HOST
 ```
 
-ssh-copy-id does the following
+ssh-copy-id does the following:
 * Copy the public key to the remote host and append to ~/.ssh/authorized_keys
 * Set permissions of ~/.ssh to 700
 * Set permissions of ~/.ssh/authorized_keys to 600
 
-#### Ansible Vault
+
+## Config on the Raspberry Pi
+
+#### Sudo without password
+
+```shell
+# Allow sudo access without a password:
+sudo sh -c "echo 'pi ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/010_pi-nopasswd"
+
+# Set permissions:
+sudo chmod 440 /etc/sudoers.d/010_pi-nopasswd
+
+# Verify permissions and parsing:
+sudo visudo -c
+```
+
+#### Set timezone
+
+```shell
+# Verify time zone:
+timedatectl
+
+# Set if incorrect:
+sudo timedatectl set-timezone America/Chicago
+```
+
+#### Run system updates
+
+```shell
+sudo apt update
+sudo apt -y dist-upgrade
+sudo apt -y autoremove
+```
+
+#### Load the w1-gpio and w1_therm modules
+
+These modules are necessary for the getTemps service.
+
+```shell
+# Append to /boot/firmware/config.txt:
+sudo sh -c "echo 'dtoverlay=w1-gpio' >> /boot/firmware/config.txt"
+
+# Verify entry, dtoverlay=w1-gpio should appear once:
+tail /boot/firmware/config.txt
+
+# Verify modules load (no output is good):
+sudo modprobe w1-gpio
+sudo modprobe w1_therm
+```
+
+#### Reboot and verify the modules above load
+
+```shell
+sudo reboot
+```
+
+```shell
+lsmod | grep w1
+```
+
+
+## Ansible Vault
 
 Some files and variables may be encrypted. Do not decrypt .vault files in place.  
 The [.gitignore](../.gitignore) file should ignore .env but not .env.vault  
@@ -44,7 +103,8 @@ ansible-vault edit .env.vault
 ansible-vault view .env.vault > .env
 ```
 
-#### Ansible inventory file example
+
+## Ansible inventory file example
 
 inventory.yaml
 
