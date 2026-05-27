@@ -1,0 +1,55 @@
+all:
+  hosts:
+    shed:
+      ansible_host: host1
+      ansible_user: grigri
+      ansible_port: 22
+    stagewall:
+      ansible_host: host2
+      ansible_user: grigri
+      ansible_port: 22
+    schoolroom:
+      ansible_host: host3
+      ansible_user: grigri
+      ansible_port: 22
+    weatherstation:
+      ansible_host: host4
+      ansible_user: grigri
+      ansible_port: 22
+  children:
+    getTemps:
+      hosts:
+        shed:
+          ansible_host: host1
+          ansible_user: grigri
+          ansible_port: 22
+        stagewall:
+          ansible_host: host2
+          ansible_user: grigri
+          ansible_port: 22
+        schoolroom:
+          ansible_host: host3
+          ansible_user: grigri
+          ansible_port: 22
+        weatherstation:
+          ansible_host: host4
+          ansible_user: grigri
+          ansible_port: 22
+    getPressures:
+      hosts:
+        shed:
+          ansible_host: host1
+          ansible_user: grigri
+          ansible_port: 22
+    getSHT30:
+      hosts:
+        shed:
+          ansible_host: host1
+          ansible_user: grigri
+          ansible_port: 22
+    getWeather:
+      hosts:
+        shed:
+          ansible_host: host1
+          ansible_user: grigri
+          ansible_port: 22

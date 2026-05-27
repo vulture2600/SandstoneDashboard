@@ -1,6 +1,6 @@
 # Ansible
 
-## Key pair for SSH 
+## Create key pair for SSH 
 
 Ansible uses ssh to connect.
 
@@ -13,12 +13,12 @@ ssh-copy-id -i your_key.pub -p 22 USERNSME@REMOTE_HOST
 ```
 
 ssh-copy-id does the following:
-* Copy the public key to the remote host and append to ~/.ssh/authorized_keys
-* Set permissions of ~/.ssh to 700
-* Set permissions of ~/.ssh/authorized_keys to 600
+* Copies the public key to the remote host and append to ~/.ssh/authorized_keys
+* Sets permissions of ~/.ssh to 700
+* Sets permissions of ~/.ssh/authorized_keys to 600
 
 
-## Config on the Raspberry Pi
+## Configure the Raspberry Pi
 
 #### Sudo without password
 
@@ -104,69 +104,12 @@ ansible-vault view .env.vault > .env
 ```
 
 
-## Ansible inventory file example
+## Ansible inventory file
 
-inventory.yaml
+See [inventory_example.yaml](inventory/inventory_example.yaml)
 
-```yaml
-all:
-  hosts:
-    shed:
-      ansible_host: host1
-      ansible_user: grigri
-      ansible_port: 22
-    stagewall:
-      ansible_host: host2
-      ansible_user: grigri
-      ansible_port: 22
-    schoolroom:
-      ansible_host: host3
-      ansible_user: grigri
-      ansible_port: 22
-    weatherstation:
-      ansible_host: host4
-      ansible_user: grigri
-      ansible_port: 22
-  children:
-    getTemps:
-      hosts:
-        shed:
-          ansible_host: host1
-          ansible_user: grigri
-          ansible_port: 22
-        stagewall:
-          ansible_host: host2
-          ansible_user: grigri
-          ansible_port: 22
-        schoolroom:
-          ansible_host: host3
-          ansible_user: grigri
-          ansible_port: 22
-        weatherstation:
-          ansible_host: host4
-          ansible_user: grigri
-          ansible_port: 22
-    getPressures:
-      hosts:
-        shed:
-          ansible_host: host1
-          ansible_user: grigri
-          ansible_port: 22
-    getSHT30:
-      hosts:
-        shed:
-          ansible_host: host1
-          ansible_user: grigri
-          ansible_port: 22
-    getWeather:
-      hosts:
-        shed:
-          ansible_host: host1
-          ansible_user: grigri
-          ansible_port: 22
-```
-
-getTemps, getPressures, getSHT30, and getWeather are host groups. Hosts can be added or removed from each.
+* getTemps, getPressures, getSHT30, and getWeather are host groups.
+* Hosts can be added or removed from each.
 
 
 ## Deploy
