@@ -1,5 +1,7 @@
 # SandstoneDashboard Python files
 
+For system configuration prior to running, see [Ansible](../ansible/)
+
 ### Python virtual environment
 
 Activate/deactivate

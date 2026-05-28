@@ -22,6 +22,8 @@ ssh-copy-id does the following:
 
 ## Configure the Raspberry Pi
 
+These steps are mainly for newly reimaged Pis.
+
 #### Sudo without password
 
 ```shell
@@ -82,9 +84,8 @@ lsmod | grep w1
 
 ## Ansible Vault
 
-Some files and variables may be encrypted. Do not decrypt .vault files in place.  
-The [.gitignore](../.gitignore) file should ignore .env but not .env.vault  
-If needed, use 'view' instead of 'edit' and redirect stdout to .env without the .vault 
+Files like dotenv and some variables are encrypted.  
+Do not decrypt .vault files in place. The [.gitignore](../.gitignore) file should ignore .env but not .env.vault  
 
 ```shell
 # If using a vault password file, the permissions should be 600.
