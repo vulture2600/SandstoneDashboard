@@ -6,6 +6,14 @@ Log monitoring
 
 Docker image: grafana/loki
 
+[local-config.yaml](local-config.yaml) is not currently deployed by Ansible.
+
+```shell
+docker cp local-config.yaml loki-3:/etc/loki/local-config.yaml
+
+docker restart loki-3
+```
+
 ### Clients
 
 ```shell
