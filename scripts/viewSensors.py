@@ -1,66 +1,50 @@
-
 """
-steve.a.mccluskey@gmail.com
 Utility to display all available OneWire temp sensors on the bus.
+Developers: steve.a.mccluskey@gmail.com, see repo for others.
 """
 
 import os
-import time
 import datetime
-from os import path
+import subprocess
 import threading
+import time
 
 DEVICES_PATH = "/sys/bus/w1/devices/"
-W1_SLAVE_FILE = "/w1_slave"
-os.system('modprobe w1-gpio')
-os.system('modprobe w1-therm')
+TEMP_SENSOR_ID_PREFIX = "28-"
+DEGREE_SIGN_F = "\N{DEGREE SIGN}F"
 
-degree_sign = u"\N{DEGREE SIGN}"
 
-#reads /temperature file
-def read_temp_f(file):
+def read_temp(file: str) -> str:
+    """Reads temperature file"""
+
     device_file = DEVICES_PATH + file + "/temperature"
 
-    if (path.exists(device_file)):
-
-        try:
-            f = open (device_file, 'r')
+    try:
+        with open(device_file, "r") as f:
             temp_string = f.read()
-            temp_c = float(temp_string) / 1000.0
-            temp_f = temp_c * 1.8 + 32.0
-            return format(temp_f, '.1f')
-        except:
-            return "OFF"
-    else:
-        return "OFFLINE"
 
-#reads w1_slave file and extracts temp raw data
-def read_temp(file):
-    device_file = DEVICES_PATH + file + "/" + W1_SLAVE_FILE
-    if (path.exists(device_file)):
-        try:
-            f = open (device_file, 'r')
-            lines = f.readlines()
-            f.close()
+        temp_c = float(temp_string) / 1000.0
+        temp_f = str(round(temp_c * 1.8 + 32, 1)) + DEGREE_SIGN_F
+        return temp_f
 
-            pos = lines[1].find('t=')
-
-            if (pos != -1):
-                temp_string= lines[1][pos + 2:]
-                temp_c = float(temp_string) / 1000.0
-                temp_f = temp_c * 1.8 + 32.0
-                return format(temp_c, '.1f'), format(temp_f, '.1f')
-        except:
-            return "OFF", "OFF"
-    else:
-        return "OFF", "OFF"
+    except FileNotFoundError as e:
+        print(f"File not found: {device_file} — {e}")
+        return "OFF"
+    except ValueError as e:
+        print(f"Error parsing temperature value: {e}")
+        return "OFF"
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return "OFF"
 
 def multi_threaded_file_reader(file_paths):
+    """Creates a thread for each file path to read temperature concurrently."""
     threads = []
     results = {}
 
     def read_file_thread(file_path):
-        result = read_temp_f(file_path)
+        """Reads the temperature from a file and stores the result in the results dictionary."""
+        result = read_temp(file_path)
         results[file_path] = result
 
     for file_path in file_paths:
@@ -73,21 +57,29 @@ def multi_threaded_file_reader(file_paths):
 
     return results
 
-while True:
+if __name__ == "__main__":
 
-    sensorIds = os.listdir(DEVICES_PATH)
+    # Verify kernel modules are loaded:
+    subprocess.run(["modprobe", "w1-gpio"], check=True)
+    subprocess.run(["modprobe", "w1-therm"], check=True)
 
-    print("Found " + str((len(sensorIds) - 1)) + " devices on bus: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print("Collecting temperatures ...")
-    i = 1
-    results = multi_threaded_file_reader(sensorIds)
+    try:
+        while True:
 
-    for file_path, content in results.items():
-        if (file_path.find('28-') != -1):
+            sensor_ids = os.listdir(DEVICES_PATH)
+            sensor_ids = [sensor_id for sensor_id in sensor_ids if sensor_id.startswith(TEMP_SENSOR_ID_PREFIX)]
 
-            print (str(i).zfill(2) + ") Sensor ID: " + str(file_path) + ". Temp = " + str(content) + degree_sign + "F.")
-            i += 1
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"Found {len(sensor_ids)} devices on 1-Wire bus, {timestamp}")
+            print("Collecting temperatures...")
 
-    print(" ")
+            multi_results = multi_threaded_file_reader(sensor_ids)
 
-    time.sleep(2)
+            for i, (sensor_id, temp) in enumerate(multi_results.items(), start=1):
+                print(f"{str(i).zfill(2)}) Sensor ID: {sensor_id}, Temp = {temp}")
+
+            print()
+            time.sleep(2)
+
+    except KeyboardInterrupt:
+        print(" Exiting...\n")

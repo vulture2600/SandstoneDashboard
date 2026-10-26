@@ -34,3 +34,11 @@ If the sensor IDs are detected, start the stopped services.
 sudo systemctl start getPressures.service
 sudo systemctl start getSHT30.service
 ```
+
+### View connected 1-Wire temp sensors
+
+```python
+python viewSensors.py
+```
+
+![viewSensors](../images_diagrams/viewSensors.png)
