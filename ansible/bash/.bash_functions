@@ -78,8 +78,25 @@ service_map["SandstoneRasPi4b8GbPowerMonitor"]="getTemps.service getPressures.se
 service_map["SandstoneRasPi3BPlusStageWall"]="getTemps.service promtail.service prometheus-node-exporter.service"
 service_map["SandstonePi3bPlusSchoolRoom"]="getTemps.service promtail.service prometheus-node-exporter.service"
 
-check_services() {
+checkservices() {
     for SERVICE in ${service_map[$HOSTNAME]}; do
         printf '%-35s %s\n' "$SERVICE" "$(systemctl is-active "$SERVICE")"
+    done
+}
+
+
+## Check 1-Wire temperature sensors
+
+checktemps() {
+    for DIR in /sys/bus/w1/devices/28-*; do
+        
+        TEMP_FILE="$DIR/temperature"
+        if [ ! -f "$TEMP_FILE" ]; then
+            echo "$DIR: ERROR (temperature file missing)"
+            continue
+        fi
+        
+        printf "$DIR: "
+        awk '{printf "%.1f°F (Raw: %s)\n", ($1 / 1000.0) * 1.8 + 32, $1}' "$TEMP_FILE"
     done
 }

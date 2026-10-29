@@ -1,8 +1,6 @@
 
   --- Sandstone Dashboard Quick Checks ---
-check_services  # Check all Sandstone Dashboard services
-check1w         # View 1-Wire temperature sensers
-check1wl        # Loop check1w
-checktemp       # View 1-wire temperature sensers, temps in Fahrenheit
-checktempl      # Loop checktemp
+checkservices   # Check all Sandstone Dashboard services
+checktemps      # View 1-wire temperature sensers
+checktempsl     # Loop checktemps
 i2cdetect -y 1  # View I2C sensor IDs, 0x44 (SHT30), 0x48 (Pressure)

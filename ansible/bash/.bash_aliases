@@ -38,10 +38,4 @@ alias s3lv='aws s3api list-object-versions --bucket sandstonedashboard-config'
 
 ## 1-Wire temperature sensers
 
-alias check1w='for FILE in /sys/bus/w1/devices/28-*; do printf "$FILE "; cat "$FILE/temperature"; done'
-
-alias check1wl='while true; do date "+%F %T"; check1w; sleep 2; echo; done'
-
-alias checktemp='for FILE in /sys/bus/w1/devices/28-*/temperature; do printf "$FILE: "; awk '\''{printf "%.1f°F\n", ($1 / 1000.0) * 1.8 + 32}'\'' "$FILE"; done'
-
-alias checktempl='while true; date "+%F %T"; do checktemp; sleep 2; echo; done'
+alias checktempsl='while true; date "+%F %T"; do checktemps; sleep 2; echo; done'
