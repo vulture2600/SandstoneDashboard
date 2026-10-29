@@ -100,3 +100,41 @@ checktemps() {
         awk '{printf "%.1f°F (Raw: %s)\n", ($1 / 1000.0) * 1.8 + 32, $1}' "$TEMP_FILE"
     done
 }
+
+
+## Sandstone Dashboard commands and logs
+
+ssdcommands() {
+cat /etc/motd
+cat <<'EOF'
+  --- Application Logs ---
+tail -f /var/log/SandstoneDashboard/getTemps.log      # Tail getTemps.log
+tail -f /var/log/SandstoneDashboard/getPressures.log  # Tail getPressures.log
+tail -f /var/log/SandstoneDashboard/getSHT30.log      # Tail getSHT30.log
+tail -f /var/log/SandstoneDashboard/getWeather.log    # Tail getWeather.log
+tail -f /var/log/SandstoneDashboard/get*.log          # Tail all logs
+lnav /var/log/SandstoneDashboard/get*.log             # Tail all logs with lnav
+
+  --- Systemd Journals ---
+journalctl -fu getTemps.service                       # System journal for getTemps
+journalctl -fu getPressures.service                   # System journal for getPressures
+journalctl -fu getSHT30.service                       # System journal for getSHT30
+journalctl -fu getWeather.service                     # System journal for getWeather
+
+  --- Systemd Services ---
+systemctl status getTemps.service                     # Status of getTemps.service
+systemctl status getPressures.service                 # Status of getPressures.service
+systemctl status getSHT30.service                     # Status of getSHT30.service
+systemctl status getWeather.service                   # Status of getWeather.service
+
+  --- System Resources ---
+systemctl --failed                                    # List any failed services
+df -hT                                                # Show disk usage
+free -h                                               # Show memory usage
+uptime                                                # Show system uptime, load averages
+ps -fu pi                                             # Show processes for the pi user
+top                                                   # Show top processes, also htop or btop
+cat /proc/device-tree/model                           # Show Raspberry Pi model
+
+EOF
+}

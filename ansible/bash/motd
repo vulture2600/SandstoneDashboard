@@ -4,3 +4,4 @@ checkservices   # Check all Sandstone Dashboard services
 checktemps      # View 1-wire temperature sensers
 checktempsl     # Loop checktemps
 i2cdetect -y 1  # View I2C sensor IDs, 0x44 (SHT30), 0x48 (Pressure)
+ssdcommands     # Show more useful commands
