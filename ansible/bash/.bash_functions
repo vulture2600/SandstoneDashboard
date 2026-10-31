@@ -105,8 +105,17 @@ checktemps() {
 ## Sandstone Dashboard commands and logs
 
 ssdcommands() {
-cat /etc/motd
-cat <<'EOF'
+    local -a BAT_CMD=(cat)
+
+    if command -v batcat >/dev/null 2>&1; then
+        BAT_CMD=(batcat -pp -l bash)
+    elif command -v bat >/dev/null 2>&1; then
+        BAT_CMD=(bat -pp -l bash)
+    fi
+
+    "${BAT_CMD[@]}" /etc/motd
+
+    "${BAT_CMD[@]}" <<'EOF'
   --- Application Logs ---
 tail -f /var/log/SandstoneDashboard/getTemps.log      # Tail getTemps.log
 tail -f /var/log/SandstoneDashboard/getPressures.log  # Tail getPressures.log
@@ -115,7 +124,7 @@ tail -f /var/log/SandstoneDashboard/getWeather.log    # Tail getWeather.log
 tail -f /var/log/SandstoneDashboard/get*.log          # Tail all logs
 lnav /var/log/SandstoneDashboard/get*.log             # Tail all logs with lnav
 
-  --- Systemd Journals ---
+  --- Service Logs (Journal) ---
 journalctl -fu getTemps.service                       # System journal for getTemps
 journalctl -fu getPressures.service                   # System journal for getPressures
 journalctl -fu getSHT30.service                       # System journal for getSHT30
@@ -127,14 +136,15 @@ systemctl status getPressures.service                 # Status of getPressures.s
 systemctl status getSHT30.service                     # Status of getSHT30.service
 systemctl status getWeather.service                   # Status of getWeather.service
 
-  --- System Resources ---
+  --- System Monitoring & Information ---
 systemctl --failed                                    # List any failed services
 df -hT                                                # Show disk usage
 free -h                                               # Show memory usage
 uptime                                                # Show system uptime, load averages
 ps -fu pi                                             # Show processes for the pi user
 top                                                   # Show top processes, also htop or btop
-cat /proc/device-tree/model                           # Show Raspberry Pi model
+cat /proc/device-tree/model; echo                     # Show Raspberry Pi model
+uname -r                                              # Show Linux kernel version   
 
 EOF
 }
