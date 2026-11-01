@@ -89,15 +89,26 @@ checkservices() {
 
 checktemps() {
     for DIR in /sys/bus/w1/devices/28-*; do
-        
+
         TEMP_FILE="$DIR/temperature"
         if [ ! -f "$TEMP_FILE" ]; then
             echo "$DIR: ERROR (temperature file missing)"
             continue
         fi
-        
+
         printf "$DIR: "
-        awk '{printf "%.1f°F (Raw: %s)\n", ($1 / 1000.0) * 1.8 + 32, $1}' "$TEMP_FILE"
+        awk '{
+            temp = ($1 / 1000.0) * 1.8 + 32
+
+            if (temp <= 32)
+                color = "\033[94m"  # Light blue
+            else if (temp < 34)
+                color = "\033[96m"  # Cyan
+            else
+                color = "\033[93m"  # Yellow
+
+            printf "%5s %s%5.1f°F\033[0m\n", $1, color, temp
+        }' "$TEMP_FILE"
     done
 }
 
