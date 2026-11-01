@@ -126,23 +126,23 @@ ssdcommands() {
         BAT_CMD=(bat -pp -l bash)
     fi
 
-    echo; cat ~/.nomic.txt
+    test -f ~/.ascii_nomic.txt && { echo; cat ~/.ascii_nomic.txt; }
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
   --- Application Logs ---
-tail -f /var/log/SandstoneDashboard/getTemps.log      # Tail getTemps.log
-tail -f /var/log/SandstoneDashboard/getPressures.log  # Tail getPressures.log
-tail -f /var/log/SandstoneDashboard/getSHT30.log      # Tail getSHT30.log
-tail -f /var/log/SandstoneDashboard/getWeather.log    # Tail getWeather.log
-tail -f /var/log/SandstoneDashboard/get*.log          # Tail all logs
-lnav /var/log/SandstoneDashboard/get*.log             # Tail all logs with lnav
+tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
+tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
+tail -f /var/log/SandstoneDashboard/getSHT30.log      # Follow getSHT30.log
+tail -f /var/log/SandstoneDashboard/getWeather.log    # Follow getWeather.log
+tail -f /var/log/SandstoneDashboard/get*.log          # Follow all logs
+lnav /var/log/SandstoneDashboard/get*.log             # Follow all logs with lnav
 
   --- Service Logs (Journal) ---
-journalctl -fu getTemps.service                       # System journal for getTemps
-journalctl -fu getPressures.service                   # System journal for getPressures
-journalctl -fu getSHT30.service                       # System journal for getSHT30
-journalctl -fu getWeather.service                     # System journal for getWeather
+journalctl -fu getTemps.service                       # Follow journal for getTemps
+journalctl -fu getPressures.service                   # Follow journal for getPressures
+journalctl -fu getSHT30.service                       # Follow journal for getSHT30
+journalctl -fu getWeather.service                     # Follow journal for getWeather
 
   --- Systemd Services ---
 systemctl status getTemps.service                     # Status of getTemps.service
