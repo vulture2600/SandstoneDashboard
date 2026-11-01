@@ -126,6 +126,7 @@ ssdcommands() {
         BAT_CMD=(bat -pp -l bash)
     fi
 
+    cat ~/.nomic.txt
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
