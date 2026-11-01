@@ -1,5 +1,6 @@
 # Bash
 
+This is not currently deployed by Ansible.  
 Add or uncomment the following blocks in .bashrc
 
 ```shell
@@ -16,4 +17,5 @@ fi
 
 Copy [.bash_functions](.bash_functions) to ```~/.bash_functions```  
 Copy [.bash_aliases](.bash_aliases) to ```~/.bash_aliases```  
+Cop [.ascii_nomic.txt](.ascii_nomic.txt) to ```~/.ascii_nomic.txt```  
 Copy [motd](motd) to ```/etc/motd```
