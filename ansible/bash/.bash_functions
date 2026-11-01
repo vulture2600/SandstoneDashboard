@@ -104,6 +104,8 @@ checktemps() {
                 color = "\033[94m"  # Light blue
             else if (temp < 34)
                 color = "\033[96m"  # Cyan
+            else if (temp < 50)
+                color = "\033[32m"  # Green
             else
                 color = "\033[93m"  # Yellow
 

@@ -39,3 +39,4 @@ alias s3lv='aws s3api list-object-versions --bucket sandstonedashboard-config'
 ## 1-Wire temperature sensers
 
 alias checktempsl='while true; date "+%F %T"; do checktemps; sleep 2; echo; done'
+alias viewconfig='jq --arg host "$HOSTNAME" '\''.[$host]'\'' ~/SandstoneDashboard/config/getTemps.json'
