@@ -35,8 +35,3 @@ alias activate='source .venv/bin/activate'
 
 alias avs3='source ~/sensor_config_s3_sync/venv_s3/bin/activate'
 alias s3lv='aws s3api list-object-versions --bucket sandstonedashboard-config'
-
-## 1-Wire temperature sensers
-
-alias checktempsl='while true; date "+%F %T"; do checktemps; sleep 2; echo; done'
-alias viewconfig='jq --arg host "$HOSTNAME" '\''.[$host]'\'' ~/SandstoneDashboard/config/getTemps.json'

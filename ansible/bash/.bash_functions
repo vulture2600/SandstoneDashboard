@@ -88,30 +88,62 @@ checkservices() {
 ## Check 1-Wire temperature sensors
 
 checktemps() {
-    for DIR in /sys/bus/w1/devices/28-*; do
+    local dir temp_file
 
-        TEMP_FILE="$DIR/temperature"
-        if [ ! -f "$TEMP_FILE" ]; then
-            echo "$DIR: ERROR (temperature file missing)"
-            continue
-        fi
+    while true; do
+        date "+%F %T"
 
-        printf "$DIR: "
-        awk '{
-            temp = ($1 / 1000.0) * 1.8 + 32
+        for dir in /sys/bus/w1/devices/28-*; do
+            temp_file="$dir/temperature"
 
-            if (temp <= 32)
-                color = "\033[94m"  # Light blue
-            else if (temp < 34)
-                color = "\033[96m"  # Cyan
-            else if (temp < 50)
-                color = "\033[32m"  # Green
-            else
-                color = "\033[93m"  # Yellow
+            if [[ ! -f "$temp_file" ]]; then
+                echo "$dir: ERROR (temperature file missing)"
+                continue
+            fi
 
-            printf "%5s %s%5.1f°F\033[0m\n", $1, color, temp
-        }' "$TEMP_FILE"
+            printf "%s: " "$dir"
+            awk '{
+                temp = ($1 / 1000.0) * 1.8 + 32
+
+                if (temp <= 32)
+                    color = "\033[94m"  # Light blue
+                else if (temp < 34)
+                    color = "\033[96m"  # Cyan
+                else if (temp < 50)
+                    color = "\033[32m"  # Green
+                else
+                    color = "\033[93m"  # Yellow
+
+                printf "%5s %s%5.1f°F\033[0m\n", $1, color, temp
+            }' "$temp_file"
+        done
+
+        [[ "$1" != "-l" ]] && break
+        sleep 5
     done
+}
+
+
+# View configuration for 1-Wire temperature sensors
+
+viewconfig() {
+    local config="$HOME/SandstoneDashboard/config/getTemps.json"
+
+    if [[ ! -f "$config" ]]; then
+        echo "Config file not found: $config" >&2
+        return 1
+    fi
+
+    if [[ -z "$1" ]]; then
+        jq --arg host "$HOSTNAME" '.[$host]' "$config"
+        return
+    fi
+
+    local pattern="$1"
+
+    jq --arg host "$HOSTNAME" --arg pattern "$pattern" \
+       -r '.[$host] | .[] | select(.id | contains($pattern))' \
+       "$config"
 }
 
 
