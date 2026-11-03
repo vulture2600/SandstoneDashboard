@@ -101,7 +101,7 @@ class TempUtils:
     """Read temperatures from device files and construct data points"""
 
     @staticmethod
-    def read_temp(device_file: str) -> float:
+    def read_temp(device_file: str) -> float | None:
         """
         Read temperature from device file written to by 1-Wire temp sensor.
         Exp device file: /sys/bus/w1/devices/28-01154f230fa5/w1_slave
@@ -111,7 +111,6 @@ class TempUtils:
         """
 
         marker = "t="
-        logging.info(f"Device file: {device_file}")
 
         try:
             with open(device_file, "r") as f:
@@ -121,25 +120,26 @@ class TempUtils:
                 logging.error(f"Temperature not found in {device_file}")
                 return None
 
-            logging.debug(f"Device file lines: {lines}")
+            logging.debug(f"Lines found in {device_file}: {lines}")
             line = lines[1].strip()
             position = line.find(marker)
 
             if position == -1:
-                logging.error(f"Marker '{marker}' not found in line: {line}")
+                logging.error(f"Marker '{marker}' not found in {device_file} line {line}")
                 return None
 
             temp_string = line[position + len(marker):]
             temp_C = float(temp_string) / 1000.0
             temp_F = round(temp_C * 1.8 + 32, 1)
+            logging.info(f"{device_file}: {temp_F}°F")
             return temp_F
 
         except FileNotFoundError as e:
-            logging.error(f"File not found: {device_file} — {e}")
+            logging.error(f"File not found: {e}")
         except ValueError as e:
-            logging.error(f"Error parsing temperature value: {e}")
+            logging.error(f"Error parsing temperature value: {device_file} — {e}")
         except Exception as e:
-            logging.error(f"Unexpected error: {e}")
+            logging.error(f"Unexpected error: {device_file} — {e}")
 
         return None
 
