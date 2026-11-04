@@ -35,3 +35,10 @@ alias activate='source .venv/bin/activate'
 
 alias avs3='source ~/sensor_config_s3_sync/venv_s3/bin/activate'
 alias s3lv='aws s3api list-object-versions --bucket sandstonedashboard-config'
+
+## Sandstone Dashboard Commands
+if command -v grc >/dev/null; then
+    alias gettemps='grc tail -f /var/log/SandstoneDashboard/getTemps.log'
+else
+    alias gettemps='tail -f /var/log/SandstoneDashboard/getTemps.log'
+fi

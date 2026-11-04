@@ -101,9 +101,9 @@ checktemps() {
                 continue
             fi
 
-            printf "%s: " "$dir"
+            printf "%s: " "$temp_file"
             awk '{
-                temp = ($1 / 1000.0) * 1.8 + 32
+                temp = ($1 / 1000.0) * 1.8 + 32  # Bad or missing data is treated as 0 and converted to 32°F
 
                 if (temp <= 32)
                     color = "\033[94m"  # Light blue
