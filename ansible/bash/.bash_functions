@@ -141,9 +141,15 @@ viewconfig() {
 
     local pattern="$1"
 
-    jq --arg host "$HOSTNAME" --arg pattern "$pattern" \
-       -r '.[$host] | .[] | select(.id | contains($pattern))' \
-       "$config"
+    if [[ "$2" == "-t" ]]; then
+        jq --arg host "$HOSTNAME" --arg pattern "$pattern" \
+           -r '.[$host] | .[] | select(.id | contains($pattern)) | .title' \
+           "$config"
+    else
+        jq --arg host "$HOSTNAME" --arg pattern "$pattern" \
+           -r '.[$host] | with_entries(select(.value.id | contains($pattern)))' \
+           "$config"
+    fi
 }
 
 
