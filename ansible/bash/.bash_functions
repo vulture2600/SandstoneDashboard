@@ -88,7 +88,10 @@ checkservices() {
 ## Check 1-Wire temperature sensors
 
 checktemps() {
-    local dir temp_file
+    # Check 1-Wire temperature sensors and display their readings in Fahrenheit with color coding.
+    # -l to loop every 5 seconds.
+    # -n to suppress title lookup from config file.
+    local dir temp_file device_id title
 
     while true; do
         date "+%F %T"
@@ -101,8 +104,15 @@ checktemps() {
                 continue
             fi
 
+            title=""
+            device_id=$(basename "$dir")
+            if [[ ! " $* " =~ " -n " ]]; then
+                title=$(viewconfig "$device_id" -t 2>/dev/null)
+            fi
+
             printf "%s: " "$temp_file"
-            awk '{
+
+            awk -v title="$title" '{
                 temp = ($1 / 1000.0) * 1.8 + 32  # Bad or missing data is treated as 0 and converted to 32°F
 
                 if (temp <= 32)
@@ -114,11 +124,11 @@ checktemps() {
                 else
                     color = "\033[93m"  # Yellow
 
-                printf "%5s %s%5.1f°F\033[0m\n", $1, color, temp
+                printf "%5s %s%5.1f°F\033[0m %s\n", $1, color, temp, title
             }' "$temp_file"
         done
 
-        [[ "$1" != "-l" ]] && break
+        [[ ! " $* " =~ " -l " ]] && break
         sleep 5
     done
 }
