@@ -174,29 +174,29 @@ tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
 tail -f /var/log/SandstoneDashboard/getSHT30.log      # Follow getSHT30.log
 tail -f /var/log/SandstoneDashboard/getWeather.log    # Follow getWeather.log
 tail -f /var/log/SandstoneDashboard/get*.log          # Follow all logs
-lnav /var/log/SandstoneDashboard/get*.log             # Follow all logs with lnav
+lnav /var/log/SandstoneDashboard/get*.log             # Follow all logs w/ lnav
 
   --- Service Logs (Journal) ---
-journalctl -fu getTemps.service                       # Follow journal for getTemps
-journalctl -fu getPressures.service                   # Follow journal for getPressures
-journalctl -fu getSHT30.service                       # Follow journal for getSHT30
-journalctl -fu getWeather.service                     # Follow journal for getWeather
+journalctl -fu getTemps.service               # Follow journal for getTemps
+journalctl -fu getPressures.service           # Follow journal for getPressures
+journalctl -fu getSHT30.service               # Follow journal for getSHT30
+journalctl -fu getWeather.service             # Follow journal for getWeather
 
   --- Systemd Services ---
-systemctl status getTemps.service                     # Status of getTemps.service
-systemctl status getPressures.service                 # Status of getPressures.service
-systemctl status getSHT30.service                     # Status of getSHT30.service
-systemctl status getWeather.service                   # Status of getWeather.service
+systemctl status getTemps.service             # Status of getTemps.service
+systemctl status getPressures.service         # Status of getPressures.service
+systemctl status getSHT30.service             # Status of getSHT30.service
+systemctl status getWeather.service           # Status of getWeather.service
 
-  --- System Monitoring & Information ---
-systemctl --failed                                    # List any failed services
-df -hT                                                # Show disk usage
-free -h                                               # Show memory usage
-uptime                                                # Show system uptime, load averages
-ps -fu pi                                             # Show processes for the pi user
-top                                                   # Show top processes, also htop or btop
-cat /proc/device-tree/model; echo                     # Show Raspberry Pi model
-uname -r                                              # Show Linux kernel version   
+  --- System Monitoring ---
+systemctl --failed                      # List any failed services
+df -hT                                  # Show disk usage
+free -h                                 # Show memory usage
+uptime                                  # Show system uptime, load averages
+top                                     # Show processes, also try htop or btop
+ps -fu pi                               # Show processes for the pi user
+cat /proc/device-tree/model; echo       # Show Raspberry Pi model
+uname -r                                # Show Linux kernel version
 
 EOF
 }
