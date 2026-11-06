@@ -88,9 +88,14 @@ checkservices() {
 ## Check 1-Wire temperature sensors
 
 checktemps() {
-    # Check 1-Wire temperature sensors and display their readings in Fahrenheit with color coding.
-    # -l to loop every 5 seconds.
-    # -n to suppress title lookup from config file.
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Check 1-Wire temperature sensors and display their readings in Fahrenheit with color coding."
+        echo "Usage: checktemps [-l] [-n]"
+        echo "  -l: Loop every 5 seconds"
+        echo "  -n: Suppress title lookup from config file"
+        return
+    fi
+
     local dir temp_file device_id title
 
     while true; do
@@ -116,7 +121,7 @@ checktemps() {
                 temp = ($1 / 1000.0) * 1.8 + 32  # Bad or missing data is treated as 0 and converted to 32°F
 
                 if (temp <= 32)
-                    color = "\033[94m"  # Light blue
+                    color = "\033[38;5;75m"  # Cornflower blue
                 else if (temp < 34)
                     color = "\033[96m"  # Cyan
                 else if (temp < 50)
@@ -124,7 +129,7 @@ checktemps() {
                 else
                     color = "\033[93m"  # Yellow
 
-                printf "%5s %s%5.1f°F\033[0m %s\n", $1, color, temp, title
+                printf "%6s %s%5.1f°F\033[0m %s\n", $1, color, temp, title
             }' "$temp_file"
         done
 
@@ -137,6 +142,13 @@ checktemps() {
 # View configuration for 1-Wire temperature sensors
 
 viewconfig() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "View configuration for 1-Wire temperature sensors from the Sandstone Dashboard config file."
+        echo "Usage: viewconfig <device_id match> [-t]"
+        echo "  -t: Show only the title of the sensor"
+        return
+    fi
+
     local config="$HOME/SandstoneDashboard/config/getTemps.json"
 
     if [[ ! -f "$config" ]]; then
