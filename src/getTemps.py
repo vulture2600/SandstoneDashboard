@@ -202,6 +202,8 @@ if __name__ == "__main__":
     print(f"Logging to {LOG_FILE}")
 
     logging.info(f"Python version: {sys.version}")
+    logging.info(f"Temperature sensor model: {TEMP_SENSOR_MODEL}")
+    logging.info(f"Config file: {CONFIG_FILE}")
 
     INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
     INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

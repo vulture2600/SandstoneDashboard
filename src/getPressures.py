@@ -16,7 +16,6 @@ from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 from common_functions import choose_dotenv, database_connect, SMBFileTransfer, load_json_file
 
 PRESSURE_SENSOR_TYPE = "ADS1115"
-
 PRESSURE_SENSOR_ID = "i2c:0x48"
 I2C_ADDR = int(PRESSURE_SENSOR_ID.split(':')[1], 16)
 NO_PSI = -999.9
@@ -116,6 +115,8 @@ if __name__ == "__main__":
     print(f"Logging to {LOG_FILE}")
 
     logging.info(f"Python version: {sys.version}")
+    logging.info(f"Pressure sensor: type: {PRESSURE_SENSOR_TYPE}, ID: {PRESSURE_SENSOR_ID}")
+    logging.info(f"Config file: {CONFIG_FILE}")
 
     INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
     INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")

@@ -38,6 +38,8 @@ logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
 logging.info(f"Python version: {sys.version}")
+logging.info(f"SHT30 sensor type: {SENSOR_TYPE}")
+logging.info(f"Config file: {CONFIG_FILE}")
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
 INFLUXDB_PORT = os.getenv("INFLUXDB_PORT")
