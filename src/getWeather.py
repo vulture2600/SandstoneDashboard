@@ -92,6 +92,17 @@ try:
                 }
             }
             logging.debug(f"Point: {point}")
+            logging.info(
+                "High: %.1f°F | Low: %.1f°F | "
+                "Tomorrow High: %.1f°F | Tomorrow Low: %.1f°F | "
+                "Wind: %.1f mph | Gust: %.1f mph",
+                point["fields"]["tempHigh"],
+                point["fields"]["tempLow"],
+                point["fields"]["tempHighTomorrow"],
+                point["fields"]["tempLowTomorrow"],
+                point["fields"]["windSpeed"],
+                point["fields"]["windGust"]
+            )
             series.append(point)
 
         except Exception as e:
