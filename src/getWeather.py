@@ -8,6 +8,7 @@ import socket
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 from requests import get
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -29,6 +30,8 @@ numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
+SCRIPT_NAME = Path(__file__).name
+logging.info(f"Starting {SCRIPT_NAME} on {HOSTNAME}")
 logging.info(f"Python version: {sys.version}")
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")

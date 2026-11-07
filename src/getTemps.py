@@ -10,6 +10,7 @@ import socket
 import time
 import sys
 import subprocess
+from pathlib import Path
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
@@ -201,6 +202,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
     print(f"Logging to {LOG_FILE}")
 
+    SCRIPT_NAME = Path(__file__).name
+    logging.info(f"Starting {SCRIPT_NAME} on {HOSTNAME}")
     logging.info(f"Python version: {sys.version}")
     logging.info(f"Temperature sensor model: {TEMP_SENSOR_MODEL}")
     logging.info(f"Config file: {CONFIG_FILE}")

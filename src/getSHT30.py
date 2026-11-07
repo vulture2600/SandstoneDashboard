@@ -10,6 +10,7 @@ import socket
 import struct
 import sys
 import time
+from pathlib import Path
 import smbus2
 from requests.exceptions import Timeout
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -37,8 +38,10 @@ numeric_level = getattr(logging, LOG_LEVEL, logging.INFO)
 logging.basicConfig(filename=LOG_FILE, level=numeric_level, format=FORMAT)
 print(f"Logging to {LOG_FILE}")
 
+SCRIPT_NAME = Path(__file__).name
+logging.info(f"Starting {SCRIPT_NAME} on {HOSTNAME}")
 logging.info(f"Python version: {sys.version}")
-logging.info(f"SHT30 sensor type: {SENSOR_TYPE}")
+logging.info(f"Sensor type: {SENSOR_TYPE}")
 logging.info(f"Config file: {CONFIG_FILE}")
 
 INFLUXDB_HOST = os.getenv("INFLUXDB_HOST")
