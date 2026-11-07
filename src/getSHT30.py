@@ -152,6 +152,11 @@ try:
                 }
             }
             logging.debug(f"Point: {point}")
+            logging.info(
+                "Temp: %.1f°F | Humidity: %.1f%%",
+                point["fields"]["temp_flt"],
+                point["fields"]["humidity_flt"]
+            )
             series.append(point)
 
         except OSError as e:
