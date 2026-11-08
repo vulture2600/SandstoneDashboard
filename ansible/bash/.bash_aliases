@@ -42,3 +42,11 @@ if command -v grc >/dev/null; then
 else
     alias gettemps='tail -f /var/log/SandstoneDashboard/getTemps.log'
 fi
+
+if command -v i2cdetect >/dev/null 2>&1; then
+    if [[ -f "$HOME/SandstoneDashboard/recover_i2c.py" ]]; then
+        alias checki2c='i2cdetect -y 1; python "$HOME/SandstoneDashboard/recover_i2c.py" --help'
+    else
+        alias checki2c='i2cdetect -y 1'
+    fi
+fi
