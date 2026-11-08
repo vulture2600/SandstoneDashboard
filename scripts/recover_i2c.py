@@ -1,8 +1,22 @@
 """
-Recover stuck i2c devices.
-Stop all services using the i2c bus before running this script.
+Recover stuck I2C devices. Example usage:
+
+i2cdetect -y 1  # View I2C sensor IDs: 0x44 (SHT30), 0x48 (Pressure)
+
+sudo systemctl stop getPressures.service
+sudo systemctl stop getSHT30.service
+
+python recover_i2c.py
+
+sudo rmmod i2c_bcm2835 && sudo modprobe i2c_bcm2835
+
+i2cdetect -y 1
+
+sudo systemctl start getPressures.service
+sudo systemctl start getSHT30.service
 """
 
+import sys
 import time
 from RPi import GPIO
 
@@ -11,6 +25,10 @@ KERNEL_MOD_I2C = "i2c_bcm2835"
 # BCM numbering
 SCL_PIN = 3   # GPIO 3, physical pin 5
 SDA_PIN = 2   # GPIO 2, physical pin 3
+
+if sys.argv[1:] == ["--help"] or sys.argv[1:] == ["-h"]:
+    print(__doc__)
+    sys.exit(0)
 
 def i2c_bus_recover():
     GPIO.setmode(GPIO.BCM)
@@ -57,6 +75,5 @@ def i2c_bus_recover():
 if __name__ == "__main__":
     i2c_bus_recover()
 
-    print("Now run:")
-    print(f"sudo rmmod {KERNEL_MOD_I2C} && sudo modprobe {KERNEL_MOD_I2C}")
-    print("i2cdetect -y 1")
+    print("Now complete the remaining steps\n")
+    print(__doc__)
