@@ -174,6 +174,26 @@ viewconfig() {
     fi
 }
 
+## Test InfluxDB connection
+
+checkinflux() {
+    local env_file="$HOME/SandstoneDashboard/.env"
+    local curl_opts=(-fsS)
+
+    if [[ "$1" == "-v" ]]; then
+        curl_opts=(-fv)
+    fi
+
+    source "$env_file" || return 1
+
+    if curl "${curl_opts[@]}" "http://$INFLUXDB_HOST:$INFLUXDB_PORT/ping"; then
+        echo "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT succeeded"
+    else
+        echo "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT failed"
+        return 1
+    fi
+}
+
 
 ## Sandstone Dashboard commands and logs
 
