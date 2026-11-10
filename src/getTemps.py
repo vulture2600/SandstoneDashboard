@@ -102,7 +102,7 @@ class TempUtils:
     """Read temperatures from device files and construct data points"""
 
     @staticmethod
-    def read_temp(device_file: str) -> float | None:
+    def read_temp(sensor_id: str, title: str) -> float | None:
         """
         Read temperature from device file written to by 1-Wire temp sensor.
         Exp device file: /sys/bus/w1/devices/28-01154f230fa5/w1_slave
@@ -112,6 +112,7 @@ class TempUtils:
         """
 
         marker = "t="
+        device_file = os.path.join(W1_DEVICES_PATH, sensor_id, W1_SLAVE_FILE)
 
         try:
             with open(device_file, "r") as f:
@@ -132,7 +133,7 @@ class TempUtils:
             temp_string = line[position + len(marker):]
             temp_C = float(temp_string) / 1000.0
             temp_F = round(temp_C * 1.8 + 32, 1)
-            logging.info(f"{device_file}: {temp_F}°F")
+            logging.info(f"{device_file}: {temp_string} {temp_F}°F {title}")
             return temp_F
 
         except FileNotFoundError as e:
@@ -169,19 +170,19 @@ def write_points_to_series(room_sensor_map, hostname) -> list[dict]:
     working_sensor_count = 0
     for room_id in room_sensor_map:
 
+        title = room_sensor_map.get(room_id, {}).get('title')
+        if not title:
+            title = "Untitled"
+
         status = "On"
         sensor_id = room_sensor_map.get(room_id, {}).get('id')
-        temp = TempUtils.read_temp(f"{W1_DEVICES_PATH}{sensor_id}/{W1_SLAVE_FILE}")
+        temp = TempUtils.read_temp(sensor_id, title)
 
         if temp:
             working_sensor_count += 1
         else:
             status = "OFF"
             temp = NO_TEMP
-
-        title = room_sensor_map.get(room_id, {}).get('title')
-        if not title:
-            title = "Untitled"
 
         point = TempUtils.construct_data_point(room_id, sensor_id, title, status, hostname, temp)
         logging.debug(f"Point: {point}")
