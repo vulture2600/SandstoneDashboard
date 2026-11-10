@@ -181,6 +181,7 @@ checkinflux() {
     local curl_opts=(-fsS)
     local magenta="\033[95m"
     local reset="\033[0m"
+    local resource="ping"
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         echo "Test InfluxDB connection using dotenv file: $env_file"
@@ -195,10 +196,10 @@ checkinflux() {
 
     source "$env_file" || return 1
 
-    if curl "${curl_opts[@]}" "http://$INFLUXDB_HOST:$INFLUXDB_PORT/ping"; then
-        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT${reset} succeeded\n"
+    if curl "${curl_opts[@]}" "http://$INFLUXDB_HOST:$INFLUXDB_PORT/$resource"; then
+        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT/$resource${reset} succeeded\n"
     else
-        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT${reset} failed\n"
+        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT/$resource${reset} failed\n"
         return 1
     fi
 }
@@ -212,6 +213,7 @@ checkloki() {
     local orange="\033[38;5;208m"
     local reset="\033[0m"
     local loki_url loki_address
+    local resource="metrics"
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         echo "Test Loki connection using config file: $loki_config"
@@ -237,10 +239,10 @@ checkloki() {
         return 1
     fi
 
-    if curl "${curl_opts[@]}" "http://$loki_address/metrics" >/dev/null; then
-        printf "Connection to ${orange}$loki_address${reset} succeeded\n"
+    if curl "${curl_opts[@]}" "http://$loki_address/$resource" >/dev/null; then
+        printf "Connection to ${orange}$loki_address/$resource${reset} succeeded\n"
     else
-        printf "Connection to ${orange}$loki_address${reset} failed\n"
+        printf "Connection to ${orange}$loki_address/$resource${reset} failed\n"
         return 1
     fi
 }
