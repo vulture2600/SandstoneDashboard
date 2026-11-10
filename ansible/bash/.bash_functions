@@ -177,8 +177,18 @@ viewconfig() {
 ## Test InfluxDB connection
 
 checkinflux() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Test InfluxDB connection using the .env file in SandstoneDashboard."
+        echo "Usage: checkinflux [-v]"
+        echo "  -v: Verbose output"
+        return
+    fi
+    
     local env_file="$HOME/SandstoneDashboard/.env"
     local curl_opts=(-fsS)
+    local magenta="\033[95m"
+    local reset="\033[0m"
+
 
     if [[ "$1" == "-v" ]]; then
         curl_opts=(-fv)
@@ -187,9 +197,9 @@ checkinflux() {
     source "$env_file" || return 1
 
     if curl "${curl_opts[@]}" "http://$INFLUXDB_HOST:$INFLUXDB_PORT/ping"; then
-        echo "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT succeeded"
+        printf "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT ${magenta}succeeded${reset}\n"
     else
-        echo "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT failed"
+        printf "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT failed\n"
         return 1
     fi
 }
