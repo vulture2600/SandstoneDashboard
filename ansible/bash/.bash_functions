@@ -177,18 +177,17 @@ viewconfig() {
 ## Test InfluxDB connection
 
 checkinflux() {
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "Test InfluxDB connection using the .env file in SandstoneDashboard."
-        echo "Usage: checkinflux [-v]"
-        echo "  -v: Verbose output"
-        return
-    fi
-    
     local env_file="$HOME/SandstoneDashboard/.env"
     local curl_opts=(-fsS)
     local magenta="\033[95m"
     local reset="\033[0m"
 
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Test InfluxDB connection using dotenv file: $env_file"
+        echo "Usage: checkinflux [-v]"
+        echo "  -v: Verbose output"
+        return 0
+    fi
 
     if [[ "$1" == "-v" ]]; then
         curl_opts=(-fv)
@@ -197,9 +196,51 @@ checkinflux() {
     source "$env_file" || return 1
 
     if curl "${curl_opts[@]}" "http://$INFLUXDB_HOST:$INFLUXDB_PORT/ping"; then
-        printf "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT ${magenta}succeeded${reset}\n"
+        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT${reset} succeeded\n"
     else
-        printf "Connection to $INFLUXDB_HOST:$INFLUXDB_PORT failed\n"
+        printf "Connection to ${magenta}$INFLUXDB_HOST:$INFLUXDB_PORT${reset} failed\n"
+        return 1
+    fi
+}
+
+
+## Test Loki connection
+
+checkloki() {
+    local loki_config="/etc/promtail/config.yml"
+    local curl_opts=(-fsSI)
+    local orange="\033[38;5;208m"
+    local reset="\033[0m"
+    local loki_url loki_address
+
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Test Loki connection using config file: $loki_config"
+        echo "Usage: checkloki [-v]"
+        echo "  -v: Verbose output"
+        return 0
+    fi
+
+    if [[ "$1" == "-v" ]]; then
+        curl_opts=(-fvI)
+    fi
+
+    if [[ ! -f "$loki_config" ]]; then
+        echo "Loki config file not found: $loki_config" >&2
+        return 1
+    fi
+
+    loki_url=$(grep -A1 clients: "$loki_config" | grep url:)
+    loki_address=$(echo "$loki_url" | grep -v '^[[:space:]]*#' | awk -F/ '{print $3}')
+
+    if [[ -z "$loki_address" ]]; then
+        echo "Loki address not found in config file: $loki_config" >&2
+        return 1
+    fi
+
+    if curl "${curl_opts[@]}" "http://$loki_address/metrics" >/dev/null; then
+        printf "Connection to ${orange}$loki_address${reset} succeeded\n"
+    else
+        printf "Connection to ${orange}$loki_address${reset} failed\n"
         return 1
     fi
 }
@@ -220,6 +261,10 @@ ssdcommands() {
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
+  --- InfluxDB and Loki ---
+checkinflux                       # Test connection to InfluxDB: -v for verbose
+checkloki                         # Test connection to Loki: -v for verbose
+
   --- Application Logs ---
 tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
 tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
