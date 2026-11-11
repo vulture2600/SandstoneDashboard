@@ -13,13 +13,13 @@ def test_write_points_to_series(monkeypatch):
 
     hostname = "testhost"
 
-    # Mock read_temp: room1 returns valid temp, room2 fails (None), room3 returns valid
+    # Mock read_temp taking (sensor_id, title)
     temp_results = {
         "28-000000000001": 72.0,
         "28-000000000002": None,
         "28-000000000003": 68.0
     }
-    monkeypatch.setattr(TempUtils, "read_temp", lambda path: temp_results[path.split('/')[-2]])
+    monkeypatch.setattr(TempUtils, "read_temp", lambda sensor_id, title: temp_results.get(sensor_id))
 
     points = write_points_to_series(room_sensor_map, hostname)
 
