@@ -21,7 +21,8 @@ def write_sensor_file(tmp_path, content):
 def test_read_temp_valid(tmp_path, monkeypatch):
     """Valid device file returns correct Fahrenheit temperature"""
     monkeypatch.setattr(get_temps, "W1_DEVICES_PATH", str(tmp_path))
-    write_sensor_file(tmp_path, "line1\n2b 01 4b 46 t=18687\n")
+    write_sensor_file(tmp_path, "2b 01 4b 46 7f ff 7f 10 51 : crc=51 YES\n"
+                       "2b 01 4b 46 7f ff 7f 10 51 t=18687\n")
 
     # 18687 → 18.687°C → 65.6°F
     temp = TempUtils.read_temp(SENSOR_ID, TITLE)
@@ -35,10 +36,21 @@ def test_read_temp_file_not_found(tmp_path, monkeypatch):
     assert temp is None
 
 
+def test_read_temp_invalid_crc(tmp_path, monkeypatch):
+    """Invalid CRC result returns None without using the temperature"""
+    monkeypatch.setattr(get_temps, "W1_DEVICES_PATH", str(tmp_path))
+    write_sensor_file(tmp_path, "2b 01 4b 46 7f ff 7f 10 51 : crc=51 NO\n"
+                       "2b 01 4b 46 7f ff 7f 10 51 t=18687\n")
+
+    temp = TempUtils.read_temp(SENSOR_ID, TITLE)
+    assert temp is None
+
+
 def test_read_temp_marker_missing(tmp_path, monkeypatch):
     """File exists but marker 't=' missing returns None"""
     monkeypatch.setattr(get_temps, "W1_DEVICES_PATH", str(tmp_path))
-    write_sensor_file(tmp_path, "line1\n2b 01 4b 46 7f ff 7f 10 51\n")
+    write_sensor_file(tmp_path, "2b 01 4b 46 7f ff 7f 10 51 : crc=51 YES\n"
+                       "2b 01 4b 46 7f ff 7f 10 51\n")
 
     temp = TempUtils.read_temp(SENSOR_ID, TITLE)
     assert temp is None
@@ -47,7 +59,8 @@ def test_read_temp_marker_missing(tmp_path, monkeypatch):
 def test_read_temp_invalid_value(tmp_path, monkeypatch):
     """File contains invalid number after 't=' returns None"""
     monkeypatch.setattr(get_temps, "W1_DEVICES_PATH", str(tmp_path))
-    write_sensor_file(tmp_path, "line1\nt=abc\n")
+    write_sensor_file(tmp_path, "2b 01 4b 46 7f ff 7f 10 51 : crc=51 YES\n"
+                       "2b 01 4b 46 t=abc\n")
 
     temp = TempUtils.read_temp(SENSOR_ID, TITLE)
     assert temp is None
@@ -56,7 +69,7 @@ def test_read_temp_invalid_value(tmp_path, monkeypatch):
 def test_read_temp_too_few_lines(tmp_path, monkeypatch):
     """File with less than 2 lines returns None"""
     monkeypatch.setattr(get_temps, "W1_DEVICES_PATH", str(tmp_path))
-    write_sensor_file(tmp_path, "line1\n")
+    write_sensor_file(tmp_path, "2b 01 4b 46 7f ff 7f 10 51 : crc=51 YES\n")
 
     temp = TempUtils.read_temp(SENSOR_ID, TITLE)
     assert temp is None

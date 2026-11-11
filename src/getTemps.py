@@ -123,6 +123,12 @@ class TempUtils:
                 return None
 
             logging.debug(f"Lines found in {device_file}: {lines}")
+
+            crc_result = lines[0].strip().split()[-1]
+            if crc_result != "YES":
+                logging.error(f"Invalid CRC result '{crc_result}' in {device_file}")
+                return None
+
             line = lines[1].strip()
             position = line.find(marker)
 
