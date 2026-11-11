@@ -1,7 +1,6 @@
 # Bash
-
-This is not currently deployed by Ansible.  
-Add or uncomment the following blocks in .bashrc
+ 
+Add or uncomment the following blocks in ~/.bashrc. This step is not in Ansible.
 
 ```shell
 if [ -f ~/.bash_functions ]; then

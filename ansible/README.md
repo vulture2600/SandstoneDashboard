@@ -130,6 +130,12 @@ Preflight check
 * To actually run the playbook, remove **--check**
 * To limit host groups, add something like **-l shed** or **-l shed,schoolroom**
 
+#### Deploy bash files
+
+```shell
+ansible-playbook playbooks/deploy_bash_files.yaml --check
+```
+
 #### Deploy the SandstoneDashboard app
 
 ```shell
