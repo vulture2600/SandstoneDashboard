@@ -1,8 +1,8 @@
 
   --- Sandstone Dashboard Quick Checks ---
 checkservices      # Check all Sandstone Dashboard services
+gettemps           # Follow /var/log/SandstoneDashboard/getTemps.log
 checktemps         # Show 1-Wire temp senser IDs & temps: -l to loop
-gettemps           # Follow getTemps.log. Includes temp senser IDs & temps
 viewconfig         # View temp sensor config: <ID match>, -t for title only
 checki2c           # View I2C sensor IDs. 0x44 (SHT30), 0x48 (Pressure)
 ssdcommands        # Show more commands

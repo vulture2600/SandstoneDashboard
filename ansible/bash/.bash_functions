@@ -272,8 +272,7 @@ tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
 tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
 tail -f /var/log/SandstoneDashboard/getSHT30.log      # Follow getSHT30.log
 tail -f /var/log/SandstoneDashboard/getWeather.log    # Follow getWeather.log
-tail -f /var/log/SandstoneDashboard/get*.log          # Follow all logs
-lnav /var/log/SandstoneDashboard/get*.log             # Follow all logs w/ lnav
+tail -f /var/log/SandstoneDashboard/get*.log          # Follow all above logs
 
   --- Service Logs (Journal) ---
 journalctl -fu getTemps.service               # Follow journal for getTemps
