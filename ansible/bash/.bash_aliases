@@ -45,8 +45,10 @@ fi
 
 if command -v i2cdetect >/dev/null 2>&1; then
     if [[ -f "$HOME/SandstoneDashboard/recover_i2c.py" ]]; then
-        alias checki2c='i2cdetect -y 1; echo -e "\nI2C device recovery:\ncd ~/SandstoneDashboard && python recover_i2c.py --help"'
+        alias checki2c='i2cdetect -y 1; echo -e "\nI2C device recovery steps:\ncd ~/SandstoneDashboard && python recover_i2c.py --help"'
     else
         alias checki2c='i2cdetect -y 1'
     fi
+else
+    alias checki2c='echo "i2cdetect command not on this system"'
 fi
