@@ -1,12 +1,8 @@
 # Bash
  
-Add or uncomment the following blocks in ~/.bashrc. This step is not in Ansible.
-
-```shell
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
-fi
-```
+The default .bashrc file sources .bash_aliases, but not .bash_functions.  
+The Ansible playbook manages the block to source .bash_fuctions.  
+Verify both blocks are present and not duplicated.
 
 ```shell
 if [ -f ~/.bash_aliases ]; then
@@ -14,7 +10,8 @@ if [ -f ~/.bash_aliases ]; then
 fi
 ```
 
-Copy [.bash_functions](.bash_functions) to ```~/.bash_functions```  
-Copy [.bash_aliases](.bash_aliases) to ```~/.bash_aliases```  
-Cop [.ascii_nomic.txt](.ascii_nomic.txt) to ```~/.ascii_nomic.txt```  
-Copy [motd](motd) to ```/etc/motd```
+```shell
+if [ -f ~/.bash_functions ]; then
+    . ~/.bash_functions
+fi
+```
