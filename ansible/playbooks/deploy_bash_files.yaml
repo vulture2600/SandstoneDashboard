@@ -4,6 +4,23 @@
   become: true
 
   tasks:
+
+    - name: Install standard packages
+      ansible.builtin.apt:
+        name:
+          - vim
+          - git
+          - bat
+          - grc
+          - jq
+          - htop
+          - curl
+          - influxdb-client
+          - lsof
+          # - tldr
+        state: present
+        update_cache: true
+
     - name: Deploy user bash configuration files
       ansible.builtin.copy:
         src: "{{ item }}"

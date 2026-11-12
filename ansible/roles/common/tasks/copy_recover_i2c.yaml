@@ -1,3 +1,11 @@
+- name: Install i2c-tools
+  ansible.builtin.apt:
+    name:
+      - i2c-tools
+    state: present
+    update_cache: true
+  tags: i2c
+
 - name: Copy recover_i2c.py to the app dir
   ansible.builtin.copy:
     src: "../../scripts/recover_i2c.py"
@@ -5,4 +13,4 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: '0644'
-  tags: app_files
+  tags: i2c
