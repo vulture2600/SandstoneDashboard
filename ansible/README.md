@@ -1,6 +1,7 @@
-# Ansible
+# Configure Pis
 
-This details the steps required to run Ansible playbooks on the Raspberry Pis along with some basic system configuration.
+This details the steps required to run Ansible playbooks on the Raspberry Pis along with some basic system configuration.  
+These steps are mainly for newly reimaged Pis.
 
 ## Create key pair for SSH 
 
@@ -21,8 +22,6 @@ ssh-copy-id does the following:
 
 
 ## Configure the Raspberry Pi
-
-These steps are mainly for newly reimaged Pis.
 
 #### Sudo without password
 
@@ -55,6 +54,14 @@ sudo apt -y dist-upgrade
 sudo apt -y autoremove
 ```
 
+## Enable use of 1-Wire and I2C Devices
+
+Enable i2c on Pi’s that use i2c devices like pressure and humidity sensors.
+
+```shell
+raspi-config
+```
+
 #### Load the w1-gpio and w1_therm modules
 
 These modules are necessary for the getTemps service.
@@ -81,6 +88,7 @@ sudo reboot
 lsmod | grep w1
 ```
 
+# Ansible
 
 ## Ansible Vault
 
