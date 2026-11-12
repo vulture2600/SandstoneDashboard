@@ -140,6 +140,8 @@ Preflight check
 
 #### Deploy bash files
 
+See [bash](bash) for further details.
+
 ```shell
 ansible-playbook playbooks/deploy_bash_files.yaml --check
 ```
@@ -164,6 +166,8 @@ ansible-playbook playbooks/deploy_sandstonedashboard.yaml -t getWeather --check
 ```
 
 #### Install Promtail and Prometheus Node Exporter
+
+See [loki](loki) and [prometheus](prometheus) for further details and steps regarding Docker containers.
 
 ```shell
 ansible-playbook playbooks/install_promtail_node_exporter.yaml --check
