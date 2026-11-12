@@ -6,15 +6,15 @@ Temperatures, humidity, pressure readings, and weather data from OpenWeatherMap 
 
 #### Log monitoring
 
-Promtail sends logs to [Loki](loki) which indexes log metadata.
+Promtail sends logs to [Loki](../ansible/loki) which indexes log metadata.
 
 #### System metrics
 
-[Prometheus](prometheus) pulls system metrics from clients running Prometheus Node Exporter
+[Prometheus](../ansible/prometheus) pulls system metrics from clients running Prometheus Node Exporter
 
 <br>
 
-![graph](../images_diagrams/monitoring_stack.svg)
+![graph](../images_diagrams/water_temp_map_dashboard.png)
 
 ### Slack alerts
 
