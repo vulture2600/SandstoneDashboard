@@ -33,31 +33,18 @@
         - ../bash/.bash_aliases
         - ../bash/.bash_functions
 
-    # - name: Ensure ~/.bash_functions is sourced in .bashrc
-    #   ansible.builtin.blockinfile:
-    #     path: /home/pi/.bashrc
-    #     owner: "{{ ansible_user }}"
-    #     group: "{{ ansible_user }}"
-    #     mode: '0644'
-    #     marker: "# {mark} ANSIBLE MANAGED BLOCK bash_functions"
-    #     block: |
-    #       if [ -f ~/.bash_functions ]; then
-    #           . ~/.bash_functions
-    #       fi
-    #     create: true
-
-    # - name: Ensure ~/.bash_aliases is sourced in .bashrc
-    #   ansible.builtin.blockinfile:
-    #     path: /home/pi/.bashrc
-    #     owner: "{{ ansible_user }}"
-    #     group: "{{ ansible_user }}"
-    #     mode: '0644'
-    #     marker: "# {mark} ANSIBLE MANAGED BLOCK bash_aliases"
-    #     block: |
-    #       if [ -f ~/.bash_aliases ]; then
-    #           . ~/.bash_aliases
-    #       fi
-    #     create: true
+    - name: Ensure ~/.bash_functions is sourced in .bashrc
+      ansible.builtin.blockinfile:
+        path: /home/pi/.bashrc
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK bash_functions"
+        block: |
+          if [ -f ~/.bash_functions ]; then
+              . ~/.bash_functions
+          fi
+        create: true
 
     - name: Deploy MOTD
       ansible.builtin.copy:
