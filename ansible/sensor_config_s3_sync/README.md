@@ -1,7 +1,8 @@
 # Backup sensor config files to S3
 
 This sets up automatic backups of SandstoneDashboard sensor config files
-to S3 storage created in QNAP QuObjects.
+to S3 storage created in QNAP QuObjects.  
+This is not currently deployed by Ansible.
 
 1) Copy the AWS [config](config) file to ~/.aws/
 
