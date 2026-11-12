@@ -61,6 +61,13 @@
   delay: 5
   tags: pip
 
+- name: Create symlink for virtualenv
+  ansible.builtin.file:
+    src: "{{ venv_path }}"
+    dest: "{{ app_dir }}/.venv"
+    state: link
+  tags: pip
+
 - name: Copy dotenv file to the app dir, make backup first
   ansible.builtin.copy:
     src: "../vault/.env.vault"
