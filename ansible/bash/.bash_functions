@@ -174,6 +174,7 @@ viewconfig() {
     fi
 }
 
+
 ## Test InfluxDB connection
 
 checkinflux() {
@@ -184,7 +185,7 @@ checkinflux() {
     local resource="ping"
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "Test InfluxDB connection using dotenv file: $env_file"
+        echo "Test to connection InfluxDB in: $env_file"
         echo "Usage: checkinflux [-v]"
         echo "  -v: Verbose output"
         return 0
@@ -216,7 +217,7 @@ checkloki() {
     local resource="metrics"
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "Test Loki connection using config file: $loki_config"
+        echo "Test connection to Loki in: $loki_config"
         echo "Usage: checkloki [-v]"
         echo "  -v: Verbose output"
         return 0
@@ -248,6 +249,43 @@ checkloki() {
 }
 
 
+## Test SMB connection
+
+checksmb() {
+    local env_file="$HOME/SandstoneDashboard/.env"
+    local cyan="\033[96m"
+    local reset="\033[0m"
+    local nc_result
+
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Test connection to SMB server in $env_file"
+        echo "Usage: checksmb"
+        return 0
+    fi
+
+    source "$env_file" || return 1
+    nc_result=$(nc -zv "$SMB_SERVER_IP" "$SMB_SERVER_PORT" 2>&1)
+
+    if [[ $? -eq 0 ]]; then
+        echo "$nc_result" | awk -v cyan="$cyan" -v reset="$reset" '{
+            for (i=1; i<=NF; i++) {
+                if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) { $i = cyan $i reset }
+                if ($(i+1) == "port" && $i ~ /^[0-9]+$/) { $i = cyan $i reset }
+            }
+            print
+        }'
+    else
+        echo "$nc_result" | awk -v cyan="$cyan" -v reset="$reset" '{
+            for (i=1; i<=NF; i++) {
+                if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) { $i = cyan $i reset }
+                if ($i == "port" && $(i+1) ~ /^[0-9]+$/) { $(i+1) = cyan $(i+1) reset }
+            }
+            print
+        }'
+    fi
+}
+
+
 ## Sandstone Dashboard commands and logs
 
 ssdcommands() {
@@ -263,9 +301,10 @@ ssdcommands() {
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
-  --- InfluxDB and Loki ---
+  --- InfluxDB, Loki, SMB ---
 checkinflux                       # Test connection to InfluxDB: -v for verbose
 checkloki                         # Test connection to Loki: -v for verbose
+checksmb                          # Test connection to SMB server
 
   --- Application Logs ---
 tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
