@@ -4,7 +4,7 @@
 i2cdetect -y 1
 ```
 
-![i2cdetect](../images_diagrams/i2cdetect.png)
+![i2cdetect](../../images_diagrams/i2cdetect.png)
 
 * 0x44 - SHT30 sensor id
 * 0x48 - Pressure sensor id
@@ -41,4 +41,4 @@ sudo systemctl start getSHT30.service
 python viewSensors.py
 ```
 
-![viewSensors](../images_diagrams/viewSensors.png)
+![viewSensors](../../images_diagrams/viewSensors.png)
