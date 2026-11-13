@@ -177,7 +177,7 @@ viewconfig() {
 
 ## Test InfluxDB connection
 
-checkinflux() {
+testinflux() {
     local env_file="$HOME/SandstoneDashboard/.env"
     local curl_opts=(-fsS)
     local magenta="\033[95m"
@@ -186,7 +186,7 @@ checkinflux() {
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         echo "Test to connection InfluxDB in: $env_file"
-        echo "Usage: checkinflux [-v]"
+        echo "Usage: testinflux [-v]"
         echo "  -v: Verbose output"
         return 0
     fi
@@ -208,7 +208,7 @@ checkinflux() {
 
 ## Test Loki connection
 
-checkloki() {
+testloki() {
     local loki_config="/etc/promtail/config.yml"
     local curl_opts=(-fsSI)
     local orange="\033[38;5;208m"
@@ -218,7 +218,7 @@ checkloki() {
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         echo "Test connection to Loki in: $loki_config"
-        echo "Usage: checkloki [-v]"
+        echo "Usage: testloki [-v]"
         echo "  -v: Verbose output"
         return 0
     fi
@@ -251,7 +251,7 @@ checkloki() {
 
 ## Test SMB connection
 
-checksmb() {
+testsmb() {
     local env_file="$HOME/SandstoneDashboard/.env"
     local cyan="\033[96m"
     local reset="\033[0m"
@@ -259,7 +259,7 @@ checksmb() {
 
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         echo "Test connection to SMB server in $env_file"
-        echo "Usage: checksmb"
+        echo "Usage: testsmb"
         return 0
     fi
 
@@ -301,11 +301,6 @@ ssdcommands() {
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
-  --- InfluxDB, Loki, SMB ---
-checkinflux                       # Test connection to InfluxDB: -v for verbose
-checkloki                         # Test connection to Loki: -v for verbose
-checksmb                          # Test connection to SMB server
-
   --- Application Logs ---
 tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
 tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
@@ -324,6 +319,12 @@ systemctl status getTemps.service             # Status of getTemps.service
 systemctl status getPressures.service         # Status of getPressures.service
 systemctl status getSHT30.service             # Status of getSHT30.service
 systemctl status getWeather.service           # Status of getWeather.service
+
+  --- SMB, InfluxDB, Loki, Prometheus ---
+checkports                        # View network connections 445|3100|8086|9100
+testinflux                        # Test connection to InfluxDB: -v for verbose
+testloki                          # Test connection to Loki: -v for verbose
+testsmb                           # Test connection to SMB server
 
   --- System Monitoring ---
 systemctl --failed                      # List any failed services

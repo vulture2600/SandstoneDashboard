@@ -52,3 +52,5 @@ if command -v i2cdetect >/dev/null 2>&1; then
 else
     alias checki2c='echo "i2cdetect command not on this system"'
 fi
+
+alias checkports='sudo netstat -antp | sort -k 5 | grep -E "445|3100|8086|9100"'
