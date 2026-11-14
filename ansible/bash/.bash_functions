@@ -175,6 +175,31 @@ viewconfig() {
 }
 
 
+## View network connections for ports 445|3100|8086|9100 
+
+checkports() {
+    sudo netstat -antp |
+        grep -E '^Proto|:445[[:space:]]|:3100[[:space:]]|:8086[[:space:]]|:9100[[:space:]]' |
+        awk '
+        BEGIN {
+            reset   = "\033[0m"
+            cyan    = "\033[36m"
+            yellow  = "\033[33m"
+            magenta = "\033[35m"
+            orange  = "\033[38;5;208m"
+        }
+        /^Proto/ { print; next }
+        {
+            line = $0
+            gsub(/:445([[:space:]]|$)/, cyan "&" reset, line)
+            gsub(/:3100([[:space:]]|$)/, yellow "&" reset, line)
+            gsub(/:8086([[:space:]]|$)/, magenta "&" reset, line)
+            gsub(/:9100([[:space:]]|$)/, orange "&" reset, line)
+            print line
+        }'
+}
+
+
 ## Test InfluxDB connection
 
 testinflux() {
@@ -211,7 +236,7 @@ testinflux() {
 testloki() {
     local loki_config="/etc/promtail/config.yml"
     local curl_opts=(-fsSI)
-    local orange="\033[38;5;208m"
+    local yellow="\033[33m"
     local reset="\033[0m"
     local loki_url loki_address
     local resource="metrics"
@@ -241,9 +266,9 @@ testloki() {
     fi
 
     if curl "${curl_opts[@]}" "http://$loki_address/$resource" >/dev/null; then
-        printf "Connection to ${orange}$loki_address/$resource${reset} succeeded\n"
+        printf "Connection to ${yellow}$loki_address/$resource${reset} succeeded\n"
     else
-        printf "Connection to ${orange}$loki_address/$resource${reset} failed\n"
+        printf "Connection to ${yellow}$loki_address/$resource${reset} failed\n"
         return 1
     fi
 }
