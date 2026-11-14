@@ -326,6 +326,12 @@ ssdcommands() {
     "${BAT_CMD[@]}" /etc/motd
 
     "${BAT_CMD[@]}" <<'EOF'
+  --- SMB, InfluxDB, Loki, Prometheus ---
+checkports                    # View network connections 445|3100|8086|9100
+testinflux                    # Test connection to InfluxDB: -v for verbose
+testloki                      # Test connection to Loki: -v for verbose
+testsmb                       # Test connection to SMB server
+
   --- Application Logs ---
 tail -f /var/log/SandstoneDashboard/getTemps.log      # Follow getTemps.log
 tail -f /var/log/SandstoneDashboard/getPressures.log  # Follow getPressures.log
@@ -344,12 +350,6 @@ systemctl status getTemps.service             # Status of getTemps.service
 systemctl status getPressures.service         # Status of getPressures.service
 systemctl status getSHT30.service             # Status of getSHT30.service
 systemctl status getWeather.service           # Status of getWeather.service
-
-  --- SMB, InfluxDB, Loki, Prometheus ---
-checkports                        # View network connections 445|3100|8086|9100
-testinflux                        # Test connection to InfluxDB: -v for verbose
-testloki                          # Test connection to Loki: -v for verbose
-testsmb                           # Test connection to SMB server
 
   --- System Monitoring ---
 systemctl --failed                      # List any failed services
