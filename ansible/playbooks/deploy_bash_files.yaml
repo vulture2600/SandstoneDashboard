@@ -17,6 +17,7 @@
           - curl
           - influxdb-client
           - lsof
+          - needrestart
           # - tldr
         state: present
         update_cache: true

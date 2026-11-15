@@ -56,10 +56,10 @@ sudo apt -y autoremove
 
 ## Enable use of 1-Wire and I2C Devices
 
-Enable i2c on Pi’s that use i2c devices like pressure and humidity sensors.
+Verify/Enable i2c on Pi’s that use i2c devices like pressure and humidity sensors.
 
 ```shell
-raspi-config
+sudo raspi-config
 ```
 
 #### Load the w1-gpio and w1_therm modules
@@ -67,11 +67,11 @@ raspi-config
 These modules are necessary for the getTemps service.
 
 ```shell
-# Append to /boot/firmware/config.txt:
-sudo sh -c "echo 'dtoverlay=w1-gpio' >> /boot/firmware/config.txt"
-
-# Verify entry, dtoverlay=w1-gpio should appear once:
+# Verify /boot/firmware/config.txt has dtoverlay=w1-gpio:
 tail /boot/firmware/config.txt
+
+# If missing, append to /boot/firmware/config.txt:
+sudo sh -c "echo 'dtoverlay=w1-gpio' >> /boot/firmware/config.txt"
 
 # Verify modules load (no output is good):
 sudo modprobe w1-gpio
@@ -82,11 +82,11 @@ sudo modprobe w1_therm
 
 ```shell
 sudo reboot
-```
 
-```shell
+# Verify modules are loaded:
 lsmod | grep w1
 ```
+
 
 # Ansible
 
