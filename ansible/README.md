@@ -46,12 +46,13 @@ timedatectl
 sudo timedatectl set-timezone America/Chicago
 ```
 
-#### Run system updates
+#### Run system updates and reboot
 
 ```shell
 sudo apt update
 sudo apt -y dist-upgrade
 sudo apt -y autoremove
+sudo reboot
 ```
 
 ## Enable use of 1-Wire and I2C Devices
@@ -73,15 +74,9 @@ tail /boot/firmware/config.txt
 # If missing, append to /boot/firmware/config.txt:
 sudo sh -c "echo 'dtoverlay=w1-gpio' >> /boot/firmware/config.txt"
 
-# Verify modules load (no output is good):
+# Verify modules are available and can be loaded (no output is good):
 sudo modprobe w1-gpio
 sudo modprobe w1_therm
-```
-
-#### Reboot and verify the modules above load
-
-```shell
-sudo reboot
 
 # Verify modules are loaded:
 lsmod | grep w1
