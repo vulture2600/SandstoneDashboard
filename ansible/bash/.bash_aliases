@@ -52,3 +52,6 @@ if command -v i2cdetect >/dev/null 2>&1; then
 else
     alias checki2c='echo "i2cdetect command not on this system"'
 fi
+
+## All Sandstone Dashboard checks
+alias checkall='checkservices; echo; checkports; echo; checki2c; echo; checktemps'

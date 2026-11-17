@@ -84,6 +84,22 @@ checkservices() {
     done
 }
 
+checkservices() {
+    local status
+    local green="\033[32m"
+    local reset="\033[0m"
+
+    for SERVICE in ${service_map[$HOSTNAME]}; do
+        status=$(systemctl is-active "$SERVICE")
+
+        if [[ "$status" == "active" ]]; then
+            status="${green}${status}${reset}"
+        fi
+
+        printf '%-35s%b\n' "$SERVICE" "$status"
+    done
+}
+
 
 ## Check 1-Wire temperature sensors
 
