@@ -79,12 +79,6 @@ service_map["SandstoneRasPi3BPlusStageWall"]="getTemps.service promtail.service 
 service_map["SandstonePi3bPlusSchoolRoom"]="getTemps.service promtail.service prometheus-node-exporter.service"
 
 checkservices() {
-    for SERVICE in ${service_map[$HOSTNAME]}; do
-        printf '%-35s %s\n' "$SERVICE" "$(systemctl is-active "$SERVICE")"
-    done
-}
-
-checkservices() {
     local status
     local green="\033[32m"
     local reset="\033[0m"
@@ -98,6 +92,17 @@ checkservices() {
 
         printf '%-35s%b\n' "$SERVICE" "$status"
     done
+}
+
+## Follow getTemps.log with color coding based on temperature ranges
+
+gettemps() {
+    tail -f /var/log/SandstoneDashboard/getTemps.log | perl -pe '
+    s/(-?\d+(?:\.\d+)?)°F/
+        ($1 <= 32 ? "\e[38;5;75m" :
+        $1 < 34  ? "\e[96m" :
+        $1 < 50  ? "\e[32m" : "\e[93m") . $& . "\e[0m"/ge
+    '
 }
 
 
